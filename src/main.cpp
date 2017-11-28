@@ -15,6 +15,9 @@
 #include "WindowManager.h"
 #include "GLTextureWriter.h"
 
+//qyburn
+#include "Actor.h"
+
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -71,8 +74,22 @@ public:
 	vec3 gDTrans = vec3(0);
 	float gDScale = 1.0;
 
-	float cTheta = 0;
+	//float cTheta = 0;
 	bool mouseDown = false;
+    
+    //QYBURN
+    shared_ptr<Actor> aTemp;
+    shared_ptr<Model> mTemp;
+    
+    vector<shared_ptr<Model>> models;
+    vector<shared_ptr<Actor>> actors;
+    
+    shared_ptr<Actor> player;
+    vec3 cameraIdentityVector = vec3(0);
+    float cTheta = -10; //around Y axis (turn head left & right)
+    float cPhi = 0; // around Z axis (nod up & down)
+    
+    
 
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -85,11 +102,11 @@ public:
 		{
 			gMat = (gMat + 1) % 4;
 		}
-		else if (key == GLFW_KEY_A && action == GLFW_PRESS)
+		else if (key == GLFW_KEY_A && (action == GLFW_PRESS || GLFW_REPEAT ))
 		{
 			cTheta += 5;
 		}
-		else if (key == GLFW_KEY_D && action == GLFW_PRESS)
+		else if (key == GLFW_KEY_D && (action == GLFW_PRESS || GLFW_REPEAT ))
 		{
 			cTheta -= 5;
 		}
@@ -173,7 +190,8 @@ public:
 			exit(1);
 		}
 		prog->addUniform("P");
-		prog->addUniform("MV");
+		prog->addUniform("V");
+        prog->addUniform("M");
 		prog->addUniform("MatAmb");
 		prog->addUniform("MatDif");
 		prog->addAttribute("vertPos");
@@ -213,7 +231,35 @@ public:
 		//load in the mesh and make the shapes
 		bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
 						(resourceDirectory + "/dummy.obj").c_str());
-
+        
+        
+        if (!rc)
+        {
+            cerr << errStr << endl;
+        }
+        else
+        {
+            mTemp = make_shared<Model>();
+            
+            mTemp->createModel(TOshapes, objMaterials);
+            mTemp->rotate(vec3(-90, 0, 0));
+        }
+        rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/dog.obj").c_str());
+        
+        for(int i = 0; i < 100; i++) {
+            aTemp = make_shared<Actor>();
+            aTemp->createActor(mTemp);
+            
+            float rX = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            float rZ = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            aTemp->setPosition(vec3(rX*100.0f-50.0f, 10.0f, rZ*100.0f-50.0f));
+            aTemp->material = rand() % 6;
+            aTemp->addOffset(vec3(0, -2, 0));
+            
+            actors.push_back(aTemp);
+        }
+        
+        
 		if (!rc)
 		{
 			cerr << errStr << endl;
@@ -387,21 +433,44 @@ public:
 
 		// Create the matrix stacks
 		auto P = make_shared<MatrixStack>();
-		auto MV = make_shared<MatrixStack>();
+        auto V = make_shared<MatrixStack>();
+		auto M = make_shared<MatrixStack>();
+        
 		// Apply perspective projection.
 		P->pushMatrix();
-		P->perspective(45.0f, aspect, 0.01f, 100.0f);
-
-		//Draw our scene - two meshes and ground plane
-		prog->bind();
-		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
-
+            P->perspective(45.0f, aspect, 0.01f, 100.0f);
+            prog->bind();
+            glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
+        P->popMatrix();
+        //
+        
+        // View Matrix
+        float x = cos(radians(cPhi))*cos(radians(cTheta));
+        float y = sin(radians(cPhi));
+        float z = cos(radians(cPhi))*sin(radians(cTheta));
+        cameraIdentityVector = vec3(x, y, z);
+        
+        V->pushMatrix();
+            V->loadIdentity();
+            V->lookAt(vec3(0, 0, 0), cameraIdentityVector, vec3(0, 1, 0));
+            glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE,value_ptr(V->topMatrix()) );
+        V->popMatrix();
+        //
+        
+        for (auto &actor : actors) // access by reference to avoid copying
+        {
+            actor->step();
+            SetMaterial(actor->material);
+            actor->draw(prog);
+        }
+        
+        /*
 		// globle transforms for 'camera' (you will likely wantt to fix this)
 		MV->pushMatrix();
 			MV->loadIdentity();
 			MV->rotate(radians(cTheta), vec3(0, 1, 0));
 
-			/* draw left mesh */
+			/* draw left mesh
 			MV->pushMatrix();
 			MV->translate(vec3(-2, 0.f, -5));
 			MV->rotate(radians(-90.f), vec3(1, 0, 0));
@@ -411,21 +480,24 @@ public:
 			glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE,value_ptr(MV->topMatrix()) );
 			Nef->draw(prog);
 		MV->popMatrix();
-
+        */
+        
 		// TODO add code for the transforms for the dummy and loop over
 		// all the shapes in the dummy to draw it
-
+        
+        /*
 		MV->popMatrix();
 		prog->unbind();
-
 		texProg->bind();
 		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
-
+         */
+        
+        /*
 		MV->pushMatrix();
 			MV->loadIdentity();
 			MV->rotate(radians(cTheta), vec3(0, 1, 0));
 
-			/* draw right mesh */
+			/* draw right mesh
 			MV->pushMatrix();
 			MV->translate(vec3(2, 0.f, -5));
 			MV->scale(gDScale);
@@ -435,13 +507,15 @@ public:
 			world->draw(texProg);
 			MV->popMatrix();
 
-			/*draw the ground */
+			/*draw the ground
 			glUniformMatrix4fv(texProg->getUniform("MV"), 1, GL_FALSE,value_ptr(MV->topMatrix()) );
 			texture2->bind(texProg->getUniform("Texture0"));
 			renderGround();
 
-		MV->popMatrix();
-		P->popMatrix();
+         */
+        //M->popMatrix();
+		//V->popMatrix();
+		//P->popMatrix();
 		texProg->unbind();
 	}
 

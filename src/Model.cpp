@@ -1,0 +1,85 @@
+//
+//  Model.cpp
+//  project4
+//
+//  Created by Alex Saalberg on 11/12/17.
+//
+//
+
+#include "Model.h"
+
+using namespace std;
+using namespace glm;
+using namespace tinyobj;
+
+void Model::createModel(vector<shape_t> inShapes, vector<material_t> inMaterials) {
+    vec3 gMin, gMax;
+    gMin = vec3(std::numeric_limits<float>::max());
+    gMax = vec3(-std::numeric_limits<float>::max());
+    shared_ptr<Shape> shape;
+    
+    shapes.reserve(inShapes.size());
+    for (size_t i = 0; i < inShapes.size(); i++)
+    {
+        // TODO -- Initialize each mesh
+        // 1. make a shared pointer
+        shapes.push_back(make_shared<Shape>());
+        
+        // 2. createShape for each tiny obj shape
+        shapes[i]->createShape(inShapes[i]);
+        
+        // 3. measure each shape to find out its AABB
+        shapes[i]->measure();
+        
+        // 4. call init on each shape to create the GPU data
+        shapes[i]->init();
+        
+        // perform some record keeping to keep track of global min and max
+        gMin.x = fmin(shapes[i]->min.x, gMin.x);
+        gMin.y = fmin(shapes[i]->min.y, gMin.y);
+        gMin.z = fmin(shapes[i]->min.z, gMin.z);
+        
+        gMax.x = fmax(shapes[i]->max.x, gMax.x);
+        gMax.y = fmax(shapes[i]->max.y, gMax.y);
+        gMax.z = fmax(shapes[i]->max.z, gMax.z);
+        // think about scale and translate....
+        // based on the results of calling measure on each peice
+    }
+    
+    mTranslate = gMin + 0.5f*(gMax - gMin);
+    if (gMax.x > gMax.y && gMax.x > gMax.z)
+    {
+        mScale = 2.0/(gMax.x-gMin.x);
+    }
+    else if (gMax.y > gMax.x && gMax.y > gMax.z)
+    {
+        mScale = 2.0/(gMax.y-gMin.y);
+    }
+    else
+    {
+        mScale = 2.0/(gMax.z-gMin.z);
+    }
+}
+
+void Model::rotate(vec3 deltaRotation) {
+    mRotate += deltaRotation;
+}
+
+void Model::draw(const std::shared_ptr<Program> prog, shared_ptr<MatrixStack> M) const {
+    
+    M->pushMatrix();
+    M->scale(mScale);
+    M->rotate(radians(mRotate.x), vec3(1, 0, 0));
+    M->rotate(radians(mRotate.y), vec3(0, 1, 0));
+    M->rotate(radians(mRotate.z), vec3(0, 0, 1));
+    M->translate(mTranslate);
+    
+    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
+    M->popMatrix();
+    
+    for (auto &shape : shapes) // access by reference to avoid copying
+    {
+        shape->draw(prog);
+    }
+}
+
