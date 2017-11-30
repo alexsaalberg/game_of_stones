@@ -46,16 +46,16 @@ public:
     
     int material;
     
-private:
-    glm::vec3 ePosition;
-    glm::vec3 eRotation;
+protected:
+    glm::vec3 position;
+    glm::vec3 rotation;
     
-    glm::vec3 eVelocity;
-    glm::vec3 eOmega;
+    glm::vec3 velocity;
+    glm::vec3 omega; //rotational velocity
     
-    glm::vec3 eOffset;
+    glm::vec3 modelOffset;
     
-    std::vector<std::shared_ptr<Model>> eModels;
+    std::vector<std::shared_ptr<Model>> models;
 };
 
 #endif /* defined(__project4__Actor__) */

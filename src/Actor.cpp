@@ -25,84 +25,84 @@ const float pVelocityMin = 0.01f;
 const float rOmegaMin = 1.0f;
 
 void Actor::createActor(std::shared_ptr<Model> inModel) {
-    ePosition = vec3(0);
-    eRotation = vec3(0);
+    position = vec3(0);
+    rotation = vec3(0);
     
-    eVelocity = vec3(0);
-    eOmega = vec3(0.0f);
-    eOmega.y = 10.0f;
+    velocity = vec3(0);
+    omega = vec3(0.0f);
+    omega.y = 10.0f;
     
-    eVelocity = vec3(0.1f);
-    eVelocity.z = 0.2f;
+    velocity = vec3(0.1f);
+    velocity.z = 0.2f;
     
-    eModels.push_back(inModel);
+    models.push_back(inModel);
     
     material = 1;
 }
 
 void Actor::step() {
     
-    ePosition += eVelocity;
+    position += velocity;
     
     //Make sure the character is above the ground
     
     
-    eVelocity.x *= pFrictionMult;
-    eVelocity.z *= pFrictionMult;
+    velocity.x *= pFrictionMult;
+    velocity.z *= pFrictionMult;
     
-    eVelocity.x = clampVelocity(eVelocity.x, pVelocityMin);
-    eVelocity.z = clampVelocity(eVelocity.z, pVelocityMin);
+    velocity.x = clampVelocity(velocity.x, pVelocityMin);
+    velocity.z = clampVelocity(velocity.z, pVelocityMin);
     
-    if(eVelocity.z > 0) {
-        if(eVelocity.z < pVelocityMin)
-            eVelocity.z = 0.0f;
+    if(velocity.z > 0) {
+        if(velocity.z < pVelocityMin)
+            velocity.z = 0.0f;
     } else {
-        if(eVelocity.z > -pVelocityMin)
-            eVelocity.z = 0.0f;
+        if(velocity.z > -pVelocityMin)
+            velocity.z = 0.0f;
     }
     
-    if(ePosition.y <= 0.0) {
-        eVelocity.y = 0.0;
-        ePosition.y = 0.0;
+    if(position.y <= 0.0) {
+        velocity.y = 0.0;
+        position.y = 0.0;
     } else {
-        eVelocity.y -= gAcc;
+        velocity.y -= gAcc;
     }
     
-    eRotation += eOmega;
-    eOmega *= rFrictionMult;
+    rotation += omega;
+    omega *= rFrictionMult;
     
-    if(eOmega.x < rOmegaMin)
-        eOmega.x = 0.0f;
-    if(eOmega.y < rOmegaMin)
+    if(omega.x < rOmegaMin)
+        omega.x = 0.0f;
+    if(omega.y < rOmegaMin)
         //eOmega.y = 0.0f;
-        if(eOmega.z < rOmegaMin)
-            eOmega.z = 0.0f;
+        if(omega.z < rOmegaMin)
+            omega.z = 0.0f;
     
 }
 
 void Actor::setPosition(vec3 newPosition) {
-    ePosition = newPosition;
+    position = newPosition;
 }
 vec3 Actor::getPosition() {
-    return ePosition;
+    return position;
 }
 
 void Actor::setRotation(vec3 newRotation) {
-    eRotation = newRotation;
+    rotation = newRotation;
 }
 void Actor::addRotation(vec3 deltaRotation) {
-    eRotation += deltaRotation;
+    rotation += deltaRotation;
 }
 vec3 Actor::getRotation() {
-    return eRotation;
+    return rotation;
 }
 
 void Actor::addVelocity(vec3 deltaVelocity) {
-    eVelocity += deltaVelocity;
+    velocity += deltaVelocity;
 }
 
 void Actor::addOffset(vec3 deltaOffset) {
-    eOffset += deltaOffset;
+    modelOffset += deltaOffset;
 }
 
 void Actor::draw(const std::shared_ptr<Program> prog) const {
@@ -113,15 +113,15 @@ void Actor::draw(const std::shared_ptr<Program> prog) const {
     M->loadIdentity();
     
     
-    M->translate(ePosition);
+    M->translate(position);
     
-    M->rotate(radians(eRotation.x), vec3(1, 0, 0));
-    M->rotate(radians(eRotation.y), vec3(0, 1, 0));
-    M->rotate(radians(eRotation.z), vec3(0, 0, 1));
+    M->rotate(radians(rotation.x), vec3(1, 0, 0));
+    M->rotate(radians(rotation.y), vec3(0, 1, 0));
+    M->rotate(radians(rotation.z), vec3(0, 0, 1));
     
-    M->translate(eOffset);
+    M->translate(modelOffset);
     
-    for (auto &model : eModels) // access by reference to avoid copying
+    for (auto &model : models) // access by reference to avoid copying
     {
         model->draw(prog, M);
     }
