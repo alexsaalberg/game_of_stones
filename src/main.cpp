@@ -174,6 +174,7 @@ public:
 		prog->addUniform("MatDif");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
+        prog->addAttribute("vertTex");
 	 }
 
 	void initGeom(const std::string& resourceDirectory)
