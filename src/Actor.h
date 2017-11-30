@@ -29,10 +29,19 @@ class Actor
 public:
     void createActor(std::shared_ptr<Model> inModels);
     void draw(const std::shared_ptr<Program> prog) const;
+    virtual void step();
+    
     void setPosition(glm::vec3 newPosition);
-    void step();
+    glm::vec3 getPosition();
     void addVelocity(glm::vec3 deltaVelocity);
+    
+    void setRotation(glm::vec3 newRotation);
+    void addRotation(glm::vec3 deltaRotation);
+    glm::vec3 getRotation();
+    
     void addOffset(glm::vec3 deltaOffset);
+    
+    
     
     
     int material;

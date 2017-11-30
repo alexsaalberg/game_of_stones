@@ -1,10 +1,3 @@
-/**
- * Base code
- * Draws two meshes and one ground plane, one mesh has textures, as well
- * as ground plane.
- * Must be fixed to load in mesh with multiple shapes (dummy.obj)
- */
-
 #include <iostream>
 #include <glad/glad.h>
 
@@ -15,8 +8,10 @@
 #include "WindowManager.h"
 #include "GLTextureWriter.h"
 
-//qyburn
+//QYBURN
 #include "Actor.h"
+#include "Player.h"
+#include "Helper.h"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -25,6 +20,12 @@
 using namespace std;
 using namespace glm;
 
+//QYBURN
+const double pixelsToDegrees_X = 40;
+const double pixelsToDegrees_Y = 40;
+
+const float cPhiMin = -80.0;
+const float cPhiMax = 80.0;
 
 class Application : public EventCallbacks
 {
@@ -35,46 +36,13 @@ public:
 
 	// Our shader program
 	std::shared_ptr<Program> prog;
-	std::shared_ptr<Program> texProg;
-
-	// Shapes to be used (from obj file)
-	std::vector<shared_ptr<Shape>> AllShapes;
-	//meshes with just one shape
-	shared_ptr<Shape> world;
-	shared_ptr<Shape> Nef;
-
-	//ground plane info
-	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
-	int gGiboLen;
-
+    
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
 
 	// Data necessary to give our triangle to OpenGL
 	GLuint VertexBufferID;
 
-	//geometry for texture render
-	GLuint quad_VertexArrayID;
-	GLuint quad_vertexbuffer;
-
-	//three different textures
-	shared_ptr<Texture> texture0;
- 	shared_ptr<Texture> texture1;
- 	shared_ptr<Texture> texture2;
-
-	int gMat = 0;
-
-	//For each shape, now that they are not resized, they need to be
-	//transformed appropriately to the origin and scaled
-	//transforms for Nef
-	vec3 gTrans = vec3(0);
-	float gScale = 1.0;
-
-	//transforms for the world
-	vec3 gDTrans = vec3(0);
-	float gDScale = 1.0;
-
-	//float cTheta = 0;
 	bool mouseDown = false;
     
     //QYBURN
@@ -85,12 +53,16 @@ public:
     vector<shared_ptr<Actor>> actors;
     
     shared_ptr<Actor> player;
+    float pSpeed = 0.2;
+    vec3 pSpeedMod = vec3(1.0, 0.6, 0.4);
+    
     vec3 cameraIdentityVector = vec3(0);
+    
     float cTheta = -10; //around Y axis (turn head left & right)
     float cPhi = 0; // around Z axis (nod up & down)
     
-    
-
+    double mouse_prevX;
+    double mouse_prevY;
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -98,71 +70,77 @@ public:
 		{
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
-		else if (key == GLFW_KEY_M && action == GLFW_PRESS)
-		{
-			gMat = (gMat + 1) % 4;
-		}
-		else if (key == GLFW_KEY_A && (action == GLFW_PRESS || GLFW_REPEAT ))
-		{
-			cTheta += 5;
-		}
-		else if (key == GLFW_KEY_D && (action == GLFW_PRESS || GLFW_REPEAT ))
-		{
-			cTheta -= 5;
-		}
+        else if (key == GLFW_KEY_A && (action == GLFW_PRESS || GLFW_REPEAT))
+        {
+            player->addVelocity( vec3(0,0, -1.0f * (pSpeed*pSpeedMod.y)) );
+        }
+        else if (key == GLFW_KEY_D && (action == GLFW_PRESS || GLFW_REPEAT))
+        {
+            player->addVelocity( vec3(0,0, +1.0f * (pSpeed*pSpeedMod.y)) );
+        }
+        else if (key == GLFW_KEY_W && (action == GLFW_PRESS || GLFW_REPEAT ))
+        {
+            player->addVelocity( vec3( +1.0f * (pSpeed*pSpeedMod.x), 0.0f,0.0f) );
+        }
+        else if (key == GLFW_KEY_S && (action == GLFW_PRESS || GLFW_REPEAT))
+        {
+            player->addVelocity( vec3( -1.0f * (pSpeed*pSpeedMod.z), 0,0) );
+        }
 	}
 
 	void scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
 	{
-		cTheta += (float) deltaX;
+        if(mouseDown) {
+            cTheta += (float) deltaX;
+            cPhi += (float) deltaY;
+        }
+        cPhi = glm::clamp(cPhi, cPhiMin, cPhiMax);
 	}
 
 	void mouseCallback(GLFWwindow *window, int button, int action, int mods)
 	{
-		double posX, posY;
-
-		if (action == GLFW_PRESS)
-		{
-			mouseDown = true;
-			glfwGetCursorPos(window, &posX, &posY);
-			cout << "Pos X " << posX << " Pos Y " << posY << endl;
-		}
-
-		if (action == GLFW_RELEASE)
-		{
-			mouseDown = false;
-		}
+        double posX, posY;
+        
+        if (action == GLFW_PRESS)
+        {
+            mouseDown = !mouseDown; //Flip mouseDown;
+            glfwGetCursorPos(window, &posX, &posY);
+            
+            if(mouseDown) {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                mouse_prevX = posX;
+                mouse_prevY = posY;
+            } else {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            }
+        }
 	}
 
 	void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 	{
+        double deltaX, deltaY;
+        
+        if(mouseDown) {
+            //change in mouse pos since last
+            deltaX = mouse_prevX - xpos;
+            deltaY = mouse_prevY - ypos;
+            mouse_prevX = xpos;
+            mouse_prevY = ypos;
+            
+            //THIS LINE MAKES vertical moving mouse down MOVE camera up;
+            deltaY *= -1;
+            //THIS LINE MAKES horizontal mouse work as expected
+            deltaX *= -1;
+            
+            cTheta += deltaX / pixelsToDegrees_X;
+            cPhi += deltaY / pixelsToDegrees_Y;
+        }
+        cPhi = glm::clamp(cPhi, cPhiMin, cPhiMax);
 	}
 
 	void resizeCallback(GLFWwindow *window, int width, int height)
 	{
 		glViewport(0, 0, width, height);
-	}
-
-	// Code to load in the three textures
-	void initTex(const std::string& resourceDirectory)
-	{
-	 	texture0 = make_shared<Texture>();
-		texture0->setFilename(resourceDirectory + "/crate.jpg");
-		texture0->init();
-		texture0->setUnit(0);
-		texture0->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-
-		texture1 = make_shared<Texture>();
-		texture1->setFilename(resourceDirectory + "/world.jpg");
-		texture1->init();
-		texture1->setUnit(1);
-		texture1->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-
-		texture2 = make_shared<Texture>();
-		texture2->setFilename(resourceDirectory + "/grass.jpg");
-		texture2->init();
-		texture2->setUnit(2);
-		texture2->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 	}
 
 	//code to set up the two shaders - a diffuse shader and texture mapping
@@ -196,26 +174,6 @@ public:
 		prog->addUniform("MatDif");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
-
-		//initialize the textures we might use
-		initTex(resourceDirectory);
-
-		texProg = make_shared<Program>();
-		texProg->setVerbose(true);
-		texProg->setShaderNames(
-			resourceDirectory + "/tex_vert.glsl",
-			resourceDirectory + "/tex_frag0.glsl");
-		if (! texProg->init())
-		{
-			std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
-			exit(1);
-		}
- 		texProg->addUniform("P");
-		texProg->addUniform("MV");
-		texProg->addAttribute("vertPos");
-		texProg->addAttribute("vertNor");
-		texProg->addAttribute("vertTex");
-		texProg->addUniform("Texture0");
 	 }
 
 	void initGeom(const std::string& resourceDirectory)
@@ -230,8 +188,7 @@ public:
 		string errStr;
 		//load in the mesh and make the shapes
 		bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-						(resourceDirectory + "/dummy.obj").c_str());
-        
+						(resourceDirectory + "/dog.obj").c_str());
         
         if (!rc)
         {
@@ -244,8 +201,8 @@ public:
             mTemp->createModel(TOshapes, objMaterials);
             mTemp->rotate(vec3(-90, 0, 0));
         }
-        rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/dog.obj").c_str());
         
+        //Initialize 100 dummies
         for(int i = 0; i < 100; i++) {
             aTemp = make_shared<Actor>();
             aTemp->createActor(mTemp);
@@ -259,163 +216,10 @@ public:
             actors.push_back(aTemp);
         }
         
-        
-		if (!rc)
-		{
-			cerr << errStr << endl;
-		}
-		else
-		{
-			// some data to keep track of where our mesh is in space
-			vec3 Gmin, Gmax;
-			Gmin = vec3(std::numeric_limits<float>::max());
-			Gmax = vec3(-std::numeric_limits<float>::max());
-			for (size_t i = 0; i < TOshapes.size(); i++)
-			{
-				// TODO -- Initialize each mesh
-				// 1. make a shared pointer
-				// 2. createShape for each tiny obj shape
-				// 3. measure each shape to find out its AABB
-				// 4. call init on each shape to create the GPU data
-				// perform some record keeping to keep track of global min and max
-
-				// Add the shape to AllShapes
-			}
-
-			// think about scale and translate....
-			// based on the results of calling measure on each peice
-		}
-
-		// now read in the sphere for the world
-		rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-						(resourceDirectory + "/sphere.obj").c_str());
-
-		world =  make_shared<Shape>();
-		world->createShape(TOshapes[0]);
-		world->measure();
-		world->init();
-
-		// compute its transforms based on measuring it
-		gDTrans = world->min + 0.5f*(world->max - world->min);
-		if (world->max.x >world->max.y && world->max.x > world->max.z)
-		{
-			gDScale = 2.0/(world->max.x-world->min.x);
-		}
-		else if (world->max.y > world->max.x && world->max.y > world->max.z)
-		{
-			gDScale = 2.0/(world->max.y-world->min.y);
-		}
-		else
-		{
-			gDScale = 2.0/(world->max.z-world->min.z);
-		}
-
-		// now read in the Nefertiti model
-		rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-						(resourceDirectory + "/Nefertiti-100K.obj").c_str());
-
-		Nef = make_shared<Shape>();
-		Nef->createShape(TOshapes[0]);
-		Nef->measure();
-		Nef->init();
-
-		// compute its transforms based on measuring it
-		gTrans = Nef->min + 0.5f * (Nef->max - Nef->min);
-		if (Nef->max.x > Nef->max.y && Nef->max.x > Nef->max.z)
-		{
-			gScale = 2.0 / (Nef->max.x - Nef->min.x);
-		}
-		else if (Nef->max.y > Nef->max.x && Nef->max.y > Nef->max.z)
-		{
-			gScale = 2.0 / (Nef->max.y - Nef->min.y);
-		}
-		else
-		{
-			gScale = 2.0 / (Nef->max.z - Nef->min.z);
-		}
-
-		// Initialize the geometry to render a ground plane
-		initQuad();
+        player = make_shared<Player>();
+        player->createActor(mTemp);
 	}
-
-	/**** geometry set up for ground plane *****/
-	void initQuad()
-	{
-		float g_groundSize = 20;
-		float g_groundY = -1.5;
-
-		// A x-z plane at y = g_groundY of dim[-g_groundSize, g_groundSize]^2
-		float GrndPos[] = {
-			-g_groundSize, g_groundY, -g_groundSize,
-			-g_groundSize, g_groundY,  g_groundSize,
-			 g_groundSize, g_groundY,  g_groundSize,
-			 g_groundSize, g_groundY, -g_groundSize
-		};
-
-		float GrndNorm[] = {
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0
-		};
-
-		float GrndTex[] = {
-			0, 0, // back
-			0, 1,
-			1, 1,
-			1, 0
-		};
-
-		unsigned short idx[] = {0, 1, 2, 0, 2, 3};
-
-		GLuint VertexArrayID;
-		//generate the VAO
-		glGenVertexArrays(1, &VertexArrayID);
-		glBindVertexArray(VertexArrayID);
-
-		gGiboLen = 6;
-		glGenBuffers(1, &GrndBuffObj);
-		glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GrndPos), GrndPos, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &GrndNorBuffObj);
-		glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GrndNorm), GrndNorm, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &GrndTexBuffObj);
-		glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GrndTex), GrndTex, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &GIndxBuffObj);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
-	}
-
-	void renderGround()
-	{
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-		// draw!
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
-		glDrawElements(GL_TRIANGLES, gGiboLen, GL_UNSIGNED_SHORT, 0);
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(2);
-	}
-
+    
 	void render()
 	{
 		// Get current frame buffer size.
@@ -442,20 +246,18 @@ public:
             prog->bind();
             glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
         P->popMatrix();
-        //
         
         // View Matrix
-        float x = cos(radians(cPhi))*cos(radians(cTheta));
-        float y = sin(radians(cPhi));
-        float z = cos(radians(cPhi))*sin(radians(cTheta));
-        cameraIdentityVector = vec3(x, y, z);
-        
+        cameraIdentityVector = calculateCameraVectorFromAngles(cPhi, cTheta);
         V->pushMatrix();
             V->loadIdentity();
             V->lookAt(vec3(0, 0, 0), cameraIdentityVector, vec3(0, 1, 0));
+            V->translate(player->getPosition());
             glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE,value_ptr(V->topMatrix()) );
         V->popMatrix();
-        //
+        
+        player->setRotation(cameraIdentityVector);
+        player->step();
         
         for (auto &actor : actors) // access by reference to avoid copying
         {
@@ -464,59 +266,7 @@ public:
             actor->draw(prog);
         }
         
-        /*
-		// globle transforms for 'camera' (you will likely wantt to fix this)
-		MV->pushMatrix();
-			MV->loadIdentity();
-			MV->rotate(radians(cTheta), vec3(0, 1, 0));
-
-			/* draw left mesh
-			MV->pushMatrix();
-			MV->translate(vec3(-2, 0.f, -5));
-			MV->rotate(radians(-90.f), vec3(1, 0, 0));
-			MV->scale(gScale);
-			MV->translate(-1.0f*gTrans);
-			SetMaterial(2);
-			glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE,value_ptr(MV->topMatrix()) );
-			Nef->draw(prog);
-		MV->popMatrix();
-        */
-        
-		// TODO add code for the transforms for the dummy and loop over
-		// all the shapes in the dummy to draw it
-        
-        /*
-		MV->popMatrix();
-		prog->unbind();
-		texProg->bind();
-		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
-         */
-        
-        /*
-		MV->pushMatrix();
-			MV->loadIdentity();
-			MV->rotate(radians(cTheta), vec3(0, 1, 0));
-
-			/* draw right mesh
-			MV->pushMatrix();
-			MV->translate(vec3(2, 0.f, -5));
-			MV->scale(gDScale);
-			MV->translate(-1.0f*gDTrans);
-			glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE,value_ptr(MV->topMatrix()) );
-			texture1->bind(texProg->getUniform("Texture0"));
-			world->draw(texProg);
-			MV->popMatrix();
-
-			/*draw the ground
-			glUniformMatrix4fv(texProg->getUniform("MV"), 1, GL_FALSE,value_ptr(MV->topMatrix()) );
-			texture2->bind(texProg->getUniform("Texture0"));
-			renderGround();
-
-         */
-        //M->popMatrix();
-		//V->popMatrix();
-		//P->popMatrix();
-		texProg->unbind();
+        prog->unbind();
 	}
 
 	// helper function to set materials for shading

@@ -13,6 +13,8 @@
 
 class Player : public Actor {
     
+public:
+    void step();
 };
 
 #endif /* Player_hpp */

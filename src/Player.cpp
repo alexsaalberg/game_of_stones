@@ -7,4 +7,6 @@
 
 #include "Player.h"
 
-const float pFrictionMult = 0.1f;
+void Player::step() {
+    return;
+}

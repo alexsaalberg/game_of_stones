@@ -8,6 +8,8 @@
 
 #include "Actor.h"
 
+#include "Helper.h"
+
 #define PI 3.14
 #define TORAD (PI / 180.0f)
 
@@ -39,6 +41,7 @@ void Actor::createActor(std::shared_ptr<Model> inModel) {
 }
 
 void Actor::step() {
+    
     ePosition += eVelocity;
     
     //Make sure the character is above the ground
@@ -47,13 +50,8 @@ void Actor::step() {
     eVelocity.x *= pFrictionMult;
     eVelocity.z *= pFrictionMult;
     
-    if(eVelocity.x > 0) {
-        if(eVelocity.x < pVelocityMin)
-            eVelocity.x = 0.0f;
-    } else {
-        if(eVelocity.x > -pVelocityMin)
-            eVelocity.x = 0.0f;
-    }
+    eVelocity.x = clampVelocity(eVelocity.x, pVelocityMin);
+    eVelocity.z = clampVelocity(eVelocity.z, pVelocityMin);
     
     if(eVelocity.z > 0) {
         if(eVelocity.z < pVelocityMin)
@@ -71,7 +69,7 @@ void Actor::step() {
     }
     
     eRotation += eOmega;
-    //eOmega *= rFrictionMult;
+    eOmega *= rFrictionMult;
     
     if(eOmega.x < rOmegaMin)
         eOmega.x = 0.0f;
@@ -84,6 +82,19 @@ void Actor::step() {
 
 void Actor::setPosition(vec3 newPosition) {
     ePosition = newPosition;
+}
+vec3 Actor::getPosition() {
+    return ePosition;
+}
+
+void Actor::setRotation(vec3 newRotation) {
+    eRotation = newRotation;
+}
+void Actor::addRotation(vec3 deltaRotation) {
+    eRotation += deltaRotation;
+}
+vec3 Actor::getRotation() {
+    return eRotation;
 }
 
 void Actor::addVelocity(vec3 deltaVelocity) {
