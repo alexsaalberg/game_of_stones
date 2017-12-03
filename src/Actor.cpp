@@ -41,25 +41,14 @@ void Actor::createActor(std::shared_ptr<Model> inModel) {
 }
 
 void Actor::step() {
-    
+    //Position Physics
     position += velocity;
-    
-    //Make sure the character is above the ground
-    
     
     velocity.x *= pFrictionMult;
     velocity.z *= pFrictionMult;
     
     velocity.x = clampVelocity(velocity.x, pVelocityMin);
     velocity.z = clampVelocity(velocity.z, pVelocityMin);
-    
-    if(velocity.z > 0) {
-        if(velocity.z < pVelocityMin)
-            velocity.z = 0.0f;
-    } else {
-        if(velocity.z > -pVelocityMin)
-            velocity.z = 0.0f;
-    }
     
     if(position.y <= 0.0) {
         velocity.y = 0.0;
@@ -68,15 +57,20 @@ void Actor::step() {
         velocity.y -= gAcc;
     }
     
+    //Rotation Physics
     rotation += omega;
     omega *= rFrictionMult;
     
+    omega.x = clampVelocity(omega.x, rOmegaMin);
+    omega.y = clampVelocity(omega.y, rOmegaMin);
+    omega.z = clampVelocity(omega.z, rOmegaMin);
+    /*
     if(omega.x < rOmegaMin)
         omega.x = 0.0f;
     if(omega.y < rOmegaMin)
         //eOmega.y = 0.0f;
         if(omega.z < rOmegaMin)
-            omega.z = 0.0f;
+            omega.z = 0.0f;*/
     
 }
 
