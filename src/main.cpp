@@ -35,7 +35,11 @@ public:
 	WindowManager * windowManager = nullptr;
 
 	// Our shader program
-	std::shared_ptr<Program> prog;
+	std::shared_ptr<Program> dragonProgram;
+    
+    std::shared_ptr<Program> shadowMainProgram;
+    std::shared_ptr<Program> shadowDepthProgram;
+    std::shared_ptr<Program> shadowQuadProgram;
     
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
@@ -63,6 +67,10 @@ public:
     
     double mouse_prevX;
     double mouse_prevY;
+    
+    //Shadows
+    GLuint sFramebuffer;
+    GLuint sDepthTexture;
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -156,26 +164,67 @@ public:
 		// Enable z-buffer test.
 		glEnable(GL_DEPTH_TEST);
 
-		// Initialize the GLSL program.
-		prog = make_shared<Program>();
-		prog->setVerbose(true);
-		prog->setShaderNames(
-			resourceDirectory + "/simple_vert.glsl",
-			resourceDirectory + "/simple_frag.glsl");
-		if (! prog->init())
-		{
-			std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
-			exit(1);
-		}
-		prog->addUniform("P");
-		prog->addUniform("V");
-        prog->addUniform("M");
-		prog->addUniform("MatAmb");
-		prog->addUniform("MatDif");
-		prog->addAttribute("vertPos");
-		prog->addAttribute("vertNor");
-        prog->addAttribute("vertTex");
+        initDragonProgram(resourceDirectory);
+        //Shadow program
+        //initShadowProgram(resourceDirectory);
 	 }
+    
+    void initDragonProgram(const std::string& resourceDirectory) {
+        // Initialize the GLSL program.
+        dragonProgram = make_shared<Program>();
+        dragonProgram->setVerbose(true);
+        dragonProgram->setShaderNames(
+                                      resourceDirectory + "/simple_vert.glsl",
+                                      resourceDirectory + "/simple_frag.glsl");
+        if (! dragonProgram->init())
+        {
+            std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+            exit(1);
+        }
+        dragonProgram->addUniform("P");
+        dragonProgram->addUniform("V");
+        dragonProgram->addUniform("M");
+        dragonProgram->addUniform("MatAmb");
+        dragonProgram->addUniform("MatDif");
+        dragonProgram->addAttribute("vertPos");
+        dragonProgram->addAttribute("vertNor");
+        dragonProgram->addAttribute("vertTex");
+    }
+    
+    void initShadowProgram(const std::string& resourceDirectory) {
+        shadowMainProgram = make_shared<Program>();
+        shadowMainProgram->setVerbose(true);
+        shadowMainProgram->setShaderNames(
+                                      resourceDirectory + "/ShadowMapping.vertexshader",
+                                      resourceDirectory + "/ShadowMapping.fragmentshader");
+        if (! shadowMainProgram->init())
+        {
+            std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+            exit(1);
+        }
+        shadowMainProgram->addUniform("P");
+        shadowMainProgram->addUniform("V");
+        shadowMainProgram->addUniform("M");
+        shadowMainProgram->addUniform("MatAmb");
+        shadowMainProgram->addUniform("MatDif");
+        shadowMainProgram->addAttribute("vertPos");
+        shadowMainProgram->addAttribute("vertNor");
+        shadowMainProgram->addAttribute("vertTex");
+        
+        shadowDepthProgram = make_shared<Program>();
+        shadowDepthProgram->setVerbose(true);
+        shadowDepthProgram->setShaderNames(
+                                          resourceDirectory + "/DepthRTT.vertexshader",
+                                          resourceDirectory + "/DepthRTT.fragmentshader");
+        if (! shadowDepthProgram->init())
+        {
+            std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+            exit(1);
+        }
+        shadowDepthProgram->addUniform("depthMVP");
+        
+    }
+    
 
 	void initGeom(const std::string& resourceDirectory)
 	{
@@ -221,6 +270,21 @@ public:
         player->createActor(mTemp);
 	}
     
+    void initShadows() {
+        glGenFramebuffers(1, &sFramebuffer);
+        
+        
+        glGenTextures(1, &sDepthTexture);
+        glBindTexture(GL_TEXTURE_2D, sDepthTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+    }
+    
 	void render()
 	{
 		// Get current frame buffer size.
@@ -244,8 +308,8 @@ public:
 		// Apply perspective projection.
 		P->pushMatrix();
             P->perspective(45.0f, aspect, 0.01f, 100.0f);
-            prog->bind();
-            glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
+            dragonProgram->bind();
+            glUniformMatrix4fv(dragonProgram->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
         P->popMatrix();
         
         // View Matrix
@@ -254,7 +318,7 @@ public:
             V->loadIdentity();
             V->lookAt(vec3(0, 0, 0), cameraIdentityVector, vec3(0, 1, 0));
             V->translate(player->getPosition());
-            glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE,value_ptr(V->topMatrix()) );
+            glUniformMatrix4fv(dragonProgram->getUniform("V"), 1, GL_FALSE,value_ptr(V->topMatrix()) );
         V->popMatrix();
         
         player->setRotation(cameraIdentityVector);
@@ -264,10 +328,10 @@ public:
         {
             actor->step();
             SetMaterial(actor->material);
-            actor->draw(prog);
+            actor->draw(dragonProgram);
         }
         
-        prog->unbind();
+        dragonProgram->unbind();
 	}
 
 	// helper function to set materials for shading
@@ -276,20 +340,20 @@ public:
 		switch (i)
 		{
 		case 0: //shiny blue plastic
-			glUniform3f(prog->getUniform("MatAmb"), 0.02f, 0.04f, 0.2f);
-			glUniform3f(prog->getUniform("MatDif"), 0.0f, 0.16f, 0.9f);
+			glUniform3f(dragonProgram->getUniform("MatAmb"), 0.02f, 0.04f, 0.2f);
+			glUniform3f(dragonProgram->getUniform("MatDif"), 0.0f, 0.16f, 0.9f);
 			break;
 		case 1: // flat grey
-			glUniform3f(prog->getUniform("MatAmb"), 0.13f, 0.13f, 0.14f);
-			glUniform3f(prog->getUniform("MatDif"), 0.3f, 0.3f, 0.4f);
+			glUniform3f(dragonProgram->getUniform("MatAmb"), 0.13f, 0.13f, 0.14f);
+			glUniform3f(dragonProgram->getUniform("MatDif"), 0.3f, 0.3f, 0.4f);
 			break;
 		case 2: //brass
-			glUniform3f(prog->getUniform("MatAmb"), 0.3294f, 0.2235f, 0.02745f);
-			glUniform3f(prog->getUniform("MatDif"), 0.7804f, 0.5686f, 0.11373f);
+			glUniform3f(dragonProgram->getUniform("MatAmb"), 0.3294f, 0.2235f, 0.02745f);
+			glUniform3f(dragonProgram->getUniform("MatDif"), 0.7804f, 0.5686f, 0.11373f);
 			break;
 		case 3: //copper
-			glUniform3f(prog->getUniform("MatAmb"), 0.1913f, 0.0735f, 0.0225f);
-			glUniform3f(prog->getUniform("MatDif"), 0.7038f, 0.27048f, 0.0828f);
+			glUniform3f(dragonProgram->getUniform("MatAmb"), 0.1913f, 0.0735f, 0.0225f);
+			glUniform3f(dragonProgram->getUniform("MatDif"), 0.7038f, 0.27048f, 0.0828f);
 			break;
 		}
 	}
@@ -319,8 +383,8 @@ int main(int argc, char **argv)
 	// This is the code that will likely change program to program as you
 	// may need to initialize or set up different data and state
 
-	application->init(resourceDir);
-	application->initGeom(resourceDir);
+	application->init(resourceDir+"/shaders");
+	application->initGeom(resourceDir+"/models");
 
 	// Loop until the user closes the window.
 	while (! glfwWindowShouldClose(windowManager->getHandle()))
