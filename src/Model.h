@@ -30,6 +30,7 @@ public:
     void rotate(glm::vec3 deltaRotation);
     void init();
     void draw(const std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack> M) const;
+    void drawForDepth(const std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack> M) const;
     
 private:
     float mScale;

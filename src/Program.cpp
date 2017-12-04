@@ -122,7 +122,7 @@ GLint Program::getAttribute(const std::string &name) const
 	{
 		if (isVerbose())
 		{
-			std::cout << name << " is not an attribute variable" << std::endl;
+            std::cout << vShaderName << ": " << name << " is not an attribute variable" << std::endl;
 		}
 		return -1;
 	}

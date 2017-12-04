@@ -74,12 +74,34 @@ void Model::draw(const std::shared_ptr<Program> prog, shared_ptr<MatrixStack> M)
     M->rotate(radians(mRotate.z), vec3(0, 0, 1));
     M->translate(mTranslate);
     
+    //mat4 normMatrix = glm::transpose(glm::inverse(M->topMatrix()));
+    //glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(normMatrix));
     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
     M->popMatrix();
     
     for (auto &shape : shapes) // access by reference to avoid copying
     {
         shape->draw(prog);
+    }
+}
+
+void Model::drawForDepth(const std::shared_ptr<Program> prog, shared_ptr<MatrixStack> M) const {
+    
+    M->pushMatrix();
+    M->scale(mScale);
+    M->rotate(radians(mRotate.x), vec3(1, 0, 0));
+    M->rotate(radians(mRotate.y), vec3(0, 1, 0));
+    M->rotate(radians(mRotate.z), vec3(0, 0, 1));
+    M->translate(mTranslate);
+    
+    //mat4 normMatrix = glm::transpose(glm::inverse(M->topMatrix()));
+    //glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(normMatrix));
+    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
+    M->popMatrix();
+    
+    for (auto &shape : shapes) // access by reference to avoid copying
+    {
+        shape->drawForDepth(prog);
     }
 }
 

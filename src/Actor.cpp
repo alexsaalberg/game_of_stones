@@ -123,3 +123,27 @@ void Actor::draw(const std::shared_ptr<Program> prog) const {
     M->popMatrix();
 }
 
+void Actor::drawForDepth(const std::shared_ptr<Program> prog) const {
+    
+    auto M = make_shared<MatrixStack>();
+    
+    M->pushMatrix();
+    M->loadIdentity();
+    
+    
+    M->translate(position);
+    
+    M->rotate(radians(rotation.x), vec3(1, 0, 0));
+    M->rotate(radians(rotation.y), vec3(0, 1, 0));
+    M->rotate(radians(rotation.z), vec3(0, 0, 1));
+    
+    M->translate(modelOffset);
+    
+    for (auto &model : models) // access by reference to avoid copying
+    {
+        model->drawForDepth(prog, M);
+    }
+    
+    M->popMatrix();
+}
+

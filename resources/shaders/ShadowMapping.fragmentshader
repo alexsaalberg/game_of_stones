@@ -15,7 +15,10 @@ layout(location = 0) out vec3 color;
 uniform sampler2D myTextureSampler;
 uniform mat4 MV;
 uniform vec3 LightPosition_worldspace;
-uniform sampler2DShadow shadowMap;
+uniform sampler2D shadowMap;
+
+uniform vec3 MatAmb;
+uniform vec3 MatDif;
 
 vec2 poissonDisk[16] = vec2[]( 
    vec2( -0.94201624, -0.39906216 ), 
@@ -50,8 +53,10 @@ void main(){
 	float LightPower = 1.0f;
 	
 	// Material properties
-	vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;
-	vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
+    //vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;
+    vec3 MaterialDiffuseColor = vec3(MatDif);
+	//vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
+    vec3 MaterialAmbientColor = vec3(MatAmb) * MaterialDiffuseColor;
 	vec3 MaterialSpecularColor = vec3(0.3,0.3,0.3);
 
 	// Distance to the light
@@ -81,13 +86,14 @@ void main(){
 	float visibility=1.0;
 
 	// Fixed bias, or...
-	float bias = 0.005;
+	//float bias = 0.005;
 
 	// ...variable bias
-	// float bias = 0.005*tan(acos(cosTheta));
-	// bias = clamp(bias, 0,0.01);
+	 float bias = 0.005*tan(acos(cosTheta));
+	 bias = clamp(bias, 0,0.01);
 
 	// Sample the shadow map 4 times
+    /*
 	for (int i=0;i<4;i++){
 		// use either :
 		//  - Always the same samples.
@@ -102,13 +108,15 @@ void main(){
 		
 		// being fully in the shadow will eat up 4*0.2 = 0.8
 		// 0.2 potentially remain, which is quite dark.
-		visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0,  (ShadowCoord.z-bias)/ShadowCoord.w) ));
-	}
+        //visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0) ) );
+		visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0) < (ShadowCoord.z-bias)/ShadowCoord.w) ));
+	} */
 
 	// For spot lights, use either one of these lines instead.
-	// if ( texture( shadowMap, (ShadowCoord.xy/ShadowCoord.w) ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
-	// if ( textureProj( shadowMap, ShadowCoord.xyw ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
-	
+    //if ( texture( shadowMap, (ShadowCoord.xy/ShadowCoord.w) ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
+        //visibility = 0.5;
+	//if ( textureProj( shadowMap, ShadowCoord.xyw ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
+	  //  visibility = 0.5;
 	color = 
 		// Ambient : simulates indirect lighting
 		MaterialAmbientColor +
