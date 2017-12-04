@@ -92,6 +92,30 @@ void Shape::init()
 	CHECKED_GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 
+void Shape::drawForDepth(const shared_ptr<Program> prog) const
+{
+    int h_pos, h_nor, h_tex;
+    h_pos = h_nor = h_tex = -1;
+    
+    CHECKED_GL_CALL(glBindVertexArray(vaoID));
+    
+    // Bind position buffer
+    h_pos = prog->getAttribute("vertPos");
+    GLSL::enableVertexAttribArray(h_pos);
+    CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, posBufID));
+    CHECKED_GL_CALL(glVertexAttribPointer(h_pos, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0));
+    
+    // Bind element buffer
+    CHECKED_GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID));
+    
+    // Draw
+    CHECKED_GL_CALL(glDrawElements(GL_TRIANGLES, (int)eleBuf.size(), GL_UNSIGNED_INT, (const void *)0));
+  
+    GLSL::disableVertexAttribArray(h_pos);
+    CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    CHECKED_GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+}
+
 void Shape::draw(const shared_ptr<Program> prog) const
 {
 	int h_pos, h_nor, h_tex;
