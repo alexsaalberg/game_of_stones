@@ -42,7 +42,9 @@ public:
     
     void addOffset(glm::vec3 deltaOffset);
     
-    
+    void scale(float deltaScale);
+    float getScale();
+    float getZLength();
     
     
     int material;
@@ -55,6 +57,8 @@ protected:
     glm::vec3 omega; //rotational velocity
     
     glm::vec3 modelOffset;
+    
+    float aScale;
     
     std::vector<std::shared_ptr<Model>> models;
 };

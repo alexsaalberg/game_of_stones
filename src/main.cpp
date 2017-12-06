@@ -57,6 +57,8 @@ public:
     
     vector<shared_ptr<Model>> models;
     vector<shared_ptr<Actor>> actors;
+    vector<shared_ptr<Actor>> tunnel;
+    float tPieceLength;
     
     shared_ptr<Actor> player;
     float pSpeed = 0.2;
@@ -274,9 +276,13 @@ public:
 		vector<tinyobj::material_t> objMaterials;
 
 		string errStr;
+        /*
+        //pipeStraight.mtl
+        //pipeStraight.obj
 		//load in the mesh and make the shapes
-		bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-						(resourceDirectory + "/dog.obj").c_str());
+		//bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/dog.obj").c_str());
+        bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+            (resourceDirectory + "/pipeStraight.obj").c_str(), (resourceDirectory + "/pipeStraight.mtl").c_str());
         
         if (!rc)
         {
@@ -287,7 +293,7 @@ public:
             mTemp = make_shared<Model>();
             
             mTemp->createModel(TOshapes, objMaterials);
-            mTemp->rotate(vec3(-90, 0, 0));
+            //mTemp->rotate(vec3(-90, 0, 0));
         }
         
         //Initialize 100 dummies
@@ -303,7 +309,36 @@ public:
             
             actors.push_back(aTemp);
         }
+         */
+        bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                                   (resourceDirectory + "/pipeStraight.obj").c_str(), (resourceDirectory + "/pipeStraight.mtl").c_str());
         
+        if (!rc)
+        {
+            cerr << errStr << endl;
+        }
+        else
+        {
+            mTemp = make_shared<Model>();
+            
+            mTemp->createModel(TOshapes, objMaterials);
+            //mTemp->rotate(vec3(-90, 0, 0));
+        }
+        
+        float pipeZed = 1.0f;
+        //Initialize 100 dummies
+        for(int i = 0; i < 20; i++) {
+            aTemp = make_shared<Actor>();
+            aTemp->createActor(mTemp);
+            
+            aTemp->setPosition(vec3(0.0f, 0.0f, pipeZed));
+            aTemp->scale(pipeZed);
+            pipeZed += aTemp->getZLength();
+            
+            aTemp->material = rand() % 6;
+            
+            tunnel.push_back(aTemp);
+        }
         player = make_shared<Actor>();
         player->createActor(mTemp);
         
@@ -377,7 +412,6 @@ public:
         auto V = make_shared<MatrixStack>();
         auto M = make_shared<MatrixStack>();
         
-        
         // View Matrix
         cameraIdentityVector = calculateCameraVectorFromAngles(cPhi, cTheta);
         V->pushMatrix();
@@ -395,29 +429,28 @@ public:
         // which are already separated from the front faces by a small distance
         // (if your geometry is made this way)
         CHECKED_GL_CALL(glEnable(GL_CULL_FACE));
-        glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+        CHECKED_GL_CALL(glCullFace(GL_BACK)); // Cull back-facing triangles -> draw only front-facing triangles
         
         CHECKED_GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, shadowFramebuffer));
         
         // Clear the screen
         CHECKED_GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         
-        
-        // Use our shader
+        /* Generate shadow map depth texture */
         shadowDepthProgram->bind();
-        
-        
+    
         glm::vec3 lightInvDir = glm::vec3(0.5f,2,2);
-        lightInvDir = cameraIdentityVector;
         
         // Compute the MVP matrix from the light's point of view
-        glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
+        //glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
+        //glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
         
-        glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
         // or, for spot light :
-        //glm::vec3 lightPos(5, 20, 20);
-        //glm::mat4 depthProjectionMatrix = glm::perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
-        //glm::mat4 depthViewMatrix = glm::lookAt(lightPos, lightPos-lightInvDir, glm::vec3(0,1,0));
+        glm::vec3 lightPos(5, 20, 20);
+        //lightPos = player->getPosition();
+        //lightInvDir = cameraIdentityVector;
+        glm::mat4 depthProjectionMatrix = glm::perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
+        glm::mat4 depthViewMatrix = glm::lookAt(lightPos, lightPos-lightInvDir, glm::vec3(0,1,0));
         
         //glm::mat4 depthModelMatrix = glm::mat4(1.0);
         //glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
@@ -426,11 +459,9 @@ public:
         
         // Send our transformation to the currently bound shader,
         // in the "MVP" uniform
-        glUniformMatrix4fv(shadowDepthProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
-        glUniformMatrix4fv(shadowDepthProgram->getUniform("V"), 1, GL_FALSE, value_ptr(depthViewMatrix));
-        glUniformMatrix4fv(shadowDepthProgram->getUniform("P"), 1, GL_FALSE, value_ptr(depthProjectionMatrix));
-        //glUniformMatrix4fv(shadowDepthProgram->getUniform("depthMVP"), 1, GL_FALSE, &depthMVP[0][0]);
-        //glUniformMatrix4fv(depthMatrixID, 1, GL_FALSE, &depthMVP[0][0]);
+        CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+        CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("V"), 1, GL_FALSE, value_ptr(depthViewMatrix)));
+        CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("P"), 1, GL_FALSE, value_ptr(depthProjectionMatrix)));
         
         model_thickWalls->drawForDepth(shadowDepthProgram, M);
         for (auto &actor : actors) // access by reference to avoid copying
@@ -439,26 +470,25 @@ public:
         }
         
         shadowDepthProgram->unbind();
+        /*END DEPTH TEXTURE PROGRAM*/
         
-        //////
-        // Render to the screen
+        
+        
+        /*MAIN RENDER PROGRAM*/
         int windowWidth, windowHeight;
         glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
         glViewport(0, 0, windowWidth, windowHeight);
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        //glViewport(0,0,windowWidth,windowHeight); // Render on the whole framebuffer, complete from the lower left corner to the upper right
         
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+        CHECKED_GL_CALL(glEnable(GL_CULL_FACE));
+        CHECKED_GL_CALL(glCullFace(GL_BACK)); // Cull back-facing triangles -> draw only front-facing triangles
         
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         // Use our shader
-        //glUseProgram(programID);
         shadowMainProgram->bind();
-        // Leave this code to just draw the meshes alone
         float aspect = windowWidth/(float)windowHeight;
         
         // Apply perspective projection.
@@ -467,15 +497,6 @@ public:
         //shadowMainProgram->bind();
         //glUniformMatrix4fv(shadowMainProgram->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
         //P->popMatrix();
-        
-        
-        
-        // Compute the MVP matrix from keyboard and mouse input
-        //computeMatricesFromInputs();
-        //glm::mat4 ProjectionMatrix = getProjectionMatrix();
-        //glm::mat4 ViewMatrix = getViewMatrix();
-        //ViewMatrix = glm::lookAt(glm::vec3(14,6,4), glm::vec3(0,1,0), glm::vec3(0,1,0));
-        //glm::mat4 MVP = P->topMatrix() * V->topMatrix() * M->topMatrix();
         
         glm::mat4 biasMatrix(
                              0.5, 0.0, 0.0, 0.0,
@@ -492,16 +513,6 @@ public:
         
         glUniform3f(shadowMainProgram->getUniform("LightInvDirection_worldspace"), lightInvDir.x, lightInvDir.y, lightInvDir.z);
         
-        // Send our transformation to the currently bound shader,
-        // in the "MVP" uniform
-        /*
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
-        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
-        glUniformMatrix4fv(DepthBiasID, 1, GL_FALSE, &depthBiasMVP[0][0]);
-        
-        glUniform3f(lightInvDirID, lightInvDir.x, lightInvDir.y, lightInvDir.z);
-        */
         // Bind our texture in Texture Unit 0
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, shadowDDSTexture);
@@ -523,67 +534,24 @@ public:
             actor->draw(shadowMainProgram);
         }
         
-        shadowMainProgram->unbind();
+        for (auto &actor : tunnel) // access by reference to avoid copying
+        {
+            actor->step();
+            SetMaterial(shadowMainProgram,actor->material);
+            actor->draw(shadowMainProgram);
+        }
         
-        ///////
+        shadowMainProgram->unbind();
+        /*END RENDER MAIN PROGRAM*/
         
 		
         
-        /*
-        // Get current frame buffer size.
-		int width, height;
-		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
-		glViewport(0, 0, width, height);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		// Clear framebuffer.
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// Leave this code to just draw the meshes alone
-		float aspect = width/(float)height;
-
-		// Create the matrix stacks
-		auto P = make_shared<MatrixStack>();
-        auto V = make_shared<MatrixStack>();
-        M = make_shared<MatrixStack>();
-        
-		// Apply perspective projection.
-		P->pushMatrix();
-            P->perspective(45.0f, aspect, 0.01f, 100.0f);
-            dragonProgram->bind();
-            glUniformMatrix4fv(dragonProgram->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
-        P->popMatrix();
-        
-        // View Matrix
-        cameraIdentityVector = calculateCameraVectorFromAngles(cPhi, cTheta);
-        V->pushMatrix();
-            V->loadIdentity();
-            V->lookAt(vec3(0, 0, 0), cameraIdentityVector, vec3(0, 1, 0));
-            V->translate(player->getPosition());
-            glUniformMatrix4fv(dragonProgram->getUniform("V"), 1, GL_FALSE,value_ptr(V->topMatrix()) );
-        V->popMatrix();
-        
-        player->setRotation(cameraIdentityVector);
-        player->step();
-        
-        for (auto &actor : actors) // access by reference to avoid copying
-        {
-            actor->step();
-            SetMaterial(actor->material);
-            actor->draw(dragonProgram);
-        }
-        
-        dragonProgram->unbind();
-        */
-        
-        // Optionally render the shadowmap (for debug only)
-        
+        /* RENDER (DEBUG) DEPTH TEXTURE: Optionally render the shadowmap (for debug only) */
         // Render only on a corner of the window (or we we won't see the real rendering...)
-        glViewport(0,0,512,512);
+        glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
+        glViewport(0,0,windowWidth/2,windowHeight/2);
+        //glViewport(0,0,512,512);
         
-        // Use our shader
-        //glUseProgram(quad_programID);
         shadowQuadProgram->bind();
         
         // Bind our texture in Texture Unit 0
@@ -609,10 +577,9 @@ public:
         // You have to disable GL_COMPARE_R_TO_TEXTURE above in order to see anything !
         glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
         glDisableVertexAttribArray(0);
+        /* END (DEBUG) RENDER DEPTH TEXTURE */
         
 	}
-    
-    
 
 	// helper function to set materials for shading
 	void SetMaterial(const std::shared_ptr<Program> prog, int i)

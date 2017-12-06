@@ -30,10 +30,8 @@ void Actor::createActor(std::shared_ptr<Model> inModel) {
     
     velocity = vec3(0);
     omega = vec3(0.0f);
-    omega.y = 10.0f;
     
-    velocity = vec3(0.1f);
-    velocity.z = 0.2f;
+    aScale = 1.0f;
     
     models.push_back(inModel);
     
@@ -99,6 +97,19 @@ void Actor::addOffset(vec3 deltaOffset) {
     modelOffset += deltaOffset;
 }
 
+void Actor::scale(float deltaScale) {
+    aScale *= deltaScale;
+}
+
+float Actor::getScale() {
+    return aScale;
+}
+
+float Actor::getZLength() {
+    return aScale;
+    //return models.at(0).get()->getZLength()*aScale;
+}
+
 void Actor::draw(const std::shared_ptr<Program> prog) const {
     
     auto M = make_shared<MatrixStack>();
@@ -107,13 +118,17 @@ void Actor::draw(const std::shared_ptr<Program> prog) const {
     M->loadIdentity();
     
     
+    
     M->translate(position);
+    
+    M->scale(aScale);
     
     M->rotate(radians(rotation.x), vec3(1, 0, 0));
     M->rotate(radians(rotation.y), vec3(0, 1, 0));
     M->rotate(radians(rotation.z), vec3(0, 0, 1));
+
+    M->translate(modelOffset*aScale);
     
-    M->translate(modelOffset);
     
     for (auto &model : models) // access by reference to avoid copying
     {

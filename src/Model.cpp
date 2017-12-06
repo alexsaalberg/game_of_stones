@@ -13,7 +13,6 @@ using namespace glm;
 using namespace tinyobj;
 
 void Model::createModel(vector<shape_t> inShapes, vector<material_t> inMaterials) {
-    vec3 gMin, gMax;
     gMin = vec3(std::numeric_limits<float>::max());
     gMax = vec3(-std::numeric_limits<float>::max());
     shared_ptr<Shape> shape;
@@ -46,7 +45,8 @@ void Model::createModel(vector<shape_t> inShapes, vector<material_t> inMaterials
         // based on the results of calling measure on each peice
     }
     
-    mTranslate = gMin + 0.5f*(gMax - gMin);
+    mTranslate = 0.5f*(gMax-gMin);
+    //mTranslate = gMin + 0.5f*(gMax - gMin);
     if (gMax.x > gMax.y && gMax.x > gMax.z)
     {
         mScale = 2.0/(gMax.x-gMin.x);
@@ -63,6 +63,11 @@ void Model::createModel(vector<shape_t> inShapes, vector<material_t> inMaterials
 
 void Model::rotate(vec3 deltaRotation) {
     mRotate += deltaRotation;
+}
+
+float Model::getZLength() {
+    return mScale;
+    //return mScale*((gMax.z - gMin.z)/2.0);
 }
 
 void Model::draw(const std::shared_ptr<Program> prog, shared_ptr<MatrixStack> M) const {

@@ -31,8 +31,10 @@ public:
     void init();
     void draw(const std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack> M) const;
     void drawForDepth(const std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack> M) const;
+    float getZLength();
     
 private:
+    glm::vec3 gMin, gMax;
     float mScale;
     glm::vec3 mRotate;
     glm::vec3 mTranslate;
