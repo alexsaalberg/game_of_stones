@@ -12,6 +12,7 @@
 #include "Actor.h"
 #include "Player.h"
 #include "Helper.h"
+#include "Light.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -74,12 +75,9 @@ public:
     double mouse_prevY;
     
     //Shadows
-    GLuint shadowFramebuffer;
-    GLuint shadowDepthTexture;
     GLuint shadowDDSTexture;
     
-    mat4 depthMVP;
-    vec3 lightInvDir;
+    Light light;
     
     GLuint shadow_quad_vertexbuffer;
     shared_ptr<Model> model_thickWalls;
@@ -366,34 +364,7 @@ public:
     }
     
     void initShadows(const std::string& resourceDirectory) {
-        
-        CHECKED_GL_CALL(glGenFramebuffers(1, &shadowFramebuffer));
-        CHECKED_GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, shadowFramebuffer));
-        
-        CHECKED_GL_CALL(glGenTextures(1, &shadowDepthTexture));
-        
-        CHECKED_GL_CALL(glBindTexture(GL_TEXTURE_2D, shadowDepthTexture));
-        CHECKED_GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0));
-        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL));
-        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE));
-        
-        //Set 'shadowDepthBuffer' to be the data storage for 'shadowFramebuffer'
-        CHECKED_GL_CALL(glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowDepthTexture, 0));
-        
-        
-        // No color output in the bound framebuffer, only depth
-        CHECKED_GL_CALL(glDrawBuffer(GL_NONE));
-        
-        // Always check that our framebuffer is ok
-        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            std::cerr << "shadowFramebuffer not okay!" << std::endl;
-            exit(1);
-        }
-        
+        light.createLight(LightTypes::SpotLight, 1024, 1024);
         
         // The quad's FBO. Used only for visualizing the shadowmap.
         static const GLfloat g_quad_vertex_buffer_data[] = {
@@ -415,44 +386,26 @@ public:
     void createShadowDepthTexture() {
         auto M = make_shared<MatrixStack>();
         
-        // Render to our framebuffer
-        CHECKED_GL_CALL(glViewport(0,0,1024,1024)); // Render on the whole framebuffer, complete from the lower left corner to the upper right
-        
         // We don't use bias in the shader, but instead we draw back faces,
         // which are already separated from the front faces by a small distance
         // (if your geometry is made this way)
         //CHECKED_GL_CALL(glEnable(GL_CULL_FACE));
         //CHECKED_GL_CALL(glCullFace(GL_BACK)); // Cull back-facing triangles -> draw only front-facing triangles
         
-        CHECKED_GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, shadowFramebuffer));
-        CHECKED_GL_CALL(glClear(GL_DEPTH_BUFFER_BIT));
-        
         shadowDepthProgram->bind();
+        light.bindForWritingAndClearDepthBuffer();
         
-        lightInvDir = glm::vec3(0.5f,2,2);
+        light.setInvertedDirection(vec3(0.5f,2,2));
+        light.setPosition(vec3(5, 20, 20));
         
-        // Compute the MVP matrix from the light's point of view
-        //glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
-        //glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
-        
-        // or, for spot light :
-        glm::vec3 lightPos(5, 20, 20);
-        //lightPos = player->getPosition();
-        //lightInvDir = cameraIdentityVector;
-        glm::mat4 depthProjectionMatrix = glm::perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
-        glm::mat4 depthViewMatrix = glm::lookAt(lightPos, lightPos-lightInvDir, glm::vec3(0,1,0));
-        
-        //glm::mat4 depthModelMatrix = glm::mat4(1.0);
-        //glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-        
-        M->loadIdentity();
-        depthMVP = depthProjectionMatrix * depthViewMatrix * M->topMatrix();
+        light.createMatrices();
+        //depthMVP = depthProjectionMatrix * depthViewMatrix * M->topMatrix();
         
         // Send our transformation to the currently bound shader,
         // in the "MVP" uniform
-        CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
-        CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("V"), 1, GL_FALSE, value_ptr(depthViewMatrix)));
-        CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("P"), 1, GL_FALSE, value_ptr(depthProjectionMatrix)));
+        CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("M"), 1, GL_FALSE, value_ptr(light.model)));
+        CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("V"), 1, GL_FALSE, value_ptr(light.view)));
+        CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("P"), 1, GL_FALSE, value_ptr(light.projection)));
         
         model_thickWalls->drawForDepth(shadowDepthProgram, M);
         for (auto &actor : actors) // access by reference to avoid copying
@@ -503,13 +456,14 @@ public:
                              0.5, 0.5, 0.5, 1.0
                              );
         
+        mat4 depthMVP = light.projection * light.view * light.model;
         glm::mat4 depthBiasMVP = biasMatrix * depthMVP;
         glUniformMatrix4fv(shadowMainProgram->getUniform("M"), 1, GL_FALSE,value_ptr(M->topMatrix()) );
         glUniformMatrix4fv(shadowMainProgram->getUniform("V"), 1, GL_FALSE,value_ptr(V->topMatrix()) );
         glUniformMatrix4fv(shadowMainProgram->getUniform("P"), 1, GL_FALSE,value_ptr(P->topMatrix()) );
         glUniformMatrix4fv(shadowMainProgram->getUniform("DepthBiasMVP"), 1, GL_FALSE,value_ptr(depthBiasMVP) );
         
-        glUniform3f(shadowMainProgram->getUniform("LightInvDirection_worldspace"), lightInvDir.x, lightInvDir.y, lightInvDir.z);
+        glUniform3f(shadowMainProgram->getUniform("LightInvDirection_worldspace"), light.invertedDirection.x, light.invertedDirection.y, light.invertedDirection.z);
         
         // Bind our texture in Texture Unit 0
         glActiveTexture(GL_TEXTURE0);
@@ -517,8 +471,10 @@ public:
         // Set our "myTextureSampler" sampler to use Texture Unit 0
         glUniform1i(shadowMainProgram->getUniform("myTextureSampler"), 0);
         
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
+        
+        light.bindForReading(GL_TEXTURE1);
+        //glActiveTexture(GL_TEXTURE1);
+        //glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
         glUniform1i(shadowMainProgram->getUniform("shadowMap"), 1);
         
         player->setRotation(cameraIdentityVector);
@@ -554,8 +510,10 @@ public:
         shadowQuadProgram->bind();
         
         // Bind our texture in Texture Unit 0
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
+        
+        light.bindForReading(GL_TEXTURE0);
+        //glActiveTexture(GL_TEXTURE0);
+        //glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
         // Set our "renderedTexture" sampler to use Texture Unit 0
         glUniform1i(shadowQuadProgram->getUniform("simpleTexture"), 0);
         //glUniform1i(texID, 0);
