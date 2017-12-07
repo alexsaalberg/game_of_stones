@@ -214,8 +214,8 @@ public:
         shadowMainProgram = make_shared<Program>();
         shadowMainProgram->setVerbose(true);
         shadowMainProgram->setShaderNames(
-                                          resourceDirectory + "/ShadowMapping.vertexshader",
-                                          resourceDirectory + "/ShadowMapping.fragmentshader");
+                                          resourceDirectory + "/ShadowMapping_vert.glsl",
+                                          resourceDirectory + "/ShadowMapping_frag.glsl");
         if (! shadowMainProgram->init())
         {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -238,8 +238,8 @@ public:
         shadowDepthProgram = make_shared<Program>();
         shadowDepthProgram->setVerbose(true);
         shadowDepthProgram->setShaderNames(
-                                           resourceDirectory + "/DepthRTT.vertexshader",
-                                           resourceDirectory + "/DepthRTT.fragmentshader");
+                                           resourceDirectory + "/DepthRTT_vert.glsl",
+                                           resourceDirectory + "/DepthRTT_frag.glsl");
         if (! shadowDepthProgram->init())
         {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -255,8 +255,8 @@ public:
         shadowQuadProgram = make_shared<Program>();
         shadowQuadProgram->setVerbose(true);
         shadowQuadProgram->setShaderNames(
-                                          resourceDirectory + "/Passthrough.vertexshader",
-                                          resourceDirectory + "/SimpleTexture.fragmentshader");
+                                          resourceDirectory + "/Passthrough_vert.glsl",
+                                          resourceDirectory + "/SimpleTexture_frag.glsl");
         if (! shadowQuadProgram->init())
         {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
