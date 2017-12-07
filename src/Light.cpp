@@ -26,6 +26,8 @@ void Light::createLight(enum LightTypes lightType, vec3 position, vec3 invertedD
     this->lightType = lightType;
     this->position = position;
     this->invertedDirection = invertedDirection;
+    
+    model = glm::mat4();
     switch(lightType) {
         case LightTypes::SpotLight: //Cone shape
             projection = glm::perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
@@ -41,6 +43,11 @@ void Light::createLight(enum LightTypes lightType, vec3 position, vec3 invertedD
 void Light::bindForWritingAndClearDepthBuffer() {
     CHECKED_GL_CALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer));
     CHECKED_GL_CALL(glClear(GL_DEPTH_BUFFER_BIT));
+}
+
+void Light::bindForReading(GLenum TextureUnit) {
+    CHECKED_GL_CALL(glActiveTexture(TextureUnit));
+    CHECKED_GL_CALL(glBindTexture(GL_TEXTURE_2D, shadowDepthTexture));
 }
     
 void Light::generateAndLinkFBOAndTexture() {

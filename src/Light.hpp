@@ -30,6 +30,11 @@ public:
     void createLight(enum LightTypes lightType, glm::vec3 position, glm::vec3 invertedDirection, int windowWidth, int windowHeight);
     
     void bindForWritingAndClearDepthBuffer();
+    void bindForReading(GLenum TextureUnit);
+
+    glm::mat4 projection;
+    glm::mat4 view;
+    glm::mat4 model;
     
 private:
     //Variables
@@ -37,9 +42,6 @@ private:
     glm::vec3 position;
     glm::vec3 invertedDirection;
     
-    glm::mat4 projection;
-    glm::mat4 view;
-    glm::mat4 model;
     
     int windowWidth;
     int windowHeight;
