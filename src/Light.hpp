@@ -9,10 +9,16 @@
 #define Light_hpp
 
 #include <stdio.h>
+#include <iostream>
 
 #include <glad/glad.h>
 
+#include "GLSL.h"
+#include "Program.h"
 #include "glm/glm.hpp"
+
+
+#include <glm/gtc/matrix_transform.hpp>
 
 enum class LightTypes {
     SpotLight, //Cone shape
@@ -21,16 +27,28 @@ enum class LightTypes {
 
 class Light {
 public:
-    void createLight(LightTypes lightType);
+    void createLight(enum LightTypes lightType, glm::vec3 position, glm::vec3 invertedDirection, int windowWidth, int windowHeight);
+    
+    void bindForWritingAndClearDepthBuffer();
+    
 private:
+    //Variables
+    LightTypes lightType;
     glm::vec3 position;
-    glm::vec3 direction;
+    glm::vec3 invertedDirection;
+    
+    glm::mat4 projection;
+    glm::mat4 view;
+    glm::mat4 model;
+    
+    int windowWidth;
+    int windowHeight;
     
     GLuint frameBuffer;
     GLuint shadowDepthTexture;
     
-    LightTypes lightType;
-    
+    //Functions
+    void generateAndLinkFBOAndTexture();
 };
 
 
