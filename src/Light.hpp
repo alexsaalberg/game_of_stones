@@ -22,7 +22,7 @@
 
 enum class LightTypes {
     SpotLight, //Cone shape
-    PointLight //Directional, like The Sun
+    DirectionalLight //Directional, like The Sun
 };
 
 class Light {

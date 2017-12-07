@@ -39,7 +39,7 @@ void Light::createMatrices() {
             projection = glm::perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
             view = glm::lookAt(position, position - invertedDirection, vec3(0, 1, 0));
             break;
-        case LightTypes::PointLight: //Far away, parallel rays
+        case LightTypes::DirectionalLight: //Far away, parallel rays
             projection = glm::ortho<float>(-10,10,-10,10,-10,20);
             view = glm::lookAt(position, vec3(0, 0, 0), vec3(0, 1, 0));
             break;
