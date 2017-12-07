@@ -10,23 +10,29 @@
 using namespace std;
 using namespace glm;
 
-/*
- GLuint frameBuffer;
- GLuint shadowDepthTexture;
- */
-
-void Light::createLight(enum LightTypes lightType, vec3 position, vec3 invertedDirection, int windowWidth, int windowHeight) {
+void Light::createLight(enum LightTypes lightType, int windowWidth, int windowHeight) {
+    this->lightType = lightType;
     
     this->windowWidth = windowWidth;
     this->windowHeight = windowHeight;
     
     //Requires width & height to be set!
     generateAndLinkFBOAndTexture();
-    
-    this->lightType = lightType;
-    this->position = position;
-    this->invertedDirection = invertedDirection;
-    
+}
+
+void Light::setPosition(vec3 newPosition) {
+    position = newPosition;
+}
+
+void Light::setInvertedDirection(vec3 newInvertedDirection) {
+    invertedDirection = newInvertedDirection;
+}
+
+void Light::setLightType(enum LightTypes newLightType) {
+    lightType = newLightType;
+}
+
+void Light::createMatrices() {
     model = glm::mat4();
     switch(lightType) {
         case LightTypes::SpotLight: //Cone shape
@@ -42,6 +48,7 @@ void Light::createLight(enum LightTypes lightType, vec3 position, vec3 invertedD
 
 void Light::bindForWritingAndClearDepthBuffer() {
     CHECKED_GL_CALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer));
+    CHECKED_GL_CALL(glViewport(0,0,windowWidth,windowHeight));
     CHECKED_GL_CALL(glClear(GL_DEPTH_BUFFER_BIT));
 }
 
