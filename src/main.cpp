@@ -363,7 +363,7 @@ public:
         }
     }
     
-    void initShadows(const std::string& resourceDirectory) {
+    void initLights(const std::string& resourceDirectory) {
         light.createLight(LightTypes::SpotLight, 1024, 1024);
         
         // The quad's FBO. Used only for visualizing the shadowmap.
@@ -380,10 +380,9 @@ public:
         CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, shadow_quad_vertexbuffer));
         CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW));
         
-        //shadowDDSTexture = loadDDS((resourceDirectory+"/uvmap.DDS").c_str());
     }
     
-    void createShadowDepthTexture() {
+    void renderShadowTexturesFromLights() {
         auto M = make_shared<MatrixStack>();
         
         // We don't use bias in the shader, but instead we draw back faces,
@@ -402,7 +401,7 @@ public:
         //depthMVP = depthProjectionMatrix * depthViewMatrix * M->topMatrix();
         
         // Send our transformation to the currently bound shader,
-        // in the "MVP" uniform
+        // in the "MVP" uniform-
         CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("M"), 1, GL_FALSE, value_ptr(light.model)));
         CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("V"), 1, GL_FALSE, value_ptr(light.view)));
         CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("P"), 1, GL_FALSE, value_ptr(light.projection)));
@@ -544,7 +543,7 @@ public:
         auto V = make_shared<MatrixStack>();
         auto M = make_shared<MatrixStack>();
         
-        createShadowDepthTexture();
+        renderShadowTexturesFromLights();
         renderCamera();
         renderShadowDepthDebug();
     }
@@ -600,7 +599,7 @@ int main(int argc, char **argv)
     
     application->init(resourceDir+"/shaders");
     application->initGeom(resourceDir+"/models");
-    application->initShadows(resourceDir+"/models");
+    application->initLights(resourceDir+"/models");
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
