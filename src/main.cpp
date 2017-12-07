@@ -31,25 +31,25 @@ const float cPhiMax = 80.0;
 
 class Application : public EventCallbacks
 {
-
+    
 public:
-
-	WindowManager * windowManager = nullptr;
-
-	// Our shader program
-	std::shared_ptr<Program> dragonProgram;
+    
+    WindowManager * windowManager = nullptr;
+    
+    // Our shader program
+    std::shared_ptr<Program> dragonProgram;
     
     std::shared_ptr<Program> shadowMainProgram;
     std::shared_ptr<Program> shadowDepthProgram;
     std::shared_ptr<Program> shadowQuadProgram;
     
-	// Contains vertex information for OpenGL
-	GLuint VertexArrayID;
-
-	// Data necessary to give our triangle to OpenGL
-	GLuint VertexBufferID;
-
-	bool mouseDown = false;
+    // Contains vertex information for OpenGL
+    GLuint VertexArrayID;
+    
+    // Data necessary to give our triangle to OpenGL
+    GLuint VertexBufferID;
+    
+    bool mouseDown = false;
     
     //QYBURN
     shared_ptr<Actor> aTemp;
@@ -78,15 +78,18 @@ public:
     GLuint shadowDepthTexture;
     GLuint shadowDDSTexture;
     
+    mat4 depthMVP;
+    vec3 lightInvDir;
+    
     GLuint shadow_quad_vertexbuffer;
     shared_ptr<Model> model_thickWalls;
-
-	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
-	{
-		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		{
-			glfwSetWindowShouldClose(window, GL_TRUE);
-		}
+    
+    void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+    {
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        {
+            glfwSetWindowShouldClose(window, GL_TRUE);
+        }
         else if (key == GLFW_KEY_A && (action == GLFW_PRESS || GLFW_REPEAT))
         {
             player->addVelocity( vec3(0,0, -1.0f * (pSpeed*pSpeedMod.y)) );
@@ -111,19 +114,19 @@ public:
         {
             cHeight += 1.0f;
         }
-	}
-
-	void scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-	{
+    }
+    
+    void scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
+    {
         if(mouseDown) {
             cTheta += (float) deltaX;
             cPhi += (float) deltaY;
         }
         cPhi = glm::clamp(cPhi, cPhiMin, cPhiMax);
-	}
-
-	void mouseCallback(GLFWwindow *window, int button, int action, int mods)
-	{
+    }
+    
+    void mouseCallback(GLFWwindow *window, int button, int action, int mods)
+    {
         double posX, posY;
         
         if (action == GLFW_PRESS)
@@ -139,10 +142,10 @@ public:
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
         }
-	}
-
-	void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-	{
+    }
+    
+    void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+    {
         double deltaX, deltaY;
         
         if(mouseDown) {
@@ -161,30 +164,30 @@ public:
             cPhi += deltaY / pixelsToDegrees_Y;
         }
         cPhi = glm::clamp(cPhi, cPhiMin, cPhiMax);
-	}
-
-	void resizeCallback(GLFWwindow *window, int width, int height)
-	{
-		glViewport(0, 0, width, height);
-	}
-
-	//code to set up the two shaders - a diffuse shader and texture mapping
-	void init(const std::string& resourceDirectory)
-	{
-		int width, height;
-		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
-		GLSL::checkVersion();
-
-		cTheta = 0;
-		// Set background color.
-		glClearColor(.12f, .34f, .56f, 1.0f);
-		// Enable z-buffer test.
-		glEnable(GL_DEPTH_TEST);
-
+    }
+    
+    void resizeCallback(GLFWwindow *window, int width, int height)
+    {
+        glViewport(0, 0, width, height);
+    }
+    
+    //code to set up the two shaders - a diffuse shader and texture mapping
+    void init(const std::string& resourceDirectory)
+    {
+        int width, height;
+        glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
+        GLSL::checkVersion();
+        
+        cTheta = 0;
+        // Set background color.
+        glClearColor(.12f, .34f, .56f, 1.0f);
+        // Enable z-buffer test.
+        glEnable(GL_DEPTH_TEST);
+        
         initDragonProgram(resourceDirectory);
         //Shadow program
         initShadowProgram(resourceDirectory);
-	 }
+    }
     
     void initDragonProgram(const std::string& resourceDirectory) {
         // Initialize the GLSL program.
@@ -213,8 +216,8 @@ public:
         shadowMainProgram = make_shared<Program>();
         shadowMainProgram->setVerbose(true);
         shadowMainProgram->setShaderNames(
-                                      resourceDirectory + "/ShadowMapping.vertexshader",
-                                      resourceDirectory + "/ShadowMapping.fragmentshader");
+                                          resourceDirectory + "/ShadowMapping.vertexshader",
+                                          resourceDirectory + "/ShadowMapping.fragmentshader");
         if (! shadowMainProgram->init())
         {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -237,8 +240,8 @@ public:
         shadowDepthProgram = make_shared<Program>();
         shadowDepthProgram->setVerbose(true);
         shadowDepthProgram->setShaderNames(
-                                          resourceDirectory + "/DepthRTT.vertexshader",
-                                          resourceDirectory + "/DepthRTT.fragmentshader");
+                                           resourceDirectory + "/DepthRTT.vertexshader",
+                                           resourceDirectory + "/DepthRTT.fragmentshader");
         if (! shadowDepthProgram->init())
         {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -254,8 +257,8 @@ public:
         shadowQuadProgram = make_shared<Program>();
         shadowQuadProgram->setVerbose(true);
         shadowQuadProgram->setShaderNames(
-                                           resourceDirectory + "/Passthrough.vertexshader",
-                                           resourceDirectory + "/SimpleTexture.fragmentshader");
+                                          resourceDirectory + "/Passthrough.vertexshader",
+                                          resourceDirectory + "/SimpleTexture.fragmentshader");
         if (! shadowQuadProgram->init())
         {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -265,24 +268,24 @@ public:
         
     }
     
-
-	void initGeom(const std::string& resourceDirectory)
-	{
-		// Load geometry
-		// Some obj files contain material information.
-		// We'll ignore them for this assignment.
-		// this is the tiny obj shapes - not to be confused with our shapes
-		vector<tinyobj::shape_t> TOshapes;
-		vector<tinyobj::material_t> objMaterials;
-
-		string errStr;
-        /*
+    
+    void initGeom(const std::string& resourceDirectory)
+    {
+        // Load geometry
+        // Some obj files contain material information.
+        // We'll ignore them for this assignment.
+        // this is the tiny obj shapes - not to be confused with our shapes
+        vector<tinyobj::shape_t> TOshapes;
+        vector<tinyobj::material_t> objMaterials;
+        
+        string errStr;
+        
         //pipeStraight.mtl
         //pipeStraight.obj
-		//load in the mesh and make the shapes
-		//bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/dog.obj").c_str());
+        //load in the mesh and make the shapes
+        //bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/dog.obj").c_str());
         bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-            (resourceDirectory + "/pipeStraight.obj").c_str(), (resourceDirectory + "/pipeStraight.mtl").c_str());
+                                   (resourceDirectory + "/pipeStraight.obj").c_str(), (resourceDirectory + "/pipeStraight.mtl").c_str());
         
         if (!rc)
         {
@@ -309,9 +312,10 @@ public:
             
             actors.push_back(aTemp);
         }
-         */
-        bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-                                   (resourceDirectory + "/pipeStraight.obj").c_str(), (resourceDirectory + "/pipeStraight.mtl").c_str());
+        
+        //bool
+        rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                              (resourceDirectory + "/pipeStraight.obj").c_str(), (resourceDirectory + "/pipeStraight.mtl").c_str());
         
         if (!rc)
         {
@@ -325,22 +329,25 @@ public:
             //mTemp->rotate(vec3(-90, 0, 0));
         }
         
-        float pipeZed = 1.0f;
-        //Initialize 100 dummies
-        for(int i = 0; i < 20; i++) {
-            aTemp = make_shared<Actor>();
-            aTemp->createActor(mTemp);
-            
-            aTemp->setPosition(vec3(0.0f, 0.0f, pipeZed));
-            aTemp->scale(pipeZed);
-            pipeZed += aTemp->getZLength();
-            
-            aTemp->material = rand() % 6;
-            
-            tunnel.push_back(aTemp);
-        }
+        /*
+         float pipeZed = 1.0f;
+         //Initialize 100 dummies
+         for(int i = 0; i < 20; i++) {
+         aTemp = make_shared<Actor>();
+         aTemp->createActor(mTemp);
+         
+         aTemp->setPosition(vec3(0.0f, 0.0f, pipeZed));
+         aTemp->scale(pipeZed);
+         pipeZed += aTemp->getZLength();
+         
+         aTemp->material = rand() % 6;
+         
+         tunnel.push_back(aTemp);
+         }
+         */
         player = make_shared<Actor>();
         player->createActor(mTemp);
+        
         
         rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
                               (resourceDirectory + "/room_thickwalls.obj").c_str());
@@ -356,23 +363,23 @@ public:
             model_thickWalls->createModel(TOshapes, objMaterials);
             //model_thickWalls->rotate(vec3(-90, 0, 0));
         }
-	}
+    }
     
     void initShadows(const std::string& resourceDirectory) {
         
         CHECKED_GL_CALL(glGenFramebuffers(1, &shadowFramebuffer));
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowFramebuffer);
+        CHECKED_GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, shadowFramebuffer));
         
         CHECKED_GL_CALL(glGenTextures(1, &shadowDepthTexture));
         
-        glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+        CHECKED_GL_CALL(glBindTexture(GL_TEXTURE_2D, shadowDepthTexture));
+        CHECKED_GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0));
+        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL));
+        CHECKED_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE));
         
         //Set 'shadowDepthBuffer' to be the data storage for 'shadowFramebuffer'
         CHECKED_GL_CALL(glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowDepthTexture, 0));
@@ -401,26 +408,12 @@ public:
         CHECKED_GL_CALL(glGenBuffers(1, &shadow_quad_vertexbuffer));
         CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, shadow_quad_vertexbuffer));
         CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW));
-
-        shadowDDSTexture = loadDDS((resourceDirectory+"/uvmap.DDS").c_str());
+        
+        //shadowDDSTexture = loadDDS((resourceDirectory+"/uvmap.DDS").c_str());
     }
     
-	void render()
-	{
-        // Create the matrix stacks
-        auto P = make_shared<MatrixStack>();
-        auto V = make_shared<MatrixStack>();
+    void createShadowDepthTexture() {
         auto M = make_shared<MatrixStack>();
-        
-        // View Matrix
-        cameraIdentityVector = calculateCameraVectorFromAngles(cPhi, cTheta);
-        V->pushMatrix();
-        V->loadIdentity();
-        V->lookAt(vec3(0, 0, 0), cameraIdentityVector, vec3(0, 1, 0));
-        V->translate(player->getPosition());
-        V->translate(vec3(0,cHeight,0));
-        //glUniformMatrix4fv(shadowMainProgram->getUniform("V"), 1, GL_FALSE,value_ptr(V->topMatrix()) );
-        //V->popMatrix();
         
         // Render to our framebuffer
         CHECKED_GL_CALL(glViewport(0,0,1024,1024)); // Render on the whole framebuffer, complete from the lower left corner to the upper right
@@ -428,18 +421,15 @@ public:
         // We don't use bias in the shader, but instead we draw back faces,
         // which are already separated from the front faces by a small distance
         // (if your geometry is made this way)
-        CHECKED_GL_CALL(glEnable(GL_CULL_FACE));
-        CHECKED_GL_CALL(glCullFace(GL_BACK)); // Cull back-facing triangles -> draw only front-facing triangles
+        //CHECKED_GL_CALL(glEnable(GL_CULL_FACE));
+        //CHECKED_GL_CALL(glCullFace(GL_BACK)); // Cull back-facing triangles -> draw only front-facing triangles
         
         CHECKED_GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, shadowFramebuffer));
+        CHECKED_GL_CALL(glClear(GL_DEPTH_BUFFER_BIT));
         
-        // Clear the screen
-        CHECKED_GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        
-        /* Generate shadow map depth texture */
         shadowDepthProgram->bind();
-    
-        glm::vec3 lightInvDir = glm::vec3(0.5f,2,2);
+        
+        lightInvDir = glm::vec3(0.5f,2,2);
         
         // Compute the MVP matrix from the light's point of view
         //glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
@@ -454,8 +444,9 @@ public:
         
         //glm::mat4 depthModelMatrix = glm::mat4(1.0);
         //glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+        
         M->loadIdentity();
-        glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * M->topMatrix();
+        depthMVP = depthProjectionMatrix * depthViewMatrix * M->topMatrix();
         
         // Send our transformation to the currently bound shader,
         // in the "MVP" uniform
@@ -470,9 +461,12 @@ public:
         }
         
         shadowDepthProgram->unbind();
-        /*END DEPTH TEXTURE PROGRAM*/
-        
-        
+    }
+    
+    void renderCamera() {
+        auto P = make_shared<MatrixStack>();
+        auto V = make_shared<MatrixStack>();
+        auto M = make_shared<MatrixStack>();
         
         /*MAIN RENDER PROGRAM*/
         int windowWidth, windowHeight;
@@ -494,9 +488,13 @@ public:
         // Apply perspective projection.
         P->pushMatrix();
         P->perspective(45.0f, aspect, 0.01f, 100.0f);
-        //shadowMainProgram->bind();
-        //glUniformMatrix4fv(shadowMainProgram->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
-        //P->popMatrix();
+        
+        cameraIdentityVector = calculateCameraVectorFromAngles(cPhi, cTheta);
+        V->pushMatrix();
+        V->loadIdentity();
+        V->lookAt(vec3(0, 0, 0), cameraIdentityVector, vec3(0, 1, 0));
+        V->translate(player->getPosition());
+        V->translate(vec3(0,cHeight,0));
         
         glm::mat4 biasMatrix(
                              0.5, 0.0, 0.0, 0.0,
@@ -543,14 +541,15 @@ public:
         
         shadowMainProgram->unbind();
         /*END RENDER MAIN PROGRAM*/
-        
-		
-        
+    }
+    
+    void renderShadowDepthDebug() {
+        int windowWidth, windowHeight;
         /* RENDER (DEBUG) DEPTH TEXTURE: Optionally render the shadowmap (for debug only) */
         // Render only on a corner of the window (or we we won't see the real rendering...)
         glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
         glViewport(0,0,windowWidth/2,windowHeight/2);
-        //glViewport(0,0,512,512);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         
         shadowQuadProgram->bind();
         
@@ -578,75 +577,87 @@ public:
         glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
         glDisableVertexAttribArray(0);
         /* END (DEBUG) RENDER DEPTH TEXTURE */
+    }
+    
+    void render()
+    {
+        // Create the matrix stacks
+        auto P = make_shared<MatrixStack>();
+        auto V = make_shared<MatrixStack>();
+        auto M = make_shared<MatrixStack>();
         
-	}
-
-	// helper function to set materials for shading
-	void SetMaterial(const std::shared_ptr<Program> prog, int i)
-	{
-		switch (i)
-		{
-		case 0: //shiny blue plastic
-			glUniform3f(prog->getUniform("MatAmb"), 0.02f, 0.04f, 0.2f);
-			glUniform3f(prog->getUniform("MatDif"), 0.0f, 0.16f, 0.9f);
-			break;
-		case 1: // flat grey
-			glUniform3f(prog->getUniform("MatAmb"), 0.13f, 0.13f, 0.14f);
-			glUniform3f(prog->getUniform("MatDif"), 0.3f, 0.3f, 0.4f);
-			break;
-		case 2: //brass
-			glUniform3f(prog->getUniform("MatAmb"), 0.3294f, 0.2235f, 0.02745f);
-			glUniform3f(prog->getUniform("MatDif"), 0.7804f, 0.5686f, 0.11373f);
-			break;
-		case 3: //copper
-			glUniform3f(prog->getUniform("MatAmb"), 0.1913f, 0.0735f, 0.0225f);
-			glUniform3f(prog->getUniform("MatDif"), 0.7038f, 0.27048f, 0.0828f);
-			break;
-		}
-	}
-
+        createShadowDepthTexture();
+        renderCamera();
+        renderShadowDepthDebug();
+    }
+    
+    // helper function to set materials for shading
+    void SetMaterial(const std::shared_ptr<Program> prog, int i)
+    {
+        switch (i)
+        {
+            case 0: //shiny blue plastic
+                glUniform3f(prog->getUniform("MatAmb"), 0.02f, 0.04f, 0.2f);
+                glUniform3f(prog->getUniform("MatDif"), 0.0f, 0.16f, 0.9f);
+                break;
+            case 1: // flat grey
+                glUniform3f(prog->getUniform("MatAmb"), 0.13f, 0.13f, 0.14f);
+                glUniform3f(prog->getUniform("MatDif"), 0.3f, 0.3f, 0.4f);
+                break;
+            case 2: //brass
+                glUniform3f(prog->getUniform("MatAmb"), 0.3294f, 0.2235f, 0.02745f);
+                glUniform3f(prog->getUniform("MatDif"), 0.7804f, 0.5686f, 0.11373f);
+                break;
+            case 3: //copper
+                glUniform3f(prog->getUniform("MatAmb"), 0.1913f, 0.0735f, 0.0225f);
+                glUniform3f(prog->getUniform("MatDif"), 0.7038f, 0.27048f, 0.0828f);
+                break;
+        }
+    }
+    
 };
 
 int main(int argc, char **argv)
 {
-	// Where the resources are loaded from
-	std::string resourceDir = "../resources";
-
-	if (argc >= 2)
-	{
-			resourceDir = argv[1];
-	}
-
-	Application *application = new Application();
-
-	// Your main will always include a similar set up to establish your window
-	// and GL context, etc.
-
-	WindowManager *windowManager = new WindowManager();
-	windowManager->init(512, 512);
-	windowManager->setEventCallbacks(application);
-	application->windowManager = windowManager;
-
-	// This is the code that will likely change program to program as you
-	// may need to initialize or set up different data and state
-
-	application->init(resourceDir+"/shaders");
-	application->initGeom(resourceDir+"/models");
+    // Where the resources are loaded from
+    std::string resourceDir = "../resources";
+    
+    if (argc >= 2)
+    {
+        resourceDir = argv[1];
+    }
+    
+    Application *application = new Application();
+    
+    // Your main will always include a similar set up to establish your window
+    // and GL context, etc.
+    
+    WindowManager *windowManager = new WindowManager();
+    windowManager->init(512, 512);
+    windowManager->setEventCallbacks(application);
+    application->windowManager = windowManager;
+    
+    // This is the code that will likely change program to program as you
+    // may need to initialize or set up different data and state
+    
+    application->init(resourceDir+"/shaders");
+    application->initGeom(resourceDir+"/models");
     application->initShadows(resourceDir+"/models");
-
-	// Loop until the user closes the window.
-	while (! glfwWindowShouldClose(windowManager->getHandle()))
-	{
-		// Render scene.
-		application->render();
-
-		// Swap front and back buffers.
-		glfwSwapBuffers(windowManager->getHandle());
-		// Poll for and process events.
-		glfwPollEvents();
-	}
-
-	// Quit program.
-	windowManager->shutdown();
-	return 0;
+    
+    // Loop until the user closes the window.
+    while (! glfwWindowShouldClose(windowManager->getHandle()))
+    {
+        // Render scene.
+        application->render();
+        
+        // Swap front and back buffers.
+        glfwSwapBuffers(windowManager->getHandle());
+        // Poll for and process events.
+        glfwPollEvents();
+    }
+    
+    // Quit program.
+    windowManager->shutdown();
+    return 0;
 }
+
