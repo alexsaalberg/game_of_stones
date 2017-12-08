@@ -212,9 +212,9 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
                 
                 faceIndex = l + s*numLayers + p*2*numLayers; //faceIndex
                 faceIndex *= 3; //3 vertices (indices) per face
-                indexVector[faceIndex + 0] = a_vert;
+                indexVector[faceIndex + 2] = a_vert;
                 indexVector[faceIndex + 1] = b_vert;
-                indexVector[faceIndex + 2] = c_vert;
+                indexVector[faceIndex + 0] = c_vert;
             }
         }
     }

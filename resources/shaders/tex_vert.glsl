@@ -4,7 +4,8 @@ layout(location = 0) in vec3 vertPos;
 layout(location = 1) in vec3 vertNor;
 layout(location = 2) in vec2 vertTex;
 uniform mat4 P;
-uniform mat4 MV;
+uniform mat4 V;
+uniform mat4 M;
 
 out float dCo;
 out vec2 vTexCoord;
@@ -14,6 +15,7 @@ void main() {
 
   vec3 lightDir = vec3(1, 1, 1);
   vec4 vPosition;
+  mat4 MV = V * M;
 
   /* First model transforms */
   gl_Position = P * MV * vec4(vertPos.xyz, 1.0);

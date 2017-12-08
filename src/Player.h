@@ -28,6 +28,8 @@ class Player {
     
     const float frictionMultiplier = 0.95f;
     
+    const float height = 0.2f;
+    
     const float gravityAcceleration = 0.02f;
     
     const float minHorizontalVelocity = 0.1f;

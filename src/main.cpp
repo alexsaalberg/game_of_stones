@@ -39,6 +39,7 @@ public:
     
     // Our shader program
     std::shared_ptr<Program> mainProgram;
+    std::shared_ptr<Program> groundProgram;
     
     shared_ptr<Actor> temporaryActor;
     shared_ptr<Model> temporaryModel;
@@ -49,11 +50,16 @@ public:
     shared_ptr<Player> player;
     
     shared_ptr<Texture> heightmapTexture;
+    shared_ptr<Texture> grassTexture;
     
     float cHeight = 0.0f;
     
     double mouse_prevX;
     double mouse_prevY;
+    
+    //ground plane info
+    GLuint GroundBufferObject, GroundNormalBufferObject, GroundTextureBufferObject, GroundIndexBufferObject;
+    int gGiboLen;
     
     void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
     {
@@ -80,6 +86,10 @@ public:
         else if (key == GLFW_KEY_SPACE  && (action == GLFW_PRESS || GLFW_REPEAT))
         {
             player->jump();
+        }
+        else if (key == GLFW_KEY_P  && (action == GLFW_PRESS || GLFW_REPEAT))
+        {
+            printf("Position: %fx %fy %fz\n", player->position.x, player->position.y, player->position.z);
         }
     }
     
@@ -139,8 +149,15 @@ public:
         glViewport(0, 0, width, height);
     }
     
+    void init(const std::string& resourceDirectory) {
+        initShaders(resourceDirectory+"/shaders");
+        initTextures(resourceDirectory+"/models");
+        initGeom(resourceDirectory+"/models");
+        initQuad();
+    }
+    
     //code to set up the two shaders - a diffuse shader and texture mapping
-    void init(const std::string& resourceDirectory)
+    void initShaders(const std::string& resourceDirectory)
     {
         int width, height;
         glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -151,6 +168,7 @@ public:
         glEnable(GL_DEPTH_TEST);
         
         initMainProgram(resourceDirectory);
+        initGroundProgram(resourceDirectory);
     }
     
     void initMainProgram(const std::string& resourceDirectory) {
@@ -179,12 +197,38 @@ public:
         mainProgram->addAttribute("vertexTextureCoordinates");
     }
     
+    void initGroundProgram(const std::string& resourceDirectory) {
+        groundProgram = make_shared<Program>();
+        groundProgram->setVerbose(true);
+        groundProgram->setShaderNames(
+                                resourceDirectory + "/tex_vert.glsl",
+                                resourceDirectory + "/tex_frag0.glsl");
+        if (! groundProgram->init())
+        {
+            std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+            exit(1);
+        }
+        groundProgram->addUniform("P");
+        groundProgram->addUniform("V");
+        groundProgram->addUniform("M");
+        groundProgram->addAttribute("vertPos");
+        groundProgram->addAttribute("vertNor");
+        groundProgram->addAttribute("vertTex");
+        groundProgram->addUniform("Texture0");
+    }
+    
     void initTextures(const std::string& resourceDirectory) {
         heightmapTexture = make_shared<Texture>();
-        heightmapTexture->setFilename(resourceDirectory + "/heightmap_wikipedia.png");
+        heightmapTexture->setFilename(resourceDirectory + "/giri_watershed.png");
         heightmapTexture->init();
         heightmapTexture->setUnit(0);
         heightmapTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+        
+        grassTexture = make_shared<Texture>();
+        grassTexture->setFilename(resourceDirectory + "/grass.jpg");
+        grassTexture->init();
+        grassTexture->setUnit(0);
+        grassTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     }
     
     void initGeom(const std::string& resourceDirectory) {
@@ -214,9 +258,9 @@ public:
         
         float diameter = (float) texturePixelHeight;
         float heightBetweenLayers = (1 / (float) texturePixelHeight);
-        float scale = 0.2f;
+        float scale = 2.0f;
         
-        diameter *= scale;
+        diameter *= scale * 2.0f;
         heightBetweenLayers *= scale;
         
         float radius = diameter / (2 * PI);
@@ -246,13 +290,92 @@ public:
         temporaryActor = make_shared<Actor>();
         temporaryActor->createActor(temporaryModel);
         
-        temporaryActor->setPosition(vec3(2.0f, 1.5f, -2.0));
+        temporaryActor->setPosition(vec3(2.0f, 0.0f, -2.0));
         temporaryActor->material = rand() % 6;
         //temporaryActor->addOffset(vec3(0, -2, 0));
+        temporaryActor->scale(1.5f);
         
         actors.push_back(temporaryActor);
         
         player = make_shared<Player>();
+    }
+    
+    /**** geometry set up for ground plane *****/
+    void initQuad()
+    {
+        float g_groundSize = 20;
+        float g_groundY = -1.5;
+        
+        // A x-z plane at y = g_groundY of dim[-g_groundSize, g_groundSize]^2
+        float GroundPos[] = {
+            -g_groundSize, g_groundY, -g_groundSize,
+            -g_groundSize, g_groundY,  g_groundSize,
+            g_groundSize, g_groundY,  g_groundSize,
+            g_groundSize, g_groundY, -g_groundSize
+        };
+        
+        float GroundNorm[] = {
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0
+        };
+        
+        float GroundTex[] = {
+            0, 0, // back
+            0, 1,
+            1, 1,
+            1, 0
+        };
+        
+        unsigned short idx[] = {0, 1, 2, 0, 2, 3};
+        
+        GLuint VertexArrayID;
+        //generate the VAO
+        glGenVertexArrays(1, &VertexArrayID);
+        glBindVertexArray(VertexArrayID);
+        
+        gGiboLen = 6;
+        glGenBuffers(1, &GroundBufferObject);
+        glBindBuffer(GL_ARRAY_BUFFER, GroundBufferObject);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GroundPos), GroundPos, GL_STATIC_DRAW);
+        
+        glGenBuffers(1, &GroundNormalBufferObject);
+        glBindBuffer(GL_ARRAY_BUFFER, GroundNormalBufferObject);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GroundNorm), GroundNorm, GL_STATIC_DRAW);
+        
+        glGenBuffers(1, &GroundTextureBufferObject);
+        glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GroundTex), GroundTex, GL_STATIC_DRAW);
+        
+        glGenBuffers(1, &GroundIndexBufferObject);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GroundIndexBufferObject);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+    }
+    
+    void renderGround()
+    {
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, GroundBufferObject);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, GroundNormalBufferObject);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        
+        // draw!
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GroundIndexBufferObject);
+        glDrawElements(GL_TRIANGLES, gGiboLen, GL_UNSIGNED_SHORT, 0);
+        
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
     }
     
     void render()
@@ -277,6 +400,13 @@ public:
         
         player->setEyePosition(mainProgram);
         
+        auto M = make_shared<MatrixStack>();
+        M->pushMatrix();
+            M->loadIdentity();
+            M->scale(vec3(5.0f, 0.0f, 5.0f));
+            CHECKED_GL_CALL( glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())) );
+        M->popMatrix();
+        
         heightmapTexture->bind(mainProgram->getUniform("Texture0"));
         
         for(auto &actor : actors) {
@@ -286,6 +416,19 @@ public:
         }
         
         mainProgram->unbind();
+        groundProgram->bind();
+        
+            player->setModelIdentityMatrix(groundProgram);
+            player->setViewMatrix(groundProgram);
+            player->setProjectionMatrix(groundProgram, aspect);
+        
+        
+            /*draw the ground */
+            grassTexture->bind(groundProgram->getUniform("Texture0"));
+            renderGround();
+        
+        groundProgram->unbind();
+        
     }
     
     // helper function to set materials for shading
@@ -352,9 +495,7 @@ int main(int argc, char **argv)
     // This is the code that will likely change program to program as you
     // may need to initialize or set up different data and state
     
-    application->init(resourceDir+"/shaders");
-    application->initTextures(resourceDir+"/models");
-    application->initGeom(resourceDir+"/models");
+    application->init(resourceDir);
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
