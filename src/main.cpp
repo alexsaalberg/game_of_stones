@@ -181,8 +181,10 @@ public:
         
         string errStr;
         
+        //bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                                  // (resourceDirectory + "/dog.obj").c_str());
         bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-                                   (resourceDirectory + "/dog.obj").c_str());
+                                   (resourceDirectory + "/pipeStraight.obj").c_str());
         
         if (!rc) {
             cerr << errStr << endl;
@@ -201,7 +203,7 @@ public:
             float rX = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             float rZ = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             float rY = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            temporaryActor->setPosition(vec3(rX*10.0f-5.0f, 10.0f+ rY*10.0f, rZ*10.0f-5.0f));
+            temporaryActor->setPosition(vec3(rX*10.0f-5.0f, rY*10.0f, rZ*10.0f-5.0f));
             temporaryActor->material = rand() % 6;
             temporaryActor->addOffset(vec3(0, -2, 0));
             
@@ -233,7 +235,7 @@ public:
         player->setEyePosition(mainProgram);
         
         for(auto &actor : actors) {
-            actor->step();
+            //actor->step();
             SetMaterial(mainProgram, actor->material);
             actor->draw(mainProgram);
         }

@@ -34,6 +34,11 @@ void Program::setShaderNames(const std::string &v, const std::string &f)
 	fShaderName = f;
 }
 
+void Program::setGeometryShaderName(const std::string &g) {
+    hasGeometryShader = true;
+    gShaderName = g;
+}
+
 bool Program::init()
 {
 	GLint rc;
@@ -75,11 +80,36 @@ bool Program::init()
 		}
 		return false;
 	}
+    
+    //Geometry shader
+    GLuint GS;
+    if(hasGeometryShader) {
+        GS = glCreateShader(GL_GEOMETRY_SHADER);
+        std::string gShaderString = readFileAsString(gShaderName);
+        const char *gshader = gShaderString.c_str();
+        CHECKED_GL_CALL(glShaderSource(GS, 1, &gshader, NULL));
+    
+        // Compile geometry shader
+        CHECKED_GL_CALL(glCompileShader(GS));
+        CHECKED_GL_CALL(glGetShaderiv(GS, GL_COMPILE_STATUS, &rc));
+        if (!rc)
+        {
+            if (isVerbose())
+            {
+                GLSL::printShaderInfoLog(GS);
+                std::cout << "Error compiling geometry shader " << gShaderName << std::endl;
+            }
+            return false;
+        }
+    }
 
 	// Create the program and link
 	pid = glCreateProgram();
 	CHECKED_GL_CALL(glAttachShader(pid, VS));
 	CHECKED_GL_CALL(glAttachShader(pid, FS));
+    if(hasGeometryShader) {
+        CHECKED_GL_CALL(glAttachShader(pid, GS));
+    }
 	CHECKED_GL_CALL(glLinkProgram(pid));
 	CHECKED_GL_CALL(glGetProgramiv(pid, GL_LINK_STATUS, &rc));
 	if (!rc)
