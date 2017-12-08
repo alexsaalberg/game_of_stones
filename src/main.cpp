@@ -19,6 +19,8 @@
 
 #include "DDS_Loader.hpp"
 
+#define PI 3.1415
+
 using namespace std;
 using namespace glm;
 
@@ -46,6 +48,7 @@ public:
     
     shared_ptr<Player> player;
     
+    shared_ptr<Texture> heightmapTexture;
     
     float cHeight = 0.0f;
     
@@ -154,9 +157,9 @@ public:
         // Initialize the GLSL program.
         mainProgram = make_shared<Program>();
         mainProgram->setVerbose(true);
-        mainProgram->setShaderNames(  resourceDirectory + "/directionalLight_vert.glsl",
-                                      resourceDirectory + "/directionalLight_frag.glsl");
-        mainProgram->setGeometryShaderName(resourceDirectory + "/directionalLight_geom.glsl");
+        mainProgram->setShaderNames(  resourceDirectory + "/heightmap_vert.glsl",
+                                      resourceDirectory + "/heightmap_frag.glsl");
+        mainProgram->setGeometryShaderName(resourceDirectory + "/heightmap_geom.glsl");
         
         if (! mainProgram->init()) {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -170,9 +173,18 @@ public:
         mainProgram->addUniform("MaterialSpecularCoefficient");
         mainProgram->addUniform("MaterialSpecularAlpha");
         mainProgram->addUniform("EyePosition");
+        mainProgram->addUniform("Texture0");
         mainProgram->addAttribute("vertexPosition_modelSpace");
         mainProgram->addAttribute("vertexNormal");
         mainProgram->addAttribute("vertexTextureCoordinates");
+    }
+    
+    void initTextures(const std::string& resourceDirectory) {
+        heightmapTexture = make_shared<Texture>();
+        heightmapTexture->setFilename(resourceDirectory + "/heightmap_wikipedia.png");
+        heightmapTexture->init();
+        heightmapTexture->setUnit(0);
+        heightmapTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     }
     
     void initGeom(const std::string& resourceDirectory) {
@@ -197,25 +209,48 @@ public:
             //mTemp->rotate(vec3(-90, 0, 0));
         }*/
         
+        int texturePixelWidth = heightmapTexture->getWidth();
+        int texturePixelHeight = heightmapTexture->getHeight();
+        
+        float diameter = (float) texturePixelHeight;
+        float heightBetweenLayers = (1 / (float) texturePixelHeight);
+        float scale = 0.2f;
+        
+        diameter *= scale;
+        heightBetweenLayers *= scale;
+        
+        float radius = diameter / (2 * PI);
+        
+        printf("Diameter %f\t HeightBetween %f\n", diameter, heightBetweenLayers);
+        printf("Width %d\t Height %d\n", texturePixelWidth, texturePixelHeight);
+        
         shared_ptr<Shape> shape = make_shared<Shape>();
-        shape->makeCylinder(5, 20, 1.0f, 1.0f);
+        shape->makeCylinder(texturePixelWidth, texturePixelHeight, radius, scale);
         temporaryModel = make_shared<Model>();
         temporaryModel->createModel(shape);
-        
+        /*
         //Initialize 100 dummies
-        for(int i = 0; i < 100; i++) {
+        for(int i = 0; i < 20; i++) {
             temporaryActor = make_shared<Actor>();
             temporaryActor->createActor(temporaryModel);
             
             float rX = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             float rZ = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             float rY = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            temporaryActor->setPosition(vec3(rX*10.0f-5.0f, rY*10.0f, rZ*10.0f-5.0f));
+            temporaryActor->setPosition(vec3(rX*5.0f-2.5f, rY*2.0f+1.0f, rZ*5.0f-2.5f));
             temporaryActor->material = rand() % 6;
             temporaryActor->addOffset(vec3(0, -2, 0));
             
             actors.push_back(temporaryActor);
-        }
+        } */
+        temporaryActor = make_shared<Actor>();
+        temporaryActor->createActor(temporaryModel);
+        
+        temporaryActor->setPosition(vec3(2.0f, 1.5f, -2.0));
+        temporaryActor->material = rand() % 6;
+        //temporaryActor->addOffset(vec3(0, -2, 0));
+        
+        actors.push_back(temporaryActor);
         
         player = make_shared<Player>();
     }
@@ -230,6 +265,7 @@ public:
         
         CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
         CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+        CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
         
         mainProgram->bind();
         // Apply perspective projection.
@@ -241,8 +277,10 @@ public:
         
         player->setEyePosition(mainProgram);
         
+        heightmapTexture->bind(mainProgram->getUniform("Texture0"));
+        
         for(auto &actor : actors) {
-            //actor->step();
+            actor->step();
             SetMaterial(mainProgram, actor->material);
             actor->draw(mainProgram);
         }
@@ -315,6 +353,7 @@ int main(int argc, char **argv)
     // may need to initialize or set up different data and state
     
     application->init(resourceDir+"/shaders");
+    application->initTextures(resourceDir+"/models");
     application->initGeom(resourceDir+"/models");
     
     // Loop until the user closes the window.

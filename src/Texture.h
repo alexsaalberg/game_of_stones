@@ -21,6 +21,8 @@ public:
 	void unbind();
 	void setWrapModes(GLint wrapS, GLint wrapT); // Must be called after init()
 	GLint getID() const { return tid; }
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
 
 private:
 

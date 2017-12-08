@@ -176,8 +176,9 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
             textureIndex = p*numCircles + c;
             textureIndex *= 2; //2 indices (UV) in textureVector per vertex
             
-            vertexVector.at(vertIndex) = (sin(thisAngle*PI/180.0f)) * circleRadius;
-            vertexVector.at(vertIndex + 1) = (cos(thisAngle*PI/180.0f)) * circleRadius;
+            //
+            vertexVector[vertIndex + 0] = (sin(thisAngle*PI/180.0f)) * circleRadius;
+            vertexVector[vertIndex + 1]= (cos(thisAngle*PI/180.0f)) * circleRadius;
             vertexVector[vertIndex + 2] = c * heightBetween;
             
             normalVector[vertIndex + 0] = vertexVector[vertIndex + 0];
@@ -185,8 +186,8 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
             normalVector[vertIndex + 2] = vertexVector[vertIndex + 2];
             
             //Coordinates in bitmap are (pointNumber, circleNumber)
-            textureVector[textureIndex] = p / pointsPerCircle; //Range [0, 1.0]
-            textureVector[textureIndex + 1] = c / numCircles; //Range [0, 1.0]
+            textureVector[textureIndex] = p / (float) pointsPerCircle; //Range [0, 1.0]
+            textureVector[textureIndex + 1] = c / (float) numCircles; //Range [0, 1.0]
             
             
         }
@@ -237,5 +238,6 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
     posBuf = vertexVector;
     eleBuf = indexVector;
     norBuf = normalVector;
+    texBuf = textureVector;
     
 }

@@ -1,8 +1,11 @@
 #version 330 core 
 in vec3 fragmentNormal;
 in vec3 worldPosition;
+in vec2 textureCoordinates;
 //to send the color to a frame buffer
 layout(location = 0) out vec4 color;
+
+uniform sampler2D Texture0;
 
 uniform vec3 EyePosition;
 
@@ -27,5 +30,7 @@ void main()
     lightColor += MaterialDiffusionCoefficient * max( dot( lightDirection, normal), 0 );
     lightColor += MaterialSpecularCoefficient
                 * pow( max( dot( halfVector, normal), 0), MaterialSpecularAlpha);
-	color = vec4(lightColor, 1.0);
+    color = vec4(lightColor, 1.0);
+    //color *= 0.2f;
+    color = texture(Texture0, textureCoordinates);
 }

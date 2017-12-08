@@ -59,6 +59,8 @@ void Actor::step() {
     rotation += omega;
     omega *= rFrictionMult;
     
+    rotation += vec3(0.0f, 0.0f, 0.1f);
+    
     omega.x = clampVelocity(omega.x, rOmegaMin);
     omega.y = clampVelocity(omega.y, rOmegaMin);
     omega.z = clampVelocity(omega.z, rOmegaMin);

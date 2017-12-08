@@ -19,14 +19,14 @@
 #include <glm/gtc/type_ptr.hpp>
 
 class Player {
-    const float speed = 0.2;
+    const float speed = 0.1;
     const glm::vec3 speedMod = glm::vec3(1.0, 0.8, 0.6);
     
     
     const float cameraPhiMin = -80.0f; //Limit head tilt up & down
     const float cameraPhiMax = 80.0f;
     
-    const float frictionMultiplier = 0.90f;
+    const float frictionMultiplier = 0.95f;
     
     const float gravityAcceleration = 0.02f;
     
@@ -36,7 +36,7 @@ public:
     glm::vec3 position = glm::vec3(0);
     glm::vec3 velocity = glm::vec3(0);
     
-    float cameraTheta = -10; //around Y axis (turn head left & right)
+    float cameraTheta = 0; //around Y axis (turn head left & right)
     float cameraPhi = 0; // around Z axis (nod up & down)
     
     //glm::vec3 cameraIdentityVector = glm::vec3(0);

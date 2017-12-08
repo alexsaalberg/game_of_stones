@@ -65,7 +65,8 @@ void Player::setViewMatrix(const std::shared_ptr<Program> prog) const {
 void Player::setProjectionMatrix(const std::shared_ptr<Program> prog, float aspect) const {
     auto P = make_shared<MatrixStack>();
     P->pushMatrix();
-        P->perspective(45.0f, aspect, 0.01f, 100.0f);
+        //P->perspective(45.0f, aspect, 0.01f, 100.0f);
+        P->perspective(45.0f, aspect, 0.05f, 100.0f);
         CHECKED_GL_CALL( glUniformMatrix4fv(
             prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix())) );
     P->popMatrix();
