@@ -28,7 +28,6 @@ class Player {
     
     const float frictionMultiplier = 0.95f;
     
-    const float height = 0.2f;
     
     const float gravityAcceleration = 0.02f;
     
@@ -37,6 +36,8 @@ class Player {
 public:
     glm::vec3 position = glm::vec3(0);
     glm::vec3 velocity = glm::vec3(0);
+    
+    float height = 0.2f;
     
     float cameraTheta = 0; //around Y axis (turn head left & right)
     float cameraPhi = 0; // around Z axis (nod up & down)

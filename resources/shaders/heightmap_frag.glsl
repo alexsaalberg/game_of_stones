@@ -31,6 +31,6 @@ void main()
     lightColor += MaterialSpecularCoefficient
                 * pow( max( dot( halfVector, normal), 0), MaterialSpecularAlpha);
     color = vec4(lightColor, 1.0);
-    //color *= 0.2f;
-    color = texture(Texture0, textureCoordinates);
+    vec4 textureColor = texture(Texture0, textureCoordinates);
+    color = 0.5 * (color+textureColor);
 }

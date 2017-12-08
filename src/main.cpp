@@ -90,6 +90,7 @@ public:
         else if (key == GLFW_KEY_P  && (action == GLFW_PRESS || GLFW_REPEAT))
         {
             printf("Position: %fx %fy %fz\n", player->position.x, player->position.y, player->position.z);
+            printf("Angle: %ft %fp\n", player->cameraTheta, player->cameraPhi);
         }
     }
     
@@ -149,9 +150,9 @@ public:
         glViewport(0, 0, width, height);
     }
     
-    void init(const std::string& resourceDirectory) {
+    void init(const std::string& resourceDirectory, const std::string& heightMapFileName) {
         initShaders(resourceDirectory+"/shaders");
-        initTextures(resourceDirectory+"/models");
+        initTextures(resourceDirectory+"/models", heightMapFileName);
         initGeom(resourceDirectory+"/models");
         initQuad();
     }
@@ -217,9 +218,9 @@ public:
         groundProgram->addUniform("Texture0");
     }
     
-    void initTextures(const std::string& resourceDirectory) {
+    void initTextures(const std::string& resourceDirectory, const std::string& heightMapFileName) {
         heightmapTexture = make_shared<Texture>();
-        heightmapTexture->setFilename(resourceDirectory + "/giri_watershed.png");
+        heightmapTexture->setFilename(resourceDirectory + heightMapFileName);
         heightmapTexture->init();
         heightmapTexture->setUnit(0);
         heightmapTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
@@ -241,11 +242,11 @@ public:
         int texturePixelWidth = heightmapTexture->getWidth();
         int texturePixelHeight = heightmapTexture->getHeight();
         
-        float diameter = (float) texturePixelHeight;
+        float diameter = (float) texturePixelWidth;
         float heightBetweenLayers = (1 / (float) texturePixelHeight);
         float scale = 2.0f;
         
-        diameter *= scale * 2.0f;
+        diameter *= scale;
         heightBetweenLayers *= scale;
         
         float radius = diameter / (2 * PI);
@@ -261,14 +262,19 @@ public:
         temporaryActor = make_shared<Actor>();
         temporaryActor->createActor(temporaryModel);
         
-        temporaryActor->setPosition(vec3(1.0f, 0.0f, -1.0f));
+        //temporaryActor->setPosition(vec3(0.0f, - 0.5f*scale, 0.0f));
+                                    //+texturePixelHeight));
         temporaryActor->material = rand() % 6;
         //temporaryActor->addOffset(vec3(0, -2, 0));
-        temporaryActor->scale(1.5f);
+        temporaryActor->scale(10.0f);
         
         actors.push_back(temporaryActor);
         
         player = make_shared<Player>();
+        player->position.z += 2.0f;
+        //player->height = texturePixelHeight/2
+        player->cameraTheta = -90.0f;
+        
     }
     
     /**** geometry set up for ground plane *****/
@@ -447,11 +453,18 @@ int main(int argc, char **argv)
 {
     // Where the resources are loaded from
     std::string resourceDir = "../resources";
+    std::string heightMapFilename = "/giri_watershed.png";
     
     if (argc >= 2)
     {
         resourceDir = argv[1];
     }
+    
+    if (argc >= 3)
+    {
+        heightMapFilename = argv[2];
+    }
+    
     
     Application *application = new Application();
     
@@ -466,7 +479,7 @@ int main(int argc, char **argv)
     // This is the code that will likely change program to program as you
     // may need to initialize or set up different data and state
     
-    application->init(resourceDir);
+    application->init(resourceDir, heightMapFilename);
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
