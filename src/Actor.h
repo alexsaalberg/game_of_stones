@@ -29,7 +29,6 @@ class Actor
 public:
     void createActor(std::shared_ptr<Model> inModels);
     void draw(const std::shared_ptr<Program> prog) const;
-    void drawForDepth(const std::shared_ptr<Program> prog) const;
     virtual void step();
     
     void setPosition(glm::vec3 newPosition);
@@ -44,8 +43,6 @@ public:
     
     void scale(float deltaScale);
     float getScale();
-    float getZLength();
-    
     
     int material;
     

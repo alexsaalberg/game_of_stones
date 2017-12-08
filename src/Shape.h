@@ -21,7 +21,6 @@ public:
 	void createShape(tinyobj::shape_t & shape);
 	void init();
 	void measure();
-    void drawForDepth(const std::shared_ptr<Program> prog) const;
 	void draw(const std::shared_ptr<Program> prog) const;
 
 	glm::vec3 min = glm::vec3(0);

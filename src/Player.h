@@ -9,12 +9,53 @@
 #define Player_hpp
 
 #include <stdio.h>
-#include "Actor.h"
 
-class Player : public Actor {
+#include "GLSL.h"
+#include "glm/glm.hpp"
+#include "Helper.h"
+#include "Program.h"
+#include "MatrixStack.h"
+
+#include <glm/gtc/type_ptr.hpp>
+
+class Player {
+    const float speed = 0.2;
+    const glm::vec3 speedMod = glm::vec3(1.0, 0.8, 0.6);
+    
+    
+    const float cameraPhiMin = -80.0f; //Limit head tilt up & down
+    const float cameraPhiMax = 80.0f;
+    
+    const float frictionMultiplier = 0.90f;
+    
+    const float gravityAcceleration = 0.02f;
+    
+    const float minHorizontalVelocity = 0.1f;
     
 public:
+    glm::vec3 position = glm::vec3(0);
+    glm::vec3 velocity = glm::vec3(0);
+    
+    float cameraTheta = -10; //around Y axis (turn head left & right)
+    float cameraPhi = 0; // around Z axis (nod up & down)
+    
+    //glm::vec3 cameraIdentityVector = glm::vec3(0);
+
+    //functions
     void step();
+    
+    void setModelIdentityMatrix(const std::shared_ptr<Program> prog) const;
+    void setViewMatrix(const std::shared_ptr<Program> prog) const;
+    void setProjectionMatrix(const std::shared_ptr<Program> prog, float aspect) const;
+    
+    void restrictCamera();
+    
+    void moveForward();
+    void moveLeft();
+    void moveRight();
+    void moveBackward();
+    void jump();
 };
+
 
 #endif /* Player_hpp */

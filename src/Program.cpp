@@ -110,11 +110,9 @@ void Program::addAttribute(const std::string &name)
 	attributes[name] = GLSL::getAttribLocation(pid, name.c_str(), isVerbose());
 }
 
-GLuint Program::addUniform(const std::string &name)
+void Program::addUniform(const std::string &name)
 {
-    GLuint uniformLocation = GLSL::getUniformLocation(pid, name.c_str(), isVerbose());
-    uniforms[name] = uniformLocation;
-    return uniformLocation;
+    uniforms[name] = GLSL::getUniformLocation(pid, name.c_str(), isVerbose());
 }
 
 GLint Program::getAttribute(const std::string &name) const
