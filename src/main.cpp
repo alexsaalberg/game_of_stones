@@ -166,6 +166,9 @@ public:
         mainProgram->addUniform("M");
         mainProgram->addUniform("MaterialAmbientCoefficient");
         mainProgram->addUniform("MaterialDiffusionCoefficient");
+        mainProgram->addUniform("MaterialSpecularCoefficient");
+        mainProgram->addUniform("MaterialSpecularAlpha");
+        mainProgram->addUniform("EyePosition");
         mainProgram->addAttribute("vertexPosition_modelSpace");
         mainProgram->addAttribute("vertexNormal");
         mainProgram->addAttribute("vertexTextureCoordinates");
@@ -198,7 +201,7 @@ public:
             float rX = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             float rZ = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             float rY = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            temporaryActor->setPosition(vec3(rX*10.0f-5.0f, rY*10.0f, rZ*10.0f-5.0f));
+            temporaryActor->setPosition(vec3(rX*10.0f-5.0f, 10.0f+ rY*10.0f, rZ*10.0f-5.0f));
             temporaryActor->material = rand() % 6;
             temporaryActor->addOffset(vec3(0, -2, 0));
             
@@ -206,7 +209,6 @@ public:
         }
         
         player = make_shared<Player>();
-        //player->createPlayer(mTemp);
     }
     
     void render()
@@ -228,8 +230,11 @@ public:
         player->setViewMatrix(mainProgram);
         player->setProjectionMatrix(mainProgram, aspect);
         
+        player->setEyePosition(mainProgram);
+        
         for(auto &actor : actors) {
             actor->step();
+            SetMaterial(mainProgram, actor->material);
             actor->draw(mainProgram);
         }
         
@@ -239,35 +244,38 @@ public:
     // helper function to set materials for shading
     void SetMaterial(const std::shared_ptr<Program> prog, int i)
     {
+        CHECKED_GL_CALL( glUniform3f(prog->getUniform("MaterialSpecularCoefficient"), 0.5f, 0.5f, 0.5f) );
+        CHECKED_GL_CALL( glUniform1f(prog->getUniform("MaterialSpecularAlpha"), 8.0f) );
+        
         switch (i)
         {
             case 0: //shiny blue plastic
-                glUniform3f(prog->getUniform("MatAmb"), 0.02f, 0.04f, 0.2f);
-                glUniform3f(prog->getUniform("MatDif"), 0.0f, 0.16f, 0.9f);
+                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.02f, 0.04f, 0.2f);
+                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.0f, 0.16f, 0.9f);;
                 break;
             case 1: // flat grey
-                glUniform3f(prog->getUniform("MatAmb"), 0.13f, 0.13f, 0.14f);
-                glUniform3f(prog->getUniform("MatDif"), 0.3f, 0.3f, 0.4f);
+                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.13f, 0.13f, 0.14f);
+                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.3f, 0.3f, 0.4f);
                 break;
             case 2: //brass
-                glUniform3f(prog->getUniform("MatAmb"), 0.3294f, 0.2235f, 0.02745f);
-                glUniform3f(prog->getUniform("MatDif"), 0.7804f, 0.5686f, 0.11373f);
+                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.3294f, 0.2235f, 0.02745f);
+                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.7804f, 0.5686f, 0.11373f);
                 break;
             case 3: //copper
-                glUniform3f(prog->getUniform("MatAmb"), 0.1913f, 0.0735f, 0.0225f);
-                glUniform3f(prog->getUniform("MatDif"), 0.7038f, 0.27048f, 0.0828f);
+                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.1913f, 0.0735f, 0.0225f);
+                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
                 break;
             case 4: //green man
-                glUniform3f(prog->getUniform("MatAmb"), 0.0913f, 0.735f, 0.0225f);
-                glUniform3f(prog->getUniform("MatDif"), 0.038f, 0.048f, 0.028f);
+                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.0913f, 0.735f, 0.0225f);
+                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.038f, 0.048f, 0.028f);
                 break;
             case 5: //radiation
-                glUniform3f(prog->getUniform("MatAmb"), 0.7, 0.7735f, 0.225f);
-                glUniform3f(prog->getUniform("MatDif"), 0.7038f, 0.27048f, 0.0828f);
+                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.7, 0.7735f, 0.225f);
+                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
                 break;
             case 6: //stone
-                glUniform3f(prog->getUniform("MatAmb"), 0.0913f, 0.1735f, 0.1225f);
-                glUniform3f(prog->getUniform("MatDif"), 0.438f, 0.4048f, 0.428f);
+                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.0913f, 0.1735f, 0.1225f);
+                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.438f, 0.4048f, 0.428f);
                 break;
         }
     }

@@ -47,6 +47,7 @@ public:
     void setModelIdentityMatrix(const std::shared_ptr<Program> prog) const;
     void setViewMatrix(const std::shared_ptr<Program> prog) const;
     void setProjectionMatrix(const std::shared_ptr<Program> prog, float aspect) const;
+    void setEyePosition(const std::shared_ptr<Program> prog) const;
     
     void restrictCamera();
     

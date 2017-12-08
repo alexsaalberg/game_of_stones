@@ -18,16 +18,17 @@ void Player::step() {
     movZ += sin(radians(cameraTheta + 90)) * velocity.z;
     
     //Minus equals because camera is opposite
-    position.x -= movX;
-    position.z -= movZ;
-    position.y += velocity.y;
+    position.x += movX;
+    position.z += movZ;
     
-    if(position.y <= 0.0) {
-        velocity.y = 0.0;
-        position.y = 0.0;
-    } else {
+    if(position.y < 0.0f) {
+        velocity.y = 0.0f;
+        position.y = 0.0f;
+    } else if (position.y > 0.0f) {
         velocity.y -= gravityAcceleration;
     }
+    position.y += velocity.y;
+    
     
     velocity *= frictionMultiplier;
     
@@ -55,7 +56,7 @@ void Player::setViewMatrix(const std::shared_ptr<Program> prog) const {
     V->pushMatrix();
         V->loadIdentity();
         V->lookAt(vec3(0, 0, 0), cameraIdentityVector, vec3(0, 1, 0));
-        V->translate(position);
+        V->translate(-position); //Negative 
         CHECKED_GL_CALL( glUniformMatrix4fv(
             prog->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix())) );
     V->popMatrix();
@@ -70,8 +71,13 @@ void Player::setProjectionMatrix(const std::shared_ptr<Program> prog, float aspe
     P->popMatrix();
 }
 
+void Player::setEyePosition(const std::shared_ptr<Program> prog) const {
+    CHECKED_GL_CALL( glUniform3f(
+        prog->getUniform("EyePosition"), position.x, position.y, position.z) );
+}
+
 void Player::jump() {
-    velocity.y += 0.1f;
+    velocity.y += 0.2f;
 }
 
 void Player::restrictCamera() {
@@ -82,10 +88,10 @@ void Player::moveForward() { //speed is ~0.2f
     velocity.x += speed * speedMod.x; //pSpeedMod.x is forward movement scalar (prob 100%)
 }
 void Player::moveLeft() {
-    velocity.z += speed * speedMod.y; //pSpeedMod.x is forward movement scalar (prob 100%)
+    velocity.z -= speed * speedMod.y; //pSpeedMod.x is forward movement scalar (prob 100%)
 }
 void Player::moveRight() {
-    velocity.z -= speed * speedMod.y; //pSpeedMod.x is forward movement scalar (prob 100%)
+    velocity.z += speed * speedMod.y; //pSpeedMod.x is forward movement scalar (prob 100%)
 }
 void Player::moveBackward() {
     velocity.x -= speed * speedMod.z; //pSpeedMod.x is forward movement scalar (prob 100%)
