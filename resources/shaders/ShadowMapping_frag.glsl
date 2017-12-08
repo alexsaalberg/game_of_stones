@@ -46,6 +46,20 @@ float random(vec3 seed, int i){
 	return fract(sin(dot_product) * 43758.5453);
 }
 
+float CalcShadowFactor(vec4 LightSpacePos)
+{
+    vec3 ProjCoords = LightSpacePos.xyz / LightSpacePos.w;
+    vec2 UVCoords;
+    UVCoords.x = 0.5 * ProjCoords.x + 0.5;
+    UVCoords.y = 0.5 * ProjCoords.y + 0.5;
+    float z = 0.5 * ProjCoords.z + 0.5;
+    float Depth = texture(shadowMap, UVCoords).x;
+    if (Depth < (z + 0.00001))
+        return 0.5;
+    else
+        return 1.0;
+}
+
 void main(){
 
 	// Light emission properties
@@ -57,7 +71,7 @@ void main(){
     vec3 MaterialDiffuseColor = vec3(MatDif);
 	//vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
     vec3 MaterialAmbientColor = vec3(MatAmb) * MaterialDiffuseColor;
-	vec3 MaterialSpecularColor = vec3(0.3,0.3,0.3);
+	vec3 MaterialSpecularColor = vec3(0.5,0.5,0.5);
 
 	// Distance to the light
 	//float distance = length( LightPosition_worldspace - Position_worldspace );
@@ -85,36 +99,11 @@ void main(){
 	
 	float visibility=1.0;
 
-	// Fixed bias, or...
-	//float bias = 0.005;
-
-	// ...variable bias
-	 float bias = 0.005*tan(acos(cosTheta));
-	 bias = clamp(bias, 0,0.01);
-
-	// Sample the shadow map 4 times
-    /*
-	for (int i=0;i<4;i++){
-		// use either :
-		//  - Always the same samples.
-		//    Gives a fixed pattern in the shadow, but no noise
-		int index = i;
-		//  - A random sample, based on the pixel's screen location. 
-		//    No banding, but the shadow moves with the camera, which looks weird.
-		// int index = int(16.0*random(gl_FragCoord.xyy, i))%16;
-		//  - A random sample, based on the pixel's position in world space.
-		//    The position is rounded to the millimeter to avoid too much aliasing
-		// int index = int(16.0*random(floor(Position_worldspace.xyz*1000.0), i))%16;
-		
-		// being fully in the shadow will eat up 4*0.2 = 0.8
-		// 0.2 potentially remain, which is quite dark.
-        //visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0) ) );
-		visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0) < (ShadowCoord.z-bias)/ShadowCoord.w) ));
-	} */
 
 	// For spot lights, use either one of these lines instead.
     //if ( texture( shadowMap, (ShadowCoord.xy/ShadowCoord.w) ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
         //visibility = 0.5;
+    visibility = CalcShadowFactor(ShadowCoord);
 	//if ( textureProj( shadowMap, ShadowCoord.xyw ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
 	  //  visibility = 0.5;
 	color = 

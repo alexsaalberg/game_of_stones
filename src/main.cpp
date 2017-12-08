@@ -229,7 +229,7 @@ public:
         shadowMainProgram->addAttribute("vertTex");
         shadowMainProgram->addUniform("MatAmb");
         shadowMainProgram->addUniform("MatDif");
-        shadowMainProgram->addUniform("DepthBiasMVP");
+        shadowMainProgram->addUniform("DepthMVP");
         shadowMainProgram->addUniform("shadowMap");
         shadowMainProgram->addUniform("LightInvDirection_worldspace");
         shadowMainProgram->addUniform("myTextureSampler");
@@ -298,13 +298,14 @@ public:
         }
         
         //Initialize 100 dummies
-        for(int i = 0; i < 20; i++) {
+        for(int i = 0; i < 100; i++) {
             aTemp = make_shared<Actor>();
             aTemp->createActor(mTemp);
             
             float rX = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             float rZ = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            aTemp->setPosition(vec3(rX*20.0f-10.0f, 10.0f, rZ*20.0f-10.0f));
+            float rY = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            aTemp->setPosition(vec3(rX*10.0f-5.0f, rY*10.0f, rZ*10.0f-5.0f));
             aTemp->material = rand() % 6;
             aTemp->addOffset(vec3(0, -2, 0));
             
@@ -388,14 +389,17 @@ public:
         // We don't use bias in the shader, but instead we draw back faces,
         // which are already separated from the front faces by a small distance
         // (if your geometry is made this way)
-        //CHECKED_GL_CALL(glEnable(GL_CULL_FACE));
-        //CHECKED_GL_CALL(glCullFace(GL_BACK)); // Cull back-facing triangles -> draw only front-facing triangles
+        CHECKED_GL_CALL(glEnable(GL_CULL_FACE));
+        CHECKED_GL_CALL(glCullFace(GL_BACK)); // Cull back-facing triangles -> draw only front-facing triangles
         
         shadowDepthProgram->bind();
         light.bindForWritingAndClearDepthBuffer();
         
         light.setInvertedDirection(vec3(0.5f,2,2));
-        light.setPosition(vec3(5, 20, 20));
+        light.setPosition(vec3(2, 10, 10));
+        
+        light.setPosition(player->getPosition());
+        light.setInvertedDirection( calculateCameraVectorFromAngles(cPhi, cTheta) );
         
         light.createMatrices();
         //depthMVP = depthProjectionMatrix * depthViewMatrix * M->topMatrix();
@@ -406,7 +410,7 @@ public:
         CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("V"), 1, GL_FALSE, value_ptr(light.view)));
         CHECKED_GL_CALL(glUniformMatrix4fv(shadowDepthProgram->getUniform("P"), 1, GL_FALSE, value_ptr(light.projection)));
         
-        model_thickWalls->drawForDepth(shadowDepthProgram, M);
+        //model_thickWalls->drawForDepth(shadowDepthProgram, M);
         for (auto &actor : actors) // access by reference to avoid copying
         {
             actor->drawForDepth(shadowDepthProgram);
@@ -427,8 +431,8 @@ public:
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         
-        CHECKED_GL_CALL(glEnable(GL_CULL_FACE));
-        CHECKED_GL_CALL(glCullFace(GL_BACK)); // Cull back-facing triangles -> draw only front-facing triangles
+        //CHECKED_GL_CALL(glEnable(GL_CULL_FACE));
+        //CHECKED_GL_CALL(glCullFace(GL_BACK)); // Cull back-facing triangles -> draw only front-facing triangles
         
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -456,40 +460,31 @@ public:
                              );
         
         mat4 depthMVP = light.projection * light.view * light.model;
-        glm::mat4 depthBiasMVP = biasMatrix * depthMVP;
+        //glm::mat4 depthBiasMVP = biasMatrix * depthMVP;
         glUniformMatrix4fv(shadowMainProgram->getUniform("M"), 1, GL_FALSE,value_ptr(M->topMatrix()) );
         glUniformMatrix4fv(shadowMainProgram->getUniform("V"), 1, GL_FALSE,value_ptr(V->topMatrix()) );
         glUniformMatrix4fv(shadowMainProgram->getUniform("P"), 1, GL_FALSE,value_ptr(P->topMatrix()) );
-        glUniformMatrix4fv(shadowMainProgram->getUniform("DepthBiasMVP"), 1, GL_FALSE,value_ptr(depthBiasMVP) );
+        glUniformMatrix4fv(shadowMainProgram->getUniform("DepthMVP"), 1, GL_FALSE,value_ptr(depthMVP) );
         
         glUniform3f(shadowMainProgram->getUniform("LightInvDirection_worldspace"), light.invertedDirection.x, light.invertedDirection.y, light.invertedDirection.z);
         
         // Bind our texture in Texture Unit 0
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, shadowDDSTexture);
+       // glActiveTexture(GL_TEXTURE0);
+        //glBindTexture(GL_TEXTURE_2D, shadowDDSTexture);
         // Set our "myTextureSampler" sampler to use Texture Unit 0
-        glUniform1i(shadowMainProgram->getUniform("myTextureSampler"), 0);
+        //glUniform1i(shadowMainProgram->getUniform("myTextureSampler"), 0);
         
         
         light.bindForReading(GL_TEXTURE1);
-        //glActiveTexture(GL_TEXTURE1);
-        //glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
         glUniform1i(shadowMainProgram->getUniform("shadowMap"), 1);
         
         player->setRotation(cameraIdentityVector);
         player->step();
         
-        model_thickWalls->draw(shadowMainProgram, M);
+        //model_thickWalls->draw(shadowMainProgram, M);
         for (auto &actor : actors) // access by reference to avoid copying
         {
-            actor->step();
-            SetMaterial(shadowMainProgram,actor->material);
-            actor->draw(shadowMainProgram);
-        }
-        
-        for (auto &actor : tunnel) // access by reference to avoid copying
-        {
-            actor->step();
+            //actor->step();
             SetMaterial(shadowMainProgram,actor->material);
             actor->draw(shadowMainProgram);
         }
