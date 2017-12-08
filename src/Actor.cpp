@@ -59,7 +59,7 @@ void Actor::step() {
     rotation += omega;
     omega *= rFrictionMult;
     
-    rotation += vec3(0.0f, 0.0f, 0.1f);
+    rotation += vec3(0.0f, 0.0f, 1.0f);
     
     omega.x = clampVelocity(omega.x, rOmegaMin);
     omega.y = clampVelocity(omega.y, rOmegaMin);
@@ -124,7 +124,7 @@ void Actor::draw(const std::shared_ptr<Program> prog) const {
     M->rotate(radians(rotation.y), vec3(0, 1, 0));
     M->rotate(radians(rotation.z), vec3(0, 0, 1));
 
-    M->translate(modelOffset*aScale);
+    M->translate(modelOffset);
     
     
     for (auto &model : models) // access by reference to avoid copying

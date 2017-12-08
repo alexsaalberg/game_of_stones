@@ -238,21 +238,6 @@ public:
         
         string errStr;
         
-        /*
-        //bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-                                  // (resourceDirectory + "/dog.obj").c_str());
-        bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-                                   (resourceDirectory + "/pipeStraight.obj").c_str());
-        
-        if (!rc) {
-            cerr << errStr << endl;
-        } else {
-            temporaryModel = make_shared<Model>();
-            
-            temporaryModel->createModel(TOshapes, objMaterials);
-            //mTemp->rotate(vec3(-90, 0, 0));
-        }*/
-        
         int texturePixelWidth = heightmapTexture->getWidth();
         int texturePixelHeight = heightmapTexture->getHeight();
         
@@ -272,25 +257,11 @@ public:
         shape->makeCylinder(texturePixelWidth, texturePixelHeight, radius, scale);
         temporaryModel = make_shared<Model>();
         temporaryModel->createModel(shape);
-        /*
-        //Initialize 100 dummies
-        for(int i = 0; i < 20; i++) {
-            temporaryActor = make_shared<Actor>();
-            temporaryActor->createActor(temporaryModel);
-            
-            float rX = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            float rZ = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            float rY = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            temporaryActor->setPosition(vec3(rX*5.0f-2.5f, rY*2.0f+1.0f, rZ*5.0f-2.5f));
-            temporaryActor->material = rand() % 6;
-            temporaryActor->addOffset(vec3(0, -2, 0));
-            
-            actors.push_back(temporaryActor);
-        } */
+        
         temporaryActor = make_shared<Actor>();
         temporaryActor->createActor(temporaryModel);
         
-        temporaryActor->setPosition(vec3(2.0f, 0.0f, -2.0));
+        temporaryActor->setPosition(vec3(1.0f, 0.0f, -1.0f));
         temporaryActor->material = rand() % 6;
         //temporaryActor->addOffset(vec3(0, -2, 0));
         temporaryActor->scale(1.5f);

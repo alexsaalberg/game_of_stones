@@ -154,7 +154,6 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
     assert(numCircles > 2);
     assert(pointsPerCircle > 2);
     
-    
     std::vector<unsigned int> indexVector(3 * 2 * (numCircles-1) * pointsPerCircle);
     std::vector<float> vertexVector(3 * numCircles * pointsPerCircle);
     std::vector<float> normalVector(3 * numCircles * pointsPerCircle);
@@ -176,9 +175,9 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
             textureIndex = p*numCircles + c;
             textureIndex *= 2; //2 indices (UV) in textureVector per vertex
             
-            //
-            vertexVector[vertIndex + 0] = (sin(thisAngle*PI/180.0f)) * circleRadius;
-            vertexVector[vertIndex + 1]= (cos(thisAngle*PI/180.0f)) * circleRadius;
+            
+            vertexVector[vertIndex + 0] = (sin(glm::radians(thisAngle))) * circleRadius;
+            vertexVector[vertIndex + 1] = (cos(glm::radians(thisAngle))) * circleRadius;
             vertexVector[vertIndex + 2] = c * heightBetween;
             
             normalVector[vertIndex + 0] = vertexVector[vertIndex + 0];
@@ -188,7 +187,6 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
             //Coordinates in bitmap are (pointNumber, circleNumber)
             textureVector[textureIndex] = p / (float) pointsPerCircle; //Range [0, 1.0]
             textureVector[textureIndex + 1] = c / (float) numCircles; //Range [0, 1.0]
-            
             
         }
     }

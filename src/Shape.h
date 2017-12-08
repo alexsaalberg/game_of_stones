@@ -4,6 +4,8 @@
 #ifndef LAB471_SHAPE_H_INCLUDED
 #define LAB471_SHAPE_H_INCLUDED
 
+#include <glad/glad.h>
+
 #include <string>
 #include <vector>
 #include <memory>
