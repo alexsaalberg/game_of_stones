@@ -158,11 +158,12 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
     std::vector<unsigned int> indexVector(3 * 2 * (numCircles-1) * pointsPerCircle);
     std::vector<float> vertexVector(3 * numCircles * pointsPerCircle);
     std::vector<float> normalVector(3 * numCircles * pointsPerCircle);
+    std::vector<float> textureVector(2 * numCircles * pointsPerCircle);
     
     float degreesPerPoint = 360.0f / (float) pointsPerCircle;
     
     float thisAngle;
-    unsigned int vertIndex, faceIndex;
+    unsigned int vertIndex, faceIndex, textureIndex;
     unsigned int a_vert, b_vert, c_vert; //vertices on a triangle
     
     /* VERTICES */
@@ -171,6 +172,10 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
         for(int c = 0; c < numCircles; c++ ) { // c : circleNumber
             vertIndex = p*numCircles + c; //index of this vertex
             vertIndex *= 3; //3 indices (XYZ) in vertexVector per vertex
+            
+            textureIndex = p*numCircles + c;
+            textureIndex *= 2; //2 indices (UV) in textureVector per vertex
+            
             vertexVector.at(vertIndex) = (sin(thisAngle*PI/180.0f)) * circleRadius;
             vertexVector.at(vertIndex + 1) = (cos(thisAngle*PI/180.0f)) * circleRadius;
             vertexVector[vertIndex + 2] = c * heightBetween;
@@ -178,10 +183,16 @@ void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius
             normalVector[vertIndex + 0] = vertexVector[vertIndex + 0];
             normalVector[vertIndex + 1] = vertexVector[vertIndex + 1];
             normalVector[vertIndex + 2] = vertexVector[vertIndex + 2];
+            
+            //Coordinates in bitmap are (pointNumber, circleNumber)
+            textureVector[textureIndex] = p / pointsPerCircle; //Range [0, 1.0]
+            textureVector[textureIndex + 1] = c / numCircles; //Range [0, 1.0]
+            
+            
         }
     }
     
-    /* FACES */
+    /* FACES (Indices) */
     int numLayers = numCircles-1;
     for(int p = 0; p < pointsPerCircle; p++) { // P : pointNumber
         //s alternates between 0 and 1
