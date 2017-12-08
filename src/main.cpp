@@ -156,6 +156,7 @@ public:
         mainProgram->setVerbose(true);
         mainProgram->setShaderNames(  resourceDirectory + "/directionalLight_vert.glsl",
                                       resourceDirectory + "/directionalLight_frag.glsl");
+        mainProgram->setGeometryShaderName(resourceDirectory + "/directionalLight_geom.glsl");
         
         if (! mainProgram->init()) {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -181,6 +182,7 @@ public:
         
         string errStr;
         
+        /*
         //bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
                                   // (resourceDirectory + "/dog.obj").c_str());
         bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
@@ -193,7 +195,12 @@ public:
             
             temporaryModel->createModel(TOshapes, objMaterials);
             //mTemp->rotate(vec3(-90, 0, 0));
-        }
+        }*/
+        
+        shared_ptr<Shape> shape = make_shared<Shape>();
+        shape->makeCylinder(5, 20, 1.0f, 1.0f);
+        temporaryModel = make_shared<Model>();
+        temporaryModel->createModel(shape);
         
         //Initialize 100 dummies
         for(int i = 0; i < 100; i++) {

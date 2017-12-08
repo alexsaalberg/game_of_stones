@@ -22,6 +22,8 @@ public:
 	void init();
 	void measure();
 	void draw(const std::shared_ptr<Program> prog) const;
+    
+    void makeCylinder(int numCircles, int pointsPerCircle, float circleRadius, float heightBetween);
 
 	glm::vec3 min = glm::vec3(0);
 	glm::vec3 max = glm::vec3(0);

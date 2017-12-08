@@ -12,6 +12,47 @@ using namespace std;
 using namespace glm;
 using namespace tinyobj;
 
+void Model::createModel(shared_ptr<Shape> shape) {
+    gMin = vec3(std::numeric_limits<float>::max());
+    gMax = vec3(-std::numeric_limits<float>::max());
+    
+    shapes.reserve(1);
+    shapes.push_back(shape);
+    
+    // 2. createShape for each tiny obj shape
+    int i = 0;
+    
+    // 3. measure each shape to find out its AABB
+    shapes[i]->measure();
+    
+    // 4. call init on each shape to create the GPU data
+    shapes[i]->init();
+    
+    gMin.x = fmin(shapes[i]->min.x, gMin.x);
+    gMin.y = fmin(shapes[i]->min.y, gMin.y);
+    gMin.z = fmin(shapes[i]->min.z, gMin.z);
+    
+    gMax.x = fmax(shapes[i]->max.x, gMax.x);
+    gMax.y = fmax(shapes[i]->max.y, gMax.y);
+    gMax.z = fmax(shapes[i]->max.z, gMax.z);
+    
+    
+    mTranslate = 0.5f*(gMax-gMin);
+    //mTranslate = gMin + 0.5f*(gMax - gMin);
+    if (gMax.x > gMax.y && gMax.x > gMax.z)
+    {
+        mScale = 2.0/(gMax.x-gMin.x);
+    }
+    else if (gMax.y > gMax.x && gMax.y > gMax.z)
+    {
+        mScale = 2.0/(gMax.y-gMin.y);
+    }
+    else
+    {
+        mScale = 2.0/(gMax.z-gMin.z);
+    }
+}
+
 void Model::createModel(vector<shape_t> inShapes, vector<material_t> inMaterials) {
     gMin = vec3(std::numeric_limits<float>::max());
     gMax = vec3(-std::numeric_limits<float>::max());

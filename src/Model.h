@@ -26,6 +26,7 @@ class Model
 {
     
 public:
+    void createModel(std::shared_ptr<Shape> shape);
     void createModel(std::vector<tinyobj::shape_t> TOshapes, std::vector<tinyobj::material_t> objMaterials);
     void rotate(glm::vec3 deltaRotation);
     void init();

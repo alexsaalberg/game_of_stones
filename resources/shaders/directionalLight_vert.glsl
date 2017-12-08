@@ -11,8 +11,7 @@ out vec3 geometryWorldPosition;
 void main()
 {
     gl_Position = P * V * M * vertexPosition_modelSpace;
-    vec3 fragmentNormal = (V * M * vec4(vertexNormal, 0.0)).xyz; //Don't want to move normal into perspective
-    geometryNormal = fragmentNormal;
+    geometryNormal = (V * M * vec4(vertexNormal, 0.0)).xyz; //Don't want to move normal into perspective
     geometryWorldPosition = vec3(V * M * vertexPosition_modelSpace);
 }
 

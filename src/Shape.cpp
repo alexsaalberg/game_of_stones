@@ -8,6 +8,8 @@
 
 using namespace std;
 
+#define PI 3.14f
+
 
 // copy the data from the shape to this object
 void Shape::createShape(tinyobj::shape_t & shape)
@@ -145,4 +147,84 @@ void Shape::draw(const shared_ptr<Program> prog) const
 	GLSL::disableVertexAttribArray(h_pos);
 	CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 	CHECKED_GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+}
+
+
+void Shape::makeCylinder(int numCircles, int pointsPerCircle, float circleRadius, float heightBetween) {
+    assert(numCircles > 2);
+    assert(pointsPerCircle > 2);
+    
+    
+    std::vector<unsigned int> indexVector(3 * 2 * (numCircles-1) * pointsPerCircle);
+    std::vector<float> vertexVector(3 * numCircles * pointsPerCircle);
+    std::vector<float> normalVector(3 * numCircles * pointsPerCircle);
+    
+    float degreesPerPoint = 360.0f / (float) pointsPerCircle;
+    
+    float thisAngle;
+    unsigned int vertIndex, faceIndex;
+    unsigned int a_vert, b_vert, c_vert; //vertices on a triangle
+    
+    /* VERTICES */
+    for(int p = 0; p < pointsPerCircle; p++) { // p : pointNumber
+        thisAngle = degreesPerPoint*(p);
+        for(int c = 0; c < numCircles; c++ ) { // c : circleNumber
+            vertIndex = p*numCircles + c; //index of this vertex
+            vertIndex *= 3; //3 indices (XYZ) in vertexVector per vertex
+            vertexVector.at(vertIndex) = (sin(thisAngle*PI/180.0f)) * circleRadius;
+            vertexVector.at(vertIndex + 1) = (cos(thisAngle*PI/180.0f)) * circleRadius;
+            vertexVector[vertIndex + 2] = c * heightBetween;
+            
+            normalVector[vertIndex + 0] = vertexVector[vertIndex + 0];
+            normalVector[vertIndex + 1] = vertexVector[vertIndex + 1];
+            normalVector[vertIndex + 2] = vertexVector[vertIndex + 2];
+        }
+    }
+    
+    /* FACES */
+    int numLayers = numCircles-1;
+    for(int p = 0; p < pointsPerCircle; p++) { // P : pointNumber
+        //s alternates between 0 and 1
+        for(int s = 0; s < 2; s++) { // s: segment
+            for(int l = 0; l < numLayers; l++) { // l : layerNumber
+                //vertIndex = l + s*numLayers + p*2*numLayers; //vertexIndex
+                
+                a_vert = p * numCircles + l; //notice the numCircles
+                if(s == 0) {
+                    b_vert = a_vert + 1;
+                    c_vert = b_vert + numCircles; //notice the numCircles
+                } else if (s==1) {
+                    c_vert = a_vert + numCircles;
+                    b_vert = c_vert + 1;
+                }
+                
+                faceIndex = l + s*numLayers + p*2*numLayers; //faceIndex
+                faceIndex *= 3; //3 vertices (indices) per face
+                indexVector[faceIndex + 0] = a_vert;
+                indexVector[faceIndex + 1] = b_vert;
+                indexVector[faceIndex + 2] = c_vert;
+            }
+        }
+    }
+    
+    //Fix the last column of triangles/faces to wrap
+    for(int s = 0; s < 2; s++) {
+        for(int l = 0; l < numLayers; l++ ) {
+            
+            faceIndex = l + s*numLayers + (pointsPerCircle - 1)*2*numLayers;
+            faceIndex *= 3; //3 vertices per face
+            
+            if(s == 0) {
+                indexVector[faceIndex + 2] = l+1; //c
+            } else if (s == 1) {
+                indexVector[faceIndex + 1] = l+1; //b
+                indexVector[faceIndex + 2] = l; //c
+            }
+        }
+    }
+    
+    posBuf = vertexVector;
+    eleBuf = indexVector;
+    norBuf = normalVector;
+    
 }
