@@ -19,8 +19,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 class Player {
-    const float speed = 0.1;
-    const glm::vec3 speedMod = glm::vec3(1.0, 0.8, 0.6);
+    const float speed = 0.15;
+    const glm::vec3 speedMod = glm::vec3(1.0, 0.8, 0.9);
     
     
     const float cameraPhiMin = -80.0f; //Limit head tilt up & down
