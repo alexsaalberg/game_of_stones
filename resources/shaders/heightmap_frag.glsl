@@ -33,4 +33,5 @@ void main()
     color = vec4(lightColor, 1.0);
     vec4 textureColor = texture(Texture0, textureCoordinates);
     color = 0.5 * (color+textureColor);
+    color.a = 0.0f;
 }

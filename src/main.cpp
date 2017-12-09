@@ -79,6 +79,14 @@ public:
         {
             player->moveForward();
         }
+        else if (key == GLFW_KEY_R && (action == GLFW_PRESS || GLFW_REPEAT))
+        {
+            player->height += 0.1f;
+        }
+        else if (key == GLFW_KEY_F && (action == GLFW_PRESS || GLFW_REPEAT))
+        {
+            player->height -= 0.1f;
+        }
         else if (key == GLFW_KEY_S && (action == GLFW_PRESS || GLFW_REPEAT))
         {
             player->moveBackward();
@@ -271,7 +279,7 @@ public:
         actors.push_back(temporaryActor);
         
         player = make_shared<Player>();
-        player->position.z += 2.0f;
+        player->position.z += 4.0f;
         //player->height = texturePixelHeight/2
         player->cameraTheta = -90.0f;
         
@@ -453,7 +461,7 @@ int main(int argc, char **argv)
 {
     // Where the resources are loaded from
     std::string resourceDir = "../resources";
-    std::string heightMapFilename = "/giri_watershed.png";
+    std::string heightMapFilename = "/mars_hm.jpg";
     
     if (argc >= 2)
     {

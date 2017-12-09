@@ -41,6 +41,7 @@ void main()
         //worldPosition = geometryWorldPosition[i];
         textureCoordinates = geometryTextureCoordinates[i];
         vec4 textureValue = texture(Texture0, textureCoordinates);
+        textureValue.a = 0.0f;
         
         normal = vec4(fragmentNormal, 0.0f);
         
@@ -53,6 +54,8 @@ void main()
         gl_Position = position + heightVector;
         worldPosition = vec3(V * M * gl_Position);
         //+ rand(normal.xy)*0.1f;
+        
+        //gl_Position = position;
         EmitVertex();
     }
     EndPrimitive();
