@@ -40,8 +40,8 @@ void Actor::createActor(std::shared_ptr<Model> inModel) {
 
 void Actor::step() {
     //Position Physics
-    velocity.x *= pFrictionMult;
-    velocity.z *= pFrictionMult;
+    //velocity.x *= pFrictionMult;
+    //velocity.z *= pFrictionMult;
     
     velocity.x = clampVelocity(velocity.x, pVelocityMin);
     velocity.z = clampVelocity(velocity.z, pVelocityMin);
@@ -54,6 +54,10 @@ void Actor::step() {
     } else {
         velocity.y -= gAcc;
     }
+    
+    
+    
+    
     
     //Rotation Physics
     omega *= rFrictionMult;

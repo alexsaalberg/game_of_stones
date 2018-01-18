@@ -28,6 +28,9 @@ using namespace glm;
 const double pixelsToDegrees_X = 40;
 const double pixelsToDegrees_Y = 40;
 
+const float gridDistanceFromCenter = 5.0f;
+const float gridHeight = -1.5f;
+
 bool mouseDown = false;
 
 class Application : public EventCallbacks
@@ -251,16 +254,21 @@ public:
         temporaryModel = make_shared<Model>();
         temporaryModel->createModel(TOshapes, objMaterials);
         
-        temporaryActor = make_shared<Actor>();
-        temporaryActor->createActor(temporaryModel);
-        
-        //temporaryActor->setPosition(vec3(0.0f, - 0.5f*scale, 0.0f));
-                                    //+texturePixelHeight));
-        temporaryActor->material = 6;
-        //temporaryActor->addOffset(vec3(0, -2, 0));
-        //temporaryActor->scale(10.0f);
-        
-        actors.push_back(temporaryActor);
+        for(int i = 0; i < 100; i++) {
+            temporaryActor = make_shared<Actor>();
+            temporaryActor->createActor(temporaryModel);
+            
+            float randX = ((randFloat() - 0.5f) * 2.0f) * gridDistanceFromCenter;
+            float randZ = ((randFloat() - 0.5f) * 2.0f) * gridDistanceFromCenter;
+            
+            temporaryActor->setPosition(vec3(randX, 1.0f, randZ));
+            temporaryActor->material = (rand()*10) % 6;
+            //temporaryActor->addOffset(vec3(0, -2, 0));
+            temporaryActor->scale(0.2f);
+            temporaryActor->gridDistanceFromCenter = gridDistanceFromCenter;
+            
+            actors.push_back(temporaryActor);
+            }
         }
         
         player = make_shared<Player>();
@@ -273,8 +281,8 @@ public:
     /**** geometry set up for ground plane *****/
     void initQuad()
     {
-        float g_groundSize = 10;
-        float g_groundY = -1.5;
+        float g_groundSize = gridDistanceFromCenter;
+        float g_groundY = gridHeight;
         
         // A x-z plane at y = g_groundY of dim[-g_groundSize, g_groundSize]^2
         float GroundPos[] = {
@@ -392,6 +400,7 @@ public:
         M->popMatrix();
         
         for(auto &actor : actors) {
+            /*
             if(testPlayerCollision(player, actor) ) {
                 actor->captured = true;
             }
@@ -401,7 +410,7 @@ public:
                         actor->velocity *= -1.0f;
                     }
                 }
-            }
+            } */
             
             
             actor->step();
@@ -472,6 +481,11 @@ public:
     bool testPlayerCollision(std::shared_ptr<Player> player, std::shared_ptr<Actor> actor) {
         float distance = length( (player->position - actor->position) );
         return (distance < (player->radius - actor->radius));
+    }
+    
+    //[0,1.0]
+    float randFloat() {
+        return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     }
 };
 

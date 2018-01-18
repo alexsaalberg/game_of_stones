@@ -30,6 +30,7 @@ public:
     glm::vec3 position;
     glm::vec3 velocity;
     
+    float gridDistanceFromCenter = 100.0f;
     float radius = 1.0f;
     bool captured = false;
     
