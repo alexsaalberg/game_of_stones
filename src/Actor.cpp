@@ -40,13 +40,14 @@ void Actor::createActor(std::shared_ptr<Model> inModel) {
 
 void Actor::step() {
     //Position Physics
-    position += velocity;
-    
     velocity.x *= pFrictionMult;
     velocity.z *= pFrictionMult;
     
     velocity.x = clampVelocity(velocity.x, pVelocityMin);
     velocity.z = clampVelocity(velocity.z, pVelocityMin);
+    
+    position += velocity;
+    
     
     if(position.y <= 0.0) {
         velocity.y = 0.0;
