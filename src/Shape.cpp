@@ -102,13 +102,13 @@ void Shape::draw(const shared_ptr<Program> prog) const
 	CHECKED_GL_CALL(glBindVertexArray(vaoID));
 
 	// Bind position buffer
-	h_pos = prog->getAttribute("vertexPosition_modelSpace");
+	h_pos = prog->getAttribute("vPosition");
 	GLSL::enableVertexAttribArray(h_pos);
 	CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, posBufID));
 	CHECKED_GL_CALL(glVertexAttribPointer(h_pos, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0));
 
 	// Bind normal buffer
-	h_nor = prog->getAttribute("vertexNormal");
+	h_nor = prog->getAttribute("vNormal");
 	if (h_nor != -1 && norBufID != 0)
 	{
 		GLSL::enableVertexAttribArray(h_nor);
@@ -119,7 +119,7 @@ void Shape::draw(const shared_ptr<Program> prog) const
 	if (texBufID != 0)
 	{
 		// Bind texcoords buffer
-		h_tex = prog->getAttribute("vertexTextureCoordinates");
+		h_tex = prog->getAttribute("vTextureCoordinates");
 
 		if (h_tex != -1 && texBufID != 0)
 		{

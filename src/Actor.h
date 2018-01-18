@@ -27,6 +27,12 @@ class Actor
 {
     
 public:
+    glm::vec3 position;
+    glm::vec3 velocity;
+    
+    float radius = 1.0f;
+    bool captured = false;
+    
     void createActor(std::shared_ptr<Model> inModels);
     void draw(const std::shared_ptr<Program> prog) const;
     virtual void step();
@@ -47,10 +53,8 @@ public:
     int material;
     
 protected:
-    glm::vec3 position;
     glm::vec3 rotation;
     
-    glm::vec3 velocity;
     glm::vec3 omega; //rotational velocity
     
     glm::vec3 modelOffset;

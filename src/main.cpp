@@ -158,9 +158,9 @@ public:
         glViewport(0, 0, width, height);
     }
     
-    void init(const std::string& resourceDirectory, const std::string& heightMapFileName) {
+    void init(const std::string& resourceDirectory) {
         initShaders(resourceDirectory+"/shaders");
-        initTextures(resourceDirectory+"/models", heightMapFileName);
+        initTextures(resourceDirectory+"/models");
         initGeom(resourceDirectory+"/models");
         initQuad();
     }
@@ -171,10 +171,8 @@ public:
         int width, height;
         glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
         GLSL::checkVersion();
-        // Set background color.
-        glClearColor(.12f, .34f, .56f, 1.0f);
-        // Enable z-buffer test.
-        glEnable(GL_DEPTH_TEST);
+        glClearColor(.12f, .34f, .56f, 1.0f); // Set background color.
+        glEnable(GL_DEPTH_TEST); // Enable z-buffer test.
         
         initMainProgram(resourceDirectory);
         initGroundProgram(resourceDirectory);
@@ -184,9 +182,8 @@ public:
         // Initialize the GLSL program.
         mainProgram = make_shared<Program>();
         mainProgram->setVerbose(true);
-        mainProgram->setShaderNames(  resourceDirectory + "/heightmap_vert.glsl",
-                                      resourceDirectory + "/heightmap_frag.glsl");
-        mainProgram->setGeometryShaderName(resourceDirectory + "/heightmap_geom.glsl");
+        mainProgram->setShaderNames(  resourceDirectory + "/mainVert.glsl",
+                                      resourceDirectory + "/mainFrag.glsl");
         
         if (! mainProgram->init()) {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -195,15 +192,16 @@ public:
         mainProgram->addUniform("P");
         mainProgram->addUniform("V");
         mainProgram->addUniform("M");
-        mainProgram->addUniform("MaterialAmbientCoefficient");
-        mainProgram->addUniform("MaterialDiffusionCoefficient");
-        mainProgram->addUniform("MaterialSpecularCoefficient");
-        mainProgram->addUniform("MaterialSpecularAlpha");
-        mainProgram->addUniform("EyePosition");
-        mainProgram->addUniform("Texture0");
-        mainProgram->addAttribute("vertexPosition_modelSpace");
-        mainProgram->addAttribute("vertexNormal");
-        mainProgram->addAttribute("vertexTextureCoordinates");
+        mainProgram->addUniform("mAmbientCoefficient");
+        mainProgram->addUniform("mDiffusionCoefficient");
+        mainProgram->addUniform("mSpecularCoefficient");
+        mainProgram->addUniform("mSpecularAlpha");
+        mainProgram->addUniform("eyePosition");
+        mainProgram->addUniform("directionTowardsLight");
+        //mainProgram->addUniform("Texture0");
+        mainProgram->addAttribute("vPosition");
+        mainProgram->addAttribute("vNormal");
+        mainProgram->addAttribute("vTextureCoordinates");
     }
     
     void initGroundProgram(const std::string& resourceDirectory) {
@@ -226,18 +224,13 @@ public:
         groundProgram->addUniform("Texture0");
     }
     
-    void initTextures(const std::string& resourceDirectory, const std::string& heightMapFileName) {
-        heightmapTexture = make_shared<Texture>();
-        heightmapTexture->setFilename(resourceDirectory + heightMapFileName);
-        heightmapTexture->init();
-        heightmapTexture->setUnit(0);
-        heightmapTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-        
+    void initTextures(const std::string& resourceDirectory) {
         grassTexture = make_shared<Texture>();
         grassTexture->setFilename(resourceDirectory + "/grass.jpg");
         grassTexture->init();
         grassTexture->setUnit(0);
-        grassTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+        grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
+        //grassTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     }
     
     void initGeom(const std::string& resourceDirectory) {
@@ -247,36 +240,28 @@ public:
         
         string errStr;
         
-        int texturePixelWidth = heightmapTexture->getWidth();
-        int texturePixelHeight = heightmapTexture->getHeight();
+        //load in the mesh and make the shapes
+        bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                                   (resourceDirectory + "/sphere.obj").c_str());
+        if (!rc)
+        {
+            cerr << errStr << endl;
+        } else {
         
-        float diameter = (float) texturePixelWidth;
-        float heightBetweenLayers = (1 / (float) texturePixelHeight);
-        float scale = 2.0f;
-        
-        diameter *= scale;
-        heightBetweenLayers *= scale;
-        
-        float radius = diameter / (2 * PI);
-        
-        printf("Diameter %f\t HeightBetween %f\n", diameter, heightBetweenLayers);
-        printf("Width %d\t Height %d\n", texturePixelWidth, texturePixelHeight);
-        
-        shared_ptr<Shape> shape = make_shared<Shape>();
-        shape->makeCylinder(texturePixelWidth, texturePixelHeight, radius, scale);
         temporaryModel = make_shared<Model>();
-        temporaryModel->createModel(shape);
+        temporaryModel->createModel(TOshapes, objMaterials);
         
         temporaryActor = make_shared<Actor>();
         temporaryActor->createActor(temporaryModel);
         
         //temporaryActor->setPosition(vec3(0.0f, - 0.5f*scale, 0.0f));
                                     //+texturePixelHeight));
-        temporaryActor->material = rand() % 6;
+        temporaryActor->material = 6;
         //temporaryActor->addOffset(vec3(0, -2, 0));
-        temporaryActor->scale(10.0f);
+        //temporaryActor->scale(10.0f);
         
         actors.push_back(temporaryActor);
+        }
         
         player = make_shared<Player>();
         player->position.z += 4.0f;
@@ -288,7 +273,7 @@ public:
     /**** geometry set up for ground plane *****/
     void initQuad()
     {
-        float g_groundSize = 20;
+        float g_groundSize = 10;
         float g_groundY = -1.5;
         
         // A x-z plane at y = g_groundY of dim[-g_groundSize, g_groundSize]^2
@@ -308,11 +293,20 @@ public:
             0, 1, 0
         };
         
+        /*
         float GroundTex[] = {
             0, 0, // back
             0, 1,
             1, 1,
             1, 0
+        }; */
+        
+        
+        float GroundTex[] = {
+            0, 0, // back
+            0, g_groundSize,
+            g_groundSize, g_groundSize,
+            g_groundSize, 0
         };
         
         unsigned short idx[] = {0, 1, 2, 0, 2, 3};
@@ -385,6 +379,11 @@ public:
         
         player->setEyePosition(mainProgram);
         
+        vec3 directionFromLight = vec3(0) - vec3(1);
+        vec3 directionTowardsLight = -directionFromLight;
+        //CHECKED_GL_CALL( glUniform3fv(mainProgram->getUniform("directionTowardsLight"), 1, GL_FALSE, &(directionTowardsLight.x) ) );
+        CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
+        
         auto M = make_shared<MatrixStack>();
         M->pushMatrix();
             M->loadIdentity();
@@ -392,9 +391,19 @@ public:
             CHECKED_GL_CALL( glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())) );
         M->popMatrix();
         
-        heightmapTexture->bind(mainProgram->getUniform("Texture0"));
-        
         for(auto &actor : actors) {
+            if(testPlayerCollision(player, actor) ) {
+                actor->captured = true;
+            }
+            if(actor->captured == false) {
+                for(auto &innerActor : actors) {
+                    if ( testCollision(actor, innerActor) ){
+                        actor->velocity *= -1.0f;
+                    }
+                }
+            }
+            
+            
             actor->step();
             SetMaterial(mainProgram, actor->material);
             actor->draw(mainProgram);
@@ -419,58 +428,61 @@ public:
     // helper function to set materials for shading
     void SetMaterial(const std::shared_ptr<Program> prog, int i)
     {
-        CHECKED_GL_CALL( glUniform3f(prog->getUniform("MaterialSpecularCoefficient"), 0.5f, 0.5f, 0.5f) );
-        CHECKED_GL_CALL( glUniform1f(prog->getUniform("MaterialSpecularAlpha"), 8.0f) );
+        CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.3f, 0.3f) );
+        CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 3.0f) );
         
         switch (i)
         {
             case 0: //shiny blue plastic
-                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.02f, 0.04f, 0.2f);
-                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.0f, 0.16f, 0.9f);;
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.02f, 0.04f, 0.2f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.0f, 0.16f, 0.9f);;
                 break;
             case 1: // flat grey
-                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.13f, 0.13f, 0.14f);
-                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.3f, 0.3f, 0.4f);
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.13f, 0.13f, 0.14f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.3f, 0.3f, 0.4f);
                 break;
             case 2: //brass
-                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.3294f, 0.2235f, 0.02745f);
-                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.7804f, 0.5686f, 0.11373f);
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.3294f, 0.2235f, 0.02745f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7804f, 0.5686f, 0.11373f);
                 break;
             case 3: //copper
-                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.1913f, 0.0735f, 0.0225f);
-                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.1913f, 0.0735f, 0.0225f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
                 break;
             case 4: //green man
-                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.0913f, 0.735f, 0.0225f);
-                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.038f, 0.048f, 0.028f);
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.735f, 0.0225f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.038f, 0.048f, 0.028f);
                 break;
             case 5: //radiation
-                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.7, 0.7735f, 0.225f);
-                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.7, 0.7735f, 0.225f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
                 break;
             case 6: //stone
-                glUniform3f(prog->getUniform("MaterialAmbientCoefficient"), 0.0913f, 0.1735f, 0.1225f);
-                glUniform3f(prog->getUniform("MaterialDiffusionCoefficient"), 0.438f, 0.4048f, 0.428f);
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.1735f, 0.1225f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.438f, 0.4048f, 0.428f);
                 break;
         }
     }
-    
+                    
+    bool testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2) {
+        float distance = length( (actor1->position - actor2->position) );
+        return (distance < (actor1->radius - actor2->radius));
+    }
+                    
+    bool testPlayerCollision(std::shared_ptr<Player> player, std::shared_ptr<Actor> actor) {
+        float distance = length( (player->position - actor->position) );
+        return (distance < (player->radius - actor->radius));
+    }
 };
 
 int main(int argc, char **argv)
 {
     // Where the resources are loaded from
     std::string resourceDir = "../resources";
-    std::string heightMapFilename = "/mars_hm.jpg";
     
     if (argc >= 2)
     {
         resourceDir = argv[1];
-    }
-    
-    if (argc >= 3)
-    {
-        heightMapFilename = argv[2];
     }
     
     
@@ -480,14 +492,14 @@ int main(int argc, char **argv)
     // and GL context, etc.
     
     WindowManager *windowManager = new WindowManager();
-    windowManager->init(512, 512);
+    windowManager->init(1024, 1024);
     windowManager->setEventCallbacks(application);
     application->windowManager = windowManager;
     
     // This is the code that will likely change program to program as you
     // may need to initialize or set up different data and state
     
-    application->init(resourceDir, heightMapFilename);
+    application->init(resourceDir);
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))

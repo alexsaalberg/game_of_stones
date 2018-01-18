@@ -74,7 +74,7 @@ void Player::setProjectionMatrix(const std::shared_ptr<Program> prog, float aspe
 
 void Player::setEyePosition(const std::shared_ptr<Program> prog) const {
     CHECKED_GL_CALL( glUniform3f(
-        prog->getUniform("EyePosition"), position.x, position.y, position.z) );
+        prog->getUniform("eyePosition"), position.x, position.y, position.z) );
 }
 
 void Player::jump() {

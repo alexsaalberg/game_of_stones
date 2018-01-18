@@ -48,7 +48,6 @@ void Actor::step() {
     
     position += velocity;
     
-    
     if(position.y <= 0.0) {
         velocity.y = 0.0;
         position.y = 0.0;
@@ -57,14 +56,14 @@ void Actor::step() {
     }
     
     //Rotation Physics
-    rotation += omega;
     omega *= rFrictionMult;
-    
-    rotation += vec3(0.0f, 0.0f, 0.1f);
     
     omega.x = clampVelocity(omega.x, rOmegaMin);
     omega.y = clampVelocity(omega.y, rOmegaMin);
     omega.z = clampVelocity(omega.z, rOmegaMin);
+    
+    rotation += omega;
+    
     /*
     if(omega.x < rOmegaMin)
         omega.x = 0.0f;
@@ -135,3 +134,4 @@ void Actor::draw(const std::shared_ptr<Program> prog) const {
     
     M->popMatrix();
 }
+
