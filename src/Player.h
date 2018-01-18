@@ -37,7 +37,7 @@ public:
     glm::vec3 position = glm::vec3(0);
     glm::vec3 velocity = glm::vec3(0);
     
-    float height = 0.0f;
+    float height = 10.0f;
     
     float cameraTheta = 0; //around Y axis (turn head left & right)
     float cameraPhi = 0; // around Z axis (nod up & down)

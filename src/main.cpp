@@ -28,6 +28,9 @@ using namespace glm;
 const double pixelsToDegrees_X = 40;
 const double pixelsToDegrees_Y = 40;
 
+const int windowWidth = 1920;
+const int windowHeight = 1080;
+
 const float gridDistanceFromCenter = 5.0f;
 const float gridHeight = -1.5f;
 
@@ -254,7 +257,7 @@ public:
         temporaryModel = make_shared<Model>();
         temporaryModel->createModel(TOshapes, objMaterials);
         
-        for(int i = 0; i < 100; i++) {
+        for(int i = 0; i < 30; i++) {
             temporaryActor = make_shared<Actor>();
             temporaryActor->createActor(temporaryModel);
             
@@ -263,8 +266,9 @@ public:
             
             temporaryActor->setPosition(vec3(randX, 1.0f, randZ));
             temporaryActor->material = (rand()*10) % 6;
+            temporaryActor->velocity = vec3(0.01f, 0, 0.01f);
             //temporaryActor->addOffset(vec3(0, -2, 0));
-            temporaryActor->scale(0.2f);
+            temporaryActor->scale *= 0.2f;
             temporaryActor->gridDistanceFromCenter = gridDistanceFromCenter;
             
             actors.push_back(temporaryActor);
@@ -400,17 +404,20 @@ public:
         M->popMatrix();
         
         for(auto &actor : actors) {
-            /*
             if(testPlayerCollision(player, actor) ) {
                 actor->captured = true;
             }
             if(actor->captured == false) {
                 for(auto &innerActor : actors) {
-                    if ( testCollision(actor, innerActor) ){
-                        actor->velocity *= -1.0f;
+                    if(actor.get() != innerActor.get()) {
+                        if ( testCollision(actor, innerActor) ){
+                            actor->velocity *= -1.0f;
+                            actor->material++;
+                            actor->material %= 6;
+                        }
                     }
                 }
-            } */
+            }
             
             
             actor->step();
@@ -433,6 +440,18 @@ public:
         groundProgram->unbind();
         
     }
+    
+    
+    bool testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2) {
+        float distance = length( (actor1->position - actor2->position) );
+        return (distance < (actor1->radius*actor1->scale + actor2->radius*actor2->scale));
+    }
+    
+    bool testPlayerCollision(std::shared_ptr<Player> player, std::shared_ptr<Actor> actor) {
+        float distance = length( (player->position - actor->position) );
+        return (distance < (player->radius - actor->radius*actor->scale));
+    }
+    
     
     // helper function to set materials for shading
     void SetMaterial(const std::shared_ptr<Program> prog, int i)
@@ -472,16 +491,6 @@ public:
                 break;
         }
     }
-                    
-    bool testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2) {
-        float distance = length( (actor1->position - actor2->position) );
-        return (distance < (actor1->radius - actor2->radius));
-    }
-                    
-    bool testPlayerCollision(std::shared_ptr<Player> player, std::shared_ptr<Actor> actor) {
-        float distance = length( (player->position - actor->position) );
-        return (distance < (player->radius - actor->radius));
-    }
     
     //[0,1.0]
     float randFloat() {
@@ -506,7 +515,7 @@ int main(int argc, char **argv)
     // and GL context, etc.
     
     WindowManager *windowManager = new WindowManager();
-    windowManager->init(1024, 1024);
+    windowManager->init(windowWidth, windowHeight);
     windowManager->setEventCallbacks(application);
     application->windowManager = windowManager;
     

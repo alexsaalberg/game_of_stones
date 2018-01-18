@@ -29,6 +29,7 @@ class Actor
 public:
     glm::vec3 position;
     glm::vec3 velocity;
+    float scale = 1.0f;
     
     float gridDistanceFromCenter = 100.0f;
     float radius = 1.0f;
@@ -47,8 +48,6 @@ public:
     glm::vec3 getRotation();
     
     void addOffset(glm::vec3 deltaOffset);
-    
-    void scale(float deltaScale);
     float getScale();
     
     int material;
@@ -60,7 +59,6 @@ protected:
     
     glm::vec3 modelOffset;
     
-    float aScale;
     
     std::vector<std::shared_ptr<Model>> models;
 };

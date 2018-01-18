@@ -31,7 +31,7 @@ void Actor::createActor(std::shared_ptr<Model> inModel) {
     velocity = vec3(0);
     omega = vec3(0.0f);
     
-    aScale = 1.0f;
+    scale = 1.0f;
     
     models.push_back(inModel);
     
@@ -55,7 +55,11 @@ void Actor::step() {
         velocity.y -= gAcc;
     }
     
+    if(abs(position.x) > gridDistanceFromCenter)
+        velocity.x *= -1.0f;
     
+    if(abs(position.z) > gridDistanceFromCenter)
+        velocity.z *= -1.0f;
     
     
     
@@ -103,12 +107,8 @@ void Actor::addOffset(vec3 deltaOffset) {
     modelOffset += deltaOffset;
 }
 
-void Actor::scale(float deltaScale) {
-    aScale *= deltaScale;
-}
-
 float Actor::getScale() {
-    return aScale;
+    return scale;
 }
 
 void Actor::draw(const std::shared_ptr<Program> prog) const {
@@ -122,7 +122,7 @@ void Actor::draw(const std::shared_ptr<Program> prog) const {
     
     M->translate(position);
     
-    M->scale(aScale);
+    M->scale(scale);
     
     M->rotate(radians(rotation.x), vec3(1, 0, 0));
     M->rotate(radians(rotation.y), vec3(0, 1, 0));
