@@ -10,27 +10,30 @@
 using namespace glm;
 using namespace std;
 
-void Player::step() {
+void Player::step(double dt) {
+    double framerate = 60.0f;
+    dt *= framerate;
+    //forward/back movement
     float movX = cos(radians(cameraTheta)) * velocity.x;
     float movZ = sin(radians(cameraTheta)) * velocity.x;
     
+    //strafing
     movX += cos(radians(cameraTheta + 90)) * velocity.z;
     movZ += sin(radians(cameraTheta + 90)) * velocity.z;
-    
-    //Minus equals because camera is opposite
-    position.x += movX;
-    position.z += movZ;
     
     if(position.y < height) {
         velocity.y = 0.0f;
         position.y = height;
     } else if (position.y > height) {
-        velocity.y -= gravityAcceleration;
+        velocity.y -= gravityAcceleration * dt;
     }
-    position.y += velocity.y;
+    velocity *= frictionMultiplier * dt;
     
+    position.y += velocity.y * dt;
     
-    velocity *= frictionMultiplier;
+    //Minus equals because camera is opposite
+    position.x += movX * dt;
+    position.z += movZ * dt;
     
     //If velocity is very low (<~0.01f), consider the player to be stopped;
     velocity.x = clampVelocity(velocity.x, minHorizontalVelocity);

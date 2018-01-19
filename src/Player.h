@@ -37,17 +37,17 @@ public:
     glm::vec3 position = glm::vec3(0);
     glm::vec3 velocity = glm::vec3(0);
     
-    float height = 0.8f;
+    float height = 0.65f;
     
     float cameraTheta = 0; //around Y axis (turn head left & right)
     float cameraPhi = 0; // around Z axis (nod up & down)
     
-    float radius = 2.0f;
+    float radius = 1.5f;
     
     //glm::vec3 cameraIdentityVector = glm::vec3(0);
 
     //functions
-    void step();
+    void step(double dt);
     
     void setModelIdentityMatrix(const std::shared_ptr<Program> prog) const;
     void setViewMatrix(const std::shared_ptr<Program> prog) const;

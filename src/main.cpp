@@ -28,11 +28,13 @@ using namespace glm;
 const double pixelsToDegrees_X = 40;
 const double pixelsToDegrees_Y = 40;
 
-const int windowWidth = 420;
-const int windowHeight = 300;
+const int windowWidth = 800;
+const int windowHeight = 420;
 
 const float gridDistanceFromCenter = 10.0f;
 const float gridHeight = -1.5f;
+
+const float secondsPerOrb = 0.5f;
 
 bool mouseDown = false;
 
@@ -62,6 +64,7 @@ public:
     float cHeight = 0.0f;
     int score = 0;
     int freeOrbCount = 0;
+    bool gameOver = false;
     
     double mouse_prevX;
     double mouse_prevY;
@@ -262,13 +265,13 @@ public:
             //temporaryModel->createModel(TOshapes, objMaterials);
             sphereModel->createModel(TOshapes, objMaterials);
             
-            for(int i = 0; i < 30; i++) {
+            for(int i = 0; i < 15; i++) {
                 createOrb();
             }
         }
         
         player = make_shared<Player>();
-        player->position.z += 4.0f;
+        player->position.z += gridDistanceFromCenter + 5.0f;
         //player->height = texturePixelHeight/2
         player->cameraTheta = -90.0f;
         
@@ -278,12 +281,16 @@ public:
         temporaryActor = make_shared<Actor>();
         temporaryActor->createActor(sphereModel);
         
-        float randX = ((randFloat() - 0.5f) * 2.0f) * gridDistanceFromCenter;
-        float randZ = ((randFloat() - 0.5f) * 2.0f) * gridDistanceFromCenter;
+        float randX = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
+        float randZ = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
+    
+        float randVelX = ((randFloat() - 0.5f) * 2.0f);
+        float randVelZ = ((randFloat() - 0.5f) * 2.0f);
         
         temporaryActor->setPosition(vec3(randX, 1.0f, randZ));
         temporaryActor->material = 2;
-        temporaryActor->velocity = vec3(0.01f, 0, 0.01f);
+        //temporaryActor->velocity = vec3(0.01f, 0, 0.01f);
+        temporaryActor->velocity = vec3(randVelX * 0.1f, 0.1f, randVelZ * 0.1f);
         temporaryActor->velocity += score * 0.001f;
         //temporaryActor->addOffset(vec3(0, -2, 0));
         temporaryActor->scale *= 0.2f;
@@ -394,27 +401,60 @@ public:
         CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
         
         mainProgram->bind();
-        // Apply perspective projection.
+            // Apply perspective projection.
+            player->setModelIdentityMatrix(mainProgram);
+            player->setViewMatrix(mainProgram);
+            player->setProjectionMatrix(mainProgram, aspect);
         
-        player->step();
-        player->setModelIdentityMatrix(mainProgram);
-        player->setViewMatrix(mainProgram);
-        player->setProjectionMatrix(mainProgram, aspect);
+            player->setEyePosition(mainProgram);
         
-        player->setEyePosition(mainProgram);
+            vec3 directionFromLight = vec3(0) - vec3(1); //from 1,1,1 to origin
+            vec3 directionTowardsLight = -directionFromLight;
+            //CHECKED_GL_CALL( glUniform3fv(mainProgram->getUniform("directionTowardsLight"), 1, GL_FALSE, &(directionTowardsLight.x) ) );
+            CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
         
-        vec3 directionFromLight = vec3(0) - vec3(1);
-        vec3 directionTowardsLight = -directionFromLight;
-        //CHECKED_GL_CALL( glUniform3fv(mainProgram->getUniform("directionTowardsLight"), 1, GL_FALSE, &(directionTowardsLight.x) ) );
-        CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
+            auto M = make_shared<MatrixStack>();
+            M->pushMatrix();
+                M->loadIdentity();
+                M->scale(vec3(5.0f, 0.0f, 5.0f));
+                CHECKED_GL_CALL( glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())) );
+            M->popMatrix();
         
-        auto M = make_shared<MatrixStack>();
-        M->pushMatrix();
-            M->loadIdentity();
-            M->scale(vec3(5.0f, 0.0f, 5.0f));
-            CHECKED_GL_CALL( glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())) );
-        M->popMatrix();
+            for(auto &actor : actors) {
+                SetMaterial(mainProgram, actor->material);
+                actor->draw(mainProgram);
+            }
         
+        mainProgram->unbind();
+        
+        groundProgram->bind();
+            player->setModelIdentityMatrix(groundProgram);
+            player->setViewMatrix(groundProgram);
+            player->setProjectionMatrix(groundProgram, aspect);
+        
+            /*draw the ground */
+            grassTexture->bind(groundProgram->getUniform("Texture0"));
+            renderGround();
+        groundProgram->unbind();
+        
+    }
+    
+    void simulate(double dt) {
+        
+        if(gameOver == false) {
+            calculateCollisions();
+        }
+        
+        //physics loop
+        for(auto &actor : actors) {
+            actor->step(dt);
+        }
+        
+        player->step(dt);
+    }
+    
+    void calculateCollisions() {
+        //collision loop
         for(auto &actor : actors) {
             if(testPlayerCollision(player, actor) && actor->captured == false) {
                 actor->captured = true;
@@ -424,6 +464,7 @@ public:
                 actor->velocity.y += 0.3f;
                 score++;
                 freeOrbCount--;
+                // +2 because player and grid
                 printf("Score: %d\tFree-Orbs: %d\n", score, freeOrbCount);
             }
             if(actor->captured == false && actor->collisionCooldown == 0) {
@@ -433,37 +474,22 @@ public:
                             actor->velocity *= -1.0f;
                             actor->material = 3;
                             //actor->material %= 6;
-                            actor->collisionCooldown = 20;
+                            actor->collisionCooldown = 20.0f;
                         }
                     }
                 }
             }
             
-            
-            actor->step();
-            SetMaterial(mainProgram, actor->material);
-            actor->draw(mainProgram);
         }
-        
-        mainProgram->unbind();
-        groundProgram->bind();
-        
-            player->setModelIdentityMatrix(groundProgram);
-            player->setViewMatrix(groundProgram);
-            player->setProjectionMatrix(groundProgram, aspect);
-        
-        
-            /*draw the ground */
-            grassTexture->bind(groundProgram->getUniform("Texture0"));
-            renderGround();
-        
-        groundProgram->unbind();
         
     }
     
-    void simulate(double dt) {
-        
-        
+    void makeOrbsGreen() {
+        for(auto &actor : actors) {
+            if(actor->captured == false) {
+                actor->material = 5;
+            }
+        }
     }
     
     
@@ -551,6 +577,7 @@ int main(int argc, char **argv)
     
     double t = 0.0;
     double currentTime = glfwGetTime();
+    double remainingTime = 20.0f;
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
@@ -559,13 +586,31 @@ int main(int argc, char **argv)
         double frameTime = newTime - currentTime;
         currentTime = newTime;
         
-        //application->simulate(frameTime);
-        printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
+        //printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
+        //printf("Time %f\n", t);
         
-        t += frameTime;
-        
+        //Simulate Scene
+        application->simulate(frameTime);
         // Render scene.
         application->render();
+        
+        //Spawn orb every 'secondsPerOrb' seconds
+        t += frameTime;
+        remainingTime -= frameTime;
+        if(t >= secondsPerOrb && application->gameOver == false) {
+            t -= secondsPerOrb;
+            printf("Framerate: %.01f\t", 1.0f / frameTime);
+            printf("3D Objects: %d\n", application->score + application->freeOrbCount + 2);
+            printf("Time Remaining: %f!\n", remainingTime);
+            application->createOrb();
+        }
+        if(remainingTime <= 0.0f && application->gameOver == false) {
+            printf("Game Over!\nScore: %d\n", application->score);
+            application->gameOver = true;
+            application->makeOrbsGreen();
+        }
+        
+        
         
         // Swap front and back buffers.
         glfwSwapBuffers(windowManager->getHandle());

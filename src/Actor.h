@@ -36,11 +36,11 @@ public:
     float gridHeight = -1.5f;
     bool captured = false;
     
-    int collisionCooldown = 5;
+    float collisionCooldown = 5;
     
     void createActor(std::shared_ptr<Model> inModels);
     void draw(const std::shared_ptr<Program> prog) const;
-    virtual void step();
+    virtual void step(double dt);
     
     void setPosition(glm::vec3 newPosition);
     glm::vec3 getPosition();

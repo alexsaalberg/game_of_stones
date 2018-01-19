@@ -38,7 +38,9 @@ void Actor::createActor(std::shared_ptr<Model> inModel) {
     material = 1;
 }
 
-void Actor::step() {
+void Actor::step(double dt) {
+    double framerate = 60.0f;
+    dt *= framerate;
     //Position Physics
     //velocity.x *= pFrictionMult;
     //velocity.z *= pFrictionMult;
@@ -46,7 +48,7 @@ void Actor::step() {
     velocity.x = clampVelocity(velocity.x, pVelocityMin);
     velocity.z = clampVelocity(velocity.z, pVelocityMin);
     
-    position += velocity;
+    position += velocity * (float) dt;
     
     if(position.y <= gridHeight+radius*2.0f) {
         velocity.y = 0.0f;
@@ -67,13 +69,13 @@ void Actor::step() {
     
     
     //Rotation Physics
-    omega *= rFrictionMult;
+    omega *= rFrictionMult * dt;
     
     omega.x = clampVelocity(omega.x, rOmegaMin);
     omega.y = clampVelocity(omega.y, rOmegaMin);
     omega.z = clampVelocity(omega.z, rOmegaMin);
     
-    rotation += omega;
+    rotation += omega * (float) dt;
     
     /*
     if(omega.x < rOmegaMin)
@@ -85,8 +87,12 @@ void Actor::step() {
     
     //Collision Cooldown
     if(collisionCooldown) {
-        collisionCooldown--;
-        if(!collisionCooldown) {
+        collisionCooldown -= dt;
+        if(collisionCooldown < 0.0f) {
+            collisionCooldown = 0.0f;
+        }
+        
+        if(collisionCooldown == 0.0f) {
             material = 2;
         }
     }
