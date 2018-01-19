@@ -33,7 +33,10 @@ public:
     
     float gridDistanceFromCenter = 100.0f;
     float radius = 1.0f;
+    float gridHeight = -1.5f;
     bool captured = false;
+    
+    int collisionCooldown = 5;
     
     void createActor(std::shared_ptr<Model> inModels);
     void draw(const std::shared_ptr<Program> prog) const;

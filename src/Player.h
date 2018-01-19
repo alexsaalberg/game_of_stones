@@ -19,7 +19,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 class Player {
-    const float speed = 0.15;
+    const float speed = 0.15f;
     const glm::vec3 speedMod = glm::vec3(1.0, 0.8, 0.9);
     
     
@@ -37,12 +37,12 @@ public:
     glm::vec3 position = glm::vec3(0);
     glm::vec3 velocity = glm::vec3(0);
     
-    float height = 10.0f;
+    float height = 0.8f;
     
     float cameraTheta = 0; //around Y axis (turn head left & right)
     float cameraPhi = 0; // around Z axis (nod up & down)
     
-    float radius = 1.0f;
+    float radius = 2.0f;
     
     //glm::vec3 cameraIdentityVector = glm::vec3(0);
 

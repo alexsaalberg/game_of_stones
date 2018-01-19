@@ -48,12 +48,15 @@ void Actor::step() {
     
     position += velocity;
     
-    if(position.y <= 0.0) {
-        velocity.y = 0.0;
-        position.y = 0.0;
+    if(position.y <= gridHeight+radius*2.0f) {
+        velocity.y = 0.0f;
+        position.y = gridHeight+radius*2.0f;
+        if(captured)
+            material = 6;
     } else {
         velocity.y -= gAcc;
     }
+    
     
     if(abs(position.x) > gridDistanceFromCenter)
         velocity.x *= -1.0f;
@@ -79,6 +82,14 @@ void Actor::step() {
         //eOmega.y = 0.0f;
         if(omega.z < rOmegaMin)
             omega.z = 0.0f;*/
+    
+    //Collision Cooldown
+    if(collisionCooldown) {
+        collisionCooldown--;
+        if(!collisionCooldown) {
+            material = 2;
+        }
+    }
     
 }
 

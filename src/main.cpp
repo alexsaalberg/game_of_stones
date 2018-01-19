@@ -28,10 +28,10 @@ using namespace glm;
 const double pixelsToDegrees_X = 40;
 const double pixelsToDegrees_Y = 40;
 
-const int windowWidth = 1920;
-const int windowHeight = 1080;
+const int windowWidth = 420;
+const int windowHeight = 300;
 
-const float gridDistanceFromCenter = 5.0f;
+const float gridDistanceFromCenter = 10.0f;
 const float gridHeight = -1.5f;
 
 bool mouseDown = false;
@@ -49,6 +49,7 @@ public:
     
     shared_ptr<Actor> temporaryActor;
     shared_ptr<Model> temporaryModel;
+    shared_ptr<Model> sphereModel;
     
     vector<shared_ptr<Model>> models;
     vector<shared_ptr<Actor>> actors;
@@ -59,6 +60,8 @@ public:
     shared_ptr<Texture> grassTexture;
     
     float cHeight = 0.0f;
+    int score = 0;
+    int freeOrbCount = 0;
     
     double mouse_prevX;
     double mouse_prevY;
@@ -177,7 +180,7 @@ public:
         int width, height;
         glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
         GLSL::checkVersion();
-        glClearColor(.12f, .34f, .56f, 1.0f); // Set background color.
+        glClearColor(.5f, .5f, .5f, 1.0f); // Set background color.
         glEnable(GL_DEPTH_TEST); // Enable z-buffer test.
         
         initMainProgram(resourceDirectory);
@@ -253,25 +256,14 @@ public:
         {
             cerr << errStr << endl;
         } else {
-        
-        temporaryModel = make_shared<Model>();
-        temporaryModel->createModel(TOshapes, objMaterials);
-        
-        for(int i = 0; i < 30; i++) {
-            temporaryActor = make_shared<Actor>();
-            temporaryActor->createActor(temporaryModel);
             
-            float randX = ((randFloat() - 0.5f) * 2.0f) * gridDistanceFromCenter;
-            float randZ = ((randFloat() - 0.5f) * 2.0f) * gridDistanceFromCenter;
+            temporaryModel = make_shared<Model>();
+            sphereModel = make_shared<Model>();
+            //temporaryModel->createModel(TOshapes, objMaterials);
+            sphereModel->createModel(TOshapes, objMaterials);
             
-            temporaryActor->setPosition(vec3(randX, 1.0f, randZ));
-            temporaryActor->material = (rand()*10) % 6;
-            temporaryActor->velocity = vec3(0.01f, 0, 0.01f);
-            //temporaryActor->addOffset(vec3(0, -2, 0));
-            temporaryActor->scale *= 0.2f;
-            temporaryActor->gridDistanceFromCenter = gridDistanceFromCenter;
-            
-            actors.push_back(temporaryActor);
+            for(int i = 0; i < 30; i++) {
+                createOrb();
             }
         }
         
@@ -280,6 +272,26 @@ public:
         //player->height = texturePixelHeight/2
         player->cameraTheta = -90.0f;
         
+    }
+    
+    void createOrb() {
+        temporaryActor = make_shared<Actor>();
+        temporaryActor->createActor(sphereModel);
+        
+        float randX = ((randFloat() - 0.5f) * 2.0f) * gridDistanceFromCenter;
+        float randZ = ((randFloat() - 0.5f) * 2.0f) * gridDistanceFromCenter;
+        
+        temporaryActor->setPosition(vec3(randX, 1.0f, randZ));
+        temporaryActor->material = 2;
+        temporaryActor->velocity = vec3(0.01f, 0, 0.01f);
+        temporaryActor->velocity += score * 0.001f;
+        //temporaryActor->addOffset(vec3(0, -2, 0));
+        temporaryActor->scale *= 0.2f;
+        temporaryActor->gridHeight = gridHeight;
+        temporaryActor->gridDistanceFromCenter = gridDistanceFromCenter;
+        
+        freeOrbCount++;
+        actors.push_back(temporaryActor);
     }
     
     /**** geometry set up for ground plane *****/
@@ -404,16 +416,24 @@ public:
         M->popMatrix();
         
         for(auto &actor : actors) {
-            if(testPlayerCollision(player, actor) ) {
+            if(testPlayerCollision(player, actor) && actor->captured == false) {
                 actor->captured = true;
+                actor->gridHeight -= 1.0f;
+                actor->material = 0;
+                actor->velocity = vec3(0);
+                actor->velocity.y += 0.3f;
+                score++;
+                freeOrbCount--;
+                printf("Score: %d\tFree-Orbs: %d\n", score, freeOrbCount);
             }
-            if(actor->captured == false) {
+            if(actor->captured == false && actor->collisionCooldown == 0) {
                 for(auto &innerActor : actors) {
                     if(actor.get() != innerActor.get()) {
                         if ( testCollision(actor, innerActor) ){
                             actor->velocity *= -1.0f;
-                            actor->material++;
-                            actor->material %= 6;
+                            actor->material = 3;
+                            //actor->material %= 6;
+                            actor->collisionCooldown = 20;
                         }
                     }
                 }
@@ -523,6 +543,9 @@ int main(int argc, char **argv)
     // may need to initialize or set up different data and state
     
     application->init(resourceDir);
+    
+    double t = 0.0;
+    double currentTime = glfwGetTime();
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
