@@ -461,6 +461,11 @@ public:
         
     }
     
+    void simulate(double dt) {
+        
+        
+    }
+    
     
     bool testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2) {
         float distance = length( (actor1->position - actor2->position) );
@@ -550,6 +555,15 @@ int main(int argc, char **argv)
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
     {
+        double newTime = glfwGetTime();
+        double frameTime = newTime - currentTime;
+        currentTime = newTime;
+        
+        //application->simulate(frameTime);
+        printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
+        
+        t += frameTime;
+        
         // Render scene.
         application->render();
         
