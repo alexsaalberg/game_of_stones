@@ -38,6 +38,8 @@ void Player::step(double dt) {
     //If velocity is very low (<~0.01f), consider the player to be stopped;
     velocity.x = clampVelocity(velocity.x, minHorizontalVelocity);
     velocity.z = clampVelocity(velocity.z, minHorizontalVelocity);
+    
+    this->avatar->position = this->position;
 }
 
 void Player::setModelIdentityMatrix(const std::shared_ptr<Program> prog) const {
@@ -47,6 +49,28 @@ void Player::setModelIdentityMatrix(const std::shared_ptr<Program> prog) const {
         CHECKED_GL_CALL( glUniformMatrix4fv(
             prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())) );
     M->popMatrix();
+}
+
+void Player::setHelicopterViewMatrix(const std::shared_ptr<Program> prog) const {
+    float x = cos(radians(cameraPhi))*cos(radians(cameraTheta));
+    float y = sin(radians(cameraPhi));
+    float z = cos(radians(cameraPhi))*sin(radians(cameraTheta));
+    
+    x = -cameraDistance;
+    z = 0.0f;
+    y = 0.0f;
+    
+    vec3 cameraIdentityVector = vec3(x, y, z);
+    
+    auto V = make_shared<MatrixStack>();
+    V->pushMatrix();
+    V->loadIdentity();
+    V->lookAt(vec3(0, 0, 0), cameraIdentityVector, vec3(0, 1, 0));
+    V->translate((-position)); //Negative
+    V->translate(vec3(-cameraDistance, 0.0f, 0.0f));
+    CHECKED_GL_CALL( glUniformMatrix4fv(
+                                        prog->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix())) );
+    V->popMatrix();
 }
 
 void Player::setViewMatrix(const std::shared_ptr<Program> prog) const {
@@ -77,7 +101,7 @@ void Player::setProjectionMatrix(const std::shared_ptr<Program> prog, float aspe
 
 void Player::setEyePosition(const std::shared_ptr<Program> prog) const {
     CHECKED_GL_CALL( glUniform3f(
-        prog->getUniform("eyePosition"), position.x, position.y, position.z) );
+        prog->getUniform("eyePosition"), position.x + cameraDistance, position.y, position.z) );
 }
 
 void Player::jump() {

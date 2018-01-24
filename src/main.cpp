@@ -81,15 +81,16 @@ public:
         }
         else if (key == GLFW_KEY_A && (action == GLFW_PRESS || GLFW_REPEAT))
         {
-            player->moveLeft();
+            player->moveBackward();
         }
         else if (key == GLFW_KEY_D && (action == GLFW_PRESS || GLFW_REPEAT))
         {
-            player->moveRight();
+            player->moveForward();
         }
         else if (key == GLFW_KEY_W && (action == GLFW_PRESS || GLFW_REPEAT ))
         {
-            player->moveForward();
+            player->jump();
+            //player->moveForward();
         }
         else if (key == GLFW_KEY_R && (action == GLFW_PRESS || GLFW_REPEAT))
         {
@@ -101,7 +102,7 @@ public:
         }
         else if (key == GLFW_KEY_S && (action == GLFW_PRESS || GLFW_REPEAT))
         {
-            player->moveBackward();
+            //player->moveBackward();
         }
         else if (key == GLFW_KEY_SPACE  && (action == GLFW_PRESS || GLFW_REPEAT))
         {
@@ -274,6 +275,8 @@ public:
         player->position.z += gridDistanceFromCenter + 5.0f;
         //player->height = texturePixelHeight/2
         player->cameraTheta = -90.0f;
+        temporaryActor->position = player->position;
+        player->avatar = temporaryActor;
         
     }
     
@@ -403,7 +406,7 @@ public:
         mainProgram->bind();
             // Apply perspective projection.
             player->setModelIdentityMatrix(mainProgram);
-            player->setViewMatrix(mainProgram);
+            player->setHelicopterViewMatrix(mainProgram);
             player->setProjectionMatrix(mainProgram, aspect);
         
             player->setEyePosition(mainProgram);
@@ -429,7 +432,7 @@ public:
         
         groundProgram->bind();
             player->setModelIdentityMatrix(groundProgram);
-            player->setViewMatrix(groundProgram);
+            player->setHelicopterViewMatrix(groundProgram);
             player->setProjectionMatrix(groundProgram, aspect);
         
             /*draw the ground */

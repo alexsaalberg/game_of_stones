@@ -14,11 +14,13 @@
 #include "glm/glm.hpp"
 #include "Helper.h"
 #include "Program.h"
+#include "Actor.h"
 #include "MatrixStack.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
 class Player {
+    const glm::vec3 direction = glm::vec3(0.0, 0.0, 1.0);
     const float speed = 0.15f;
     const glm::vec3 speedMod = glm::vec3(1.0, 0.8, 0.9);
     
@@ -34,6 +36,8 @@ class Player {
     const float minHorizontalVelocity = 0.1f;
     
 public:
+    std::shared_ptr<Actor> avatar;
+    float cameraDistance = 10.0f;
     glm::vec3 position = glm::vec3(0);
     glm::vec3 velocity = glm::vec3(0);
     
@@ -50,6 +54,7 @@ public:
     void step(double dt);
     
     void setModelIdentityMatrix(const std::shared_ptr<Program> prog) const;
+    void setHelicopterViewMatrix(const std::shared_ptr<Program> prog) const;
     void setViewMatrix(const std::shared_ptr<Program> prog) const;
     void setProjectionMatrix(const std::shared_ptr<Program> prog, float aspect) const;
     void setEyePosition(const std::shared_ptr<Program> prog) const;
