@@ -47,15 +47,15 @@ public:
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> groundProgram;
     
-    State current;
-    State previous = current;
+    State currentState;
+    State previousState = currentState;
     
     std::shared_ptr<Actor> temporaryActor;
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
     
     std::vector<std::shared_ptr<Model>> models;
-    std::vector<std::shared_ptr<Actor>> actors;
+    //std::vector<std::shared_ptr<Actor>> actors;
     
     std::shared_ptr<Player> player;
     
@@ -105,6 +105,11 @@ public:
     
     void renderGround();
     void render();
+    
+    //Physics
+    void integrate(float t, float dt);
+    void render(float t,  float alpha);
+    void renderState(State state);
     
     void simulate(double dt);
     

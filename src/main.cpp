@@ -67,15 +67,17 @@ int main(int argc, char **argv)
             accumulator -= dt;
             
             application->simulate(dt);
+            application->integrate( t, dt);
             //integrate(current, t, dt);
             t += dt;
             numSimulationsThisFrame++;
         }
         printf("Num Simulations: %d\n", numSimulationsThisFrame);
         
-        //State state = interpolate(previous, current, accumulator/dt);
+        float alpha = accumulator/dt;
+        //Interpolates automatically in application
+        application->render( t, alpha);
         
-        application->render();
         // Swap front and back buffers.
         glfwSwapBuffers(windowManager->getHandle());
         // Poll for and process events.

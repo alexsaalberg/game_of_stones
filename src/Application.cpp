@@ -240,7 +240,7 @@ void Application::createOrb() {
     temporaryActor->gridDistanceFromCenter = gridDistanceFromCenter;
     
     freeOrbCount++;
-    actors.push_back(temporaryActor);
+    currentState.actors.push_back(temporaryActor);
 }
 
 /**** geometry set up for ground plane *****/
@@ -362,7 +362,61 @@ void Application::render()
     CHECKED_GL_CALL( glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())) );
     M->popMatrix();
     
-    for(auto &actor : actors) {
+    for(auto &actor : currentState.actors) {
+        SetMaterial(mainProgram, actor->material);
+        actor->draw(mainProgram);
+    }
+    
+    mainProgram->unbind();
+    
+    groundProgram->bind();
+    player->setModelIdentityMatrix(groundProgram);
+    player->setHelicopterViewMatrix(groundProgram);
+    player->setProjectionMatrix(groundProgram, aspect);
+    
+    /*draw the ground */
+    grassTexture->bind(groundProgram->getUniform("Texture0"));
+    renderGround();
+    groundProgram->unbind();
+    
+}
+
+void Application::integrate(float t, float dt) {
+    previousState = currentState;
+    
+    currentState.integrate(t, dt);
+}
+
+void Application::render(float t, float alpha) {
+    State state = State::interpolate(previousState, currentState, alpha);
+    //state = currentState;
+    renderState(state);
+}
+
+void Application::renderState(State state) {
+    int windowWidth, windowHeight;
+    glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
+    glViewport(0, 0, windowWidth, windowHeight);
+    
+    float aspect = windowWidth/(float)windowHeight;
+    
+    CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
+    CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+    CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
+    
+    mainProgram->bind();
+    
+    player->setModelIdentityMatrix(mainProgram);
+    player->setHelicopterViewMatrix(mainProgram);
+    player->setProjectionMatrix(mainProgram, aspect);
+    
+    player->setEyePosition(mainProgram);
+    
+    vec3 directionFromLight = vec3(0) - vec3(1); //from 1,1,1 to origin
+    vec3 directionTowardsLight = -directionFromLight;
+    CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
+    
+    for(auto &actor : currentState.actors) {
         SetMaterial(mainProgram, actor->material);
         actor->draw(mainProgram);
     }
@@ -388,7 +442,8 @@ void Application::simulate(double dt) {
     }
     
     //physics loop
-    for(auto &actor : actors) {
+    
+    for(auto &actor : currentState.actors) {
         actor->step(dt);
     }
     
@@ -397,7 +452,7 @@ void Application::simulate(double dt) {
 
 void Application::calculateCollisions() {
     //collision loop
-    for(auto &actor : actors) {
+    for(auto &actor : currentState.actors) {
         if(testPlayerCollision(player, actor) && actor->captured == false) {
             actor->captured = true;
             actor->gridHeight -= 1.0f;
@@ -410,7 +465,7 @@ void Application::calculateCollisions() {
             printf("Score: %d\tFree-Orbs: %d\n", score, freeOrbCount);
         }
         if(actor->captured == false && actor->collisionCooldown == 0) {
-            for(auto &innerActor : actors) {
+            for(auto &innerActor : currentState.actors) {
                 if(actor.get() != innerActor.get()) {
                     if ( testCollision(actor, innerActor) ){
                         actor->velocity *= -1.0f;
@@ -427,7 +482,7 @@ void Application::calculateCollisions() {
 }
 
 void Application::makeOrbsGreen() {
-    for(auto &actor : actors) {
+    for(auto &actor : currentState.actors) {
         if(actor->captured == false) {
             actor->material = 5;
         }

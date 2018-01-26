@@ -16,10 +16,19 @@ State State::interpolate(State &previous, State &current, float alpha)
     shared_ptr<Actor> temporaryActor;
     temporaryActor = make_shared<Actor>();
     
-    unsigned int numberOfActors = current.actors.size();
-    for( int i = 0; i < numberOfActors; i++ ) {
-        temporaryActor = Actor::interpolate( previous.actors.at(i), current.actors.at(i), alpha );
-        state.actors.push_back( temporaryActor );
+    unsigned int currentNumberOfActors = current.actors.size();
+    unsigned int previousNumberOfActors = previous.actors.size();
+    
+    if(currentNumberOfActors > previousNumberOfActors) {
+    
+        for( int i = 0; i < previousNumberOfActors; i++ ) {
+            temporaryActor = Actor::interpolate( previous.actors.at(i), current.actors.at(i), alpha );
+            state.actors.push_back( temporaryActor );
+        }
+        for( int i = previousNumberOfActors; i < currentNumberOfActors; i++) {
+            state.actors.push_back( current.actors.at(i) );
+        }
+        
     }
     
     return state;
