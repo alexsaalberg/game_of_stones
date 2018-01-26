@@ -38,6 +38,10 @@ public:
     
     float collisionCooldown = 5;
     
+    static std::shared_ptr<Actor> interpolate(std::shared_ptr<Actor> &previous, std::shared_ptr<Actor> &current, float alpha);
+    glm::vec3 calculateAcceleration(float t);
+    void integrate(float t, float dt);
+    
     void createActor(std::shared_ptr<Model> inModels);
     void draw(const std::shared_ptr<Program> prog) const;
     virtual void step(double dt);

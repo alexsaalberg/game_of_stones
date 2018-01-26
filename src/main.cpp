@@ -33,11 +33,18 @@ int main(int argc, char **argv)
     // This is the code that will likely change program to program as you
     // may need to initialize or set up different data and state
     
+    
     application->init(resourceDir);
     
     double t = 0.0;
     double currentTime = glfwGetTime();
-    double remainingTime = 20.0f;
+    double accumulator = 0.0f;
+    
+    float simulationsPerSecond = 60.0f;
+    float dt = 1.0f / simulationsPerSecond;
+    
+    //double remainingTime = 20.0f;
+    int numSimulationsThisFrame = 0;
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
@@ -46,34 +53,29 @@ int main(int argc, char **argv)
         double frameTime = newTime - currentTime;
         currentTime = newTime;
         
-        //printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
-        //printf("Time %f\n", t);
+        printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
         
-        //Simulate Scene
-        application->simulate(frameTime);
-        // Render scene.
+        /*
+        if (frameTime>0.25f)
+            frameTime = 0.25f;*/
+        
+        accumulator += frameTime;
+        
+        numSimulationsThisFrame = 0;
+        while (accumulator>=dt)
+        {
+            accumulator -= dt;
+            
+            application->simulate(dt);
+            //integrate(current, t, dt);
+            t += dt;
+            numSimulationsThisFrame++;
+        }
+        printf("Num Simulations: %d\n", numSimulationsThisFrame);
+        
+        //State state = interpolate(previous, current, accumulator/dt);
+        
         application->render();
-        
-        
-        
-        //Spawn orb every 'secondsPerOrb' seconds
-        t += frameTime;
-        remainingTime -= frameTime;
-        if(t >= secondsPerOrb && application->gameOver == false) {
-            t -= secondsPerOrb;
-            printf("Framerate: %.01f\t", 1.0f / frameTime);
-            printf("3D Objects: %d\n", application->score + application->freeOrbCount + 2);
-            printf("Time Remaining: %f!\n", remainingTime);
-            application->createOrb();
-        }
-        if(remainingTime <= 0.0f && application->gameOver == false) {
-            printf("Game Over!\nScore: %d\n", application->score);
-            application->gameOver = true;
-            application->makeOrbsGreen();
-        }
-        
-        
-        
         // Swap front and back buffers.
         glfwSwapBuffers(windowManager->getHandle());
         // Poll for and process events.

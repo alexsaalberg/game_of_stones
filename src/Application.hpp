@@ -18,10 +18,11 @@
 #include "WindowManager.h"
 #include "GLTextureWriter.h"
 
-//QYBURN
+//Helico-opter
 #include "Actor.h"
 #include "Player.h"
 #include "Helper.h"
+#include "State.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -45,6 +46,9 @@ public:
     // Our shader program
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> groundProgram;
+    
+    State current;
+    State previous = current;
     
     std::shared_ptr<Actor> temporaryActor;
     std::shared_ptr<Model> temporaryModel;

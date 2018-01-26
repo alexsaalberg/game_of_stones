@@ -24,6 +24,31 @@ const float rFrictionMult = 0.9f;
 const float pVelocityMin = 0.01f;
 const float rOmegaMin = 1.0f;
 
+std::shared_ptr<Actor> Actor::interpolate(std::shared_ptr<Actor> &previous, std::shared_ptr<Actor> &current, float alpha) {
+    shared_ptr<Actor> actor;
+    actor = make_shared<Actor>();
+    
+    actor->position = current->position*alpha + previous->position*(1-alpha);
+    actor->velocity = current->velocity*alpha + previous->velocity*(1-alpha);
+    
+    return actor;
+}
+
+vec3 Actor::calculateAcceleration(float t) {
+    vec3 acceleration = vec3(0.0f); // meters per second per second
+    
+    acceleration.y = -9.8f;
+    
+    return acceleration;
+}
+
+void Actor::integrate(float t, float dt) {
+    vec3 acceleration = calculateAcceleration( t );
+    
+    velocity += acceleration * dt;
+    position += velocity * dt;
+}
+
 void Actor::createActor(std::shared_ptr<Model> inModel) {
     position = vec3(0);
     rotation = vec3(0);
