@@ -226,8 +226,8 @@ void Application::createOrb() {
     float randX = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
     float randZ = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
     
-    float randVelX = ((randFloat() - 0.5f) * 2.0f);
-    float randVelZ = ((randFloat() - 0.5f) * 2.0f);
+    float randVelX = ((randFloat() - 0.5f) * 20.0f);
+    float randVelZ = ((randFloat() - 0.5f) * 20.0f);
     
     temporaryActor->setPosition(vec3(randX, 1.0f, randZ));
     temporaryActor->material = 2;
@@ -330,57 +330,6 @@ void Application::renderGround()
     glDisableVertexAttribArray(2);
 }
 
-void Application::render()
-{
-    int windowWidth, windowHeight;
-    glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
-    glViewport(0, 0, windowWidth, windowHeight);
-    
-    float aspect = windowWidth/(float)windowHeight;
-    
-    CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
-    CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
-    CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
-    
-    mainProgram->bind();
-    // Apply perspective projection.
-    player->setModelIdentityMatrix(mainProgram);
-    player->setHelicopterViewMatrix(mainProgram);
-    player->setProjectionMatrix(mainProgram, aspect);
-    
-    player->setEyePosition(mainProgram);
-    
-    vec3 directionFromLight = vec3(0) - vec3(1); //from 1,1,1 to origin
-    vec3 directionTowardsLight = -directionFromLight;
-    //CHECKED_GL_CALL( glUniform3fv(mainProgram->getUniform("directionTowardsLight"), 1, GL_FALSE, &(directionTowardsLight.x) ) );
-    CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
-    
-    auto M = make_shared<MatrixStack>();
-    M->pushMatrix();
-    M->loadIdentity();
-    M->scale(vec3(5.0f, 0.0f, 5.0f));
-    CHECKED_GL_CALL( glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())) );
-    M->popMatrix();
-    
-    for(auto &actor : currentState.actors) {
-        SetMaterial(mainProgram, actor->material);
-        actor->draw(mainProgram);
-    }
-    
-    mainProgram->unbind();
-    
-    groundProgram->bind();
-    player->setModelIdentityMatrix(groundProgram);
-    player->setHelicopterViewMatrix(groundProgram);
-    player->setProjectionMatrix(groundProgram, aspect);
-    
-    /*draw the ground */
-    grassTexture->bind(groundProgram->getUniform("Texture0"));
-    renderGround();
-    groundProgram->unbind();
-    
-}
-
 void Application::integrate(float t, float dt) {
     previousState = currentState;
     
@@ -407,7 +356,7 @@ void Application::renderState(State state) {
     mainProgram->bind();
     
     player->setModelIdentityMatrix(mainProgram);
-    player->setHelicopterViewMatrix(mainProgram);
+    player->setViewMatrix(mainProgram);
     player->setProjectionMatrix(mainProgram, aspect);
     
     player->setEyePosition(mainProgram);
@@ -425,7 +374,7 @@ void Application::renderState(State state) {
     
     groundProgram->bind();
     player->setModelIdentityMatrix(groundProgram);
-    player->setHelicopterViewMatrix(groundProgram);
+    player->setViewMatrix(groundProgram);
     player->setProjectionMatrix(groundProgram, aspect);
     
     /*draw the ground */
@@ -433,21 +382,6 @@ void Application::renderState(State state) {
     renderGround();
     groundProgram->unbind();
     
-}
-
-void Application::simulate(double dt) {
-    
-    if(gameOver == false) {
-        calculateCollisions();
-    }
-    
-    //physics loop
-    
-    for(auto &actor : currentState.actors) {
-        actor->step(dt);
-    }
-    
-    player->step(dt);
 }
 
 void Application::calculateCollisions() {
@@ -478,7 +412,6 @@ void Application::calculateCollisions() {
         }
         
     }
-    
 }
 
 void Application::makeOrbsGreen() {
@@ -488,7 +421,6 @@ void Application::makeOrbsGreen() {
         }
     }
 }
-
 
 bool Application::testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2) {
     float distance = length( (actor1->position - actor2->position) );

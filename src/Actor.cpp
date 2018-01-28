@@ -39,14 +39,39 @@ vec3 Actor::calculateAcceleration(float t) {
     
     acceleration.y = -9.8f;
     
+    
     return acceleration;
 }
+
 
 void Actor::integrate(float t, float dt) {
     vec3 acceleration = calculateAcceleration( t );
     
     velocity += acceleration * dt;
     position += velocity * dt;
+    
+    if( actorIsOnGround() ) {
+        velocity.y = 0.0f;
+        position.y = calculateGroundHeight();
+    }
+    
+    if(abs(position.x) > gridDistanceFromCenter)
+        velocity.x *= -1.0f;
+    
+    if(abs(position.z) > gridDistanceFromCenter)
+        velocity.z *= -1.0f;
+    
+}
+
+bool Actor::actorIsOnGround() {
+    if(position.y <= calculateGroundHeight() ) {
+        return true;
+    }
+    return false;
+}
+
+float Actor::calculateGroundHeight() {
+    return gridHeight+radius*2.0f;
 }
 
 void Actor::createActor(std::shared_ptr<Model> inModel) {

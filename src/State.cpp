@@ -41,32 +41,3 @@ void State::integrate(float t, float dt)
         actor->integrate( t, dt );
     }
 }
-
-
-/*
- float State::acceleration(const State &state, float t)
- {
- 
- return - k*state.x - b*state.v;
- }*/
-/*
- Derivative State::evaluate(const State &initial, float t)
- {
- Derivative output;
- output.dx = initial.v;
- output.dv = acceleration(initial, t);
- return output;
- }*/
-
-/*
- Derivative State::evaluate(const State &initial, float t, float dt, const Derivative &d)
- {
- State state;
- state.x = initial.x + d.dx*dt;
- state.v = initial.v + d.dv*dt;
- Derivative output;
- output.dx = state.v;
- output.dv = acceleration(state, t+dt);
- return output;
- }
- */

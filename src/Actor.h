@@ -42,6 +42,9 @@ public:
     glm::vec3 calculateAcceleration(float t);
     void integrate(float t, float dt);
     
+    bool actorIsOnGround();
+    float calculateGroundHeight();
+    
     void createActor(std::shared_ptr<Model> inModels);
     void draw(const std::shared_ptr<Program> prog) const;
     virtual void step(double dt);

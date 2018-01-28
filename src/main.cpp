@@ -66,7 +66,7 @@ int main(int argc, char **argv)
         {
             accumulator -= dt;
             
-            application->simulate(dt);
+            //application->simulate(dt);
             application->integrate( t, dt);
             //integrate(current, t, dt);
             t += dt;
