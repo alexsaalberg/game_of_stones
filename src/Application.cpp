@@ -18,15 +18,23 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
-    else if (key == GLFW_KEY_A && (action == GLFW_PRESS || GLFW_REPEAT))
+    else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
     {
         player->moveBackward();
     }
-    else if (key == GLFW_KEY_D && (action == GLFW_PRESS || GLFW_REPEAT))
+    else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
     {
         player->moveForward();
     }
-    else if (key == GLFW_KEY_W && (action == GLFW_PRESS || GLFW_REPEAT ))
+    else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
+    {
+        player->stopMovingBackward();
+    }
+    else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
+    {
+        player->stopMovingForward();
+    }
+    else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
     {
         player->jump();
         //player->moveForward();
@@ -217,6 +225,8 @@ void Application::initGeom(const std::string& resourceDirectory) {
     temporaryActor->position = player->position;
     player->avatar = temporaryActor;
     
+    currentState.player = player;
+    
 }
 
 void Application::createOrb() {
@@ -356,7 +366,7 @@ void Application::renderState(State state) {
     mainProgram->bind();
     
     player->setModelIdentityMatrix(mainProgram);
-    player->setViewMatrix(mainProgram);
+    player->setHelicopterViewMatrix(mainProgram);
     player->setProjectionMatrix(mainProgram, aspect);
     
     player->setEyePosition(mainProgram);
@@ -374,7 +384,7 @@ void Application::renderState(State state) {
     
     groundProgram->bind();
     player->setModelIdentityMatrix(groundProgram);
-    player->setViewMatrix(groundProgram);
+    player->setHelicopterViewMatrix(groundProgram);
     player->setProjectionMatrix(groundProgram, aspect);
     
     /*draw the ground */

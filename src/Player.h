@@ -21,18 +21,14 @@
 
 class Player {
     const glm::vec3 direction = glm::vec3(0.0, 0.0, 1.0);
-    const float speed = 0.15f;
+    const float speed = 200.0f;
     const glm::vec3 speedMod = glm::vec3(1.0, 0.8, 0.9);
-    
     
     const float cameraPhiMin = -80.0f; //Limit head tilt up & down
     const float cameraPhiMax = 80.0f;
     
     const float frictionMultiplier = 0.95f;
-    
-    
     const float gravityAcceleration = 0.02f;
-    
     const float minHorizontalVelocity = 0.1f;
     
 public:
@@ -48,11 +44,23 @@ public:
     
     float radius = 1.5f;
     
+    bool movingForward;
+    bool movingBackward;
+    bool movingLeftward;
+    bool movingRightward;
+    
     //glm::vec3 cameraIdentityVector = glm::vec3(0);
 
-    //functions
+    //Physics
     void step(double dt);
+    static std::shared_ptr<Player> interpolate(std::shared_ptr<Player> &previous, std::shared_ptr<Player> &current, float alpha);
+    glm::vec3 calculateAcceleration(float t);
+    void integrate(float t, float dt);
     
+    bool playerIsOnGround();
+    float calculateGroundHeight();
+    
+    //Camera
     void setModelIdentityMatrix(const std::shared_ptr<Program> prog) const;
     void setHelicopterViewMatrix(const std::shared_ptr<Program> prog) const;
     void setViewMatrix(const std::shared_ptr<Program> prog) const;
@@ -61,11 +69,15 @@ public:
     
     void restrictCamera();
     
+    //Movement
     void moveForward();
     void moveLeft();
     void moveRight();
     void moveBackward();
     void jump();
+    
+    void stopMovingForward();
+    void stopMovingBackward();
 };
 
 

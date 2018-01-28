@@ -60,7 +60,6 @@ void Actor::integrate(float t, float dt) {
     
     if(abs(position.z) > gridDistanceFromCenter)
         velocity.z *= -1.0f;
-    
 }
 
 bool Actor::actorIsOnGround() {

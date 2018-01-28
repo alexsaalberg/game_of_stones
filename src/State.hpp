@@ -11,9 +11,11 @@
 #include <iostream>
 #include <vector>
 #include "Actor.h"
+#include "Player.h"
 
 class State {
 public:
+    std::shared_ptr<Player> player;
     std::vector<std::shared_ptr<Actor>> actors;
     
     static State interpolate(State &previous, State &current, float alpha);

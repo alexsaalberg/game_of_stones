@@ -31,6 +31,12 @@ State State::interpolate(State &previous, State &current, float alpha)
         
     }
     
+    if( previous.player == nullptr) {
+        state.player = current.player;
+    } else {
+        state.player = Player::interpolate( previous.player, current.player, alpha);
+    }
+    
     return state;
 }
 
@@ -40,4 +46,5 @@ void State::integrate(float t, float dt)
     for(auto &actor : actors) {
         actor->integrate( t, dt );
     }
+    player->integrate( t, dt );
 }

@@ -42,6 +42,75 @@ void Player::step(double dt) {
     this->avatar->position = this->position;
 }
 
+std::shared_ptr<Player> Player::interpolate(std::shared_ptr<Player> &previous, std::shared_ptr<Player> &current, float alpha) {
+    shared_ptr<Player> player;
+    player = make_shared<Player>();
+    
+    player->position = current->position*alpha + previous->position*(1-alpha);
+    player->velocity = current->velocity*alpha + previous->velocity*(1-alpha);
+    
+    return player;
+}
+
+vec3 Player::calculateAcceleration(float t) {
+    vec3 acceleration = vec3(0.0f); // meters per second per second
+    
+    acceleration.y = -9.8f;
+    
+    
+    printf("Time: %f\n", t);
+    
+    //acceleration.x -= frictionMultiplier;
+    //acceleration.z -= frictionMultiplier;
+    
+    //movingForward = movingBackward = movingLeftward = movingRightward = false;
+    
+    return acceleration;
+}
+
+void Player::integrate(float t, float dt) {
+    vec3 acceleration = calculateAcceleration( t );
+    
+    velocity += acceleration * dt;
+    
+    // Foreward: +X
+    // Rightward: +Z
+    if(movingForward) {
+        velocity.z -= speed * speedMod.x;
+    } else if(movingBackward) {
+        velocity.z += speed * speedMod.z;
+    }
+    if(movingLeftward) {
+        velocity.x -= speed * speedMod.y;
+    } else if(movingRightward) {
+        velocity.x += speed * speedMod.y;
+    }
+    
+    velocity *= frictionMultiplier * dt;
+    position += velocity * dt;
+    printf("X:%f \tZ:%f \tVx:%f \tVz:%f\n", position.x, position.z, velocity.x, velocity.z);
+    
+    if( playerIsOnGround() ) {
+        velocity.y = 0.0f;
+        position.y = calculateGroundHeight();
+    }
+    
+    
+    this->avatar->position = this->position;
+}
+
+bool Player::playerIsOnGround() {
+    if(position.y <= calculateGroundHeight() ) {
+        return true;
+    }
+    return false;
+}
+
+float Player::calculateGroundHeight() {
+    return height;
+}
+
+
 void Player::setModelIdentityMatrix(const std::shared_ptr<Program> prog) const {
     auto M = make_shared<MatrixStack>();
     M->pushMatrix();
@@ -112,15 +181,26 @@ void Player::restrictCamera() {
     cameraPhi = glm::clamp(cameraPhi, cameraPhiMin, cameraPhiMax);
 }
 
-void Player::moveForward() { //speed is ~0.2f
-    velocity.x += speed * speedMod.x; //pSpeedMod.x is forward movement scalar (prob 100%)
+void Player::moveForward() {
+    movingForward = true;
+    //velocity.x += speed * speedMod.x; //pSpeedMod.x is forward movement scalar (prob 100%)
 }
 void Player::moveLeft() {
-    velocity.z -= speed * speedMod.y; //pSpeedMod.x is forward movement scalar (prob 100%)
+    movingLeftward = true;
+    //velocity.z -= speed * speedMod.y; //pSpeedMod.x is forward movement scalar (prob 100%)
 }
 void Player::moveRight() {
-    velocity.z += speed * speedMod.y; //pSpeedMod.x is forward movement scalar (prob 100%)
+    movingRightward = true;
+    //velocity.z += speed * speedMod.y; //pSpeedMod.x is forward movement scalar (prob 100%)
 }
 void Player::moveBackward() {
-    velocity.x -= speed * speedMod.z; //pSpeedMod.x is forward movement scalar (prob 100%)
+    movingBackward = true;
+    //velocity.x -= speed * speedMod.z; //pSpeedMod.x is forward movement scalar (prob 100%)
+}
+
+void Player::stopMovingForward() {
+    movingForward = false;
+}
+void Player::stopMovingBackward() {
+    movingBackward = false;
 }
