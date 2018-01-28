@@ -148,35 +148,6 @@ void Actor::step(double dt) {
     
 }
 
-void Actor::setPosition(vec3 newPosition) {
-    position = newPosition;
-}
-vec3 Actor::getPosition() {
-    return position;
-}
-
-void Actor::setRotation(vec3 newRotation) {
-    rotation = newRotation;
-}
-void Actor::addRotation(vec3 deltaRotation) {
-    rotation += deltaRotation;
-}
-vec3 Actor::getRotation() {
-    return rotation;
-}
-
-void Actor::addVelocity(vec3 deltaVelocity) {
-    velocity += deltaVelocity;
-}
-
-void Actor::addOffset(vec3 deltaOffset) {
-    modelOffset += deltaOffset;
-}
-
-float Actor::getScale() {
-    return scale;
-}
-
 void Actor::draw(const std::shared_ptr<Program> prog) const {
     
     auto M = make_shared<MatrixStack>();

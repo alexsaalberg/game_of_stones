@@ -239,7 +239,7 @@ void Application::createOrb() {
     float randVelX = ((randFloat() - 0.5f) * 20.0f);
     float randVelZ = ((randFloat() - 0.5f) * 20.0f);
     
-    temporaryActor->setPosition(vec3(randX, 1.0f, randZ));
+    temporaryActor->position = vec3(randX, 1.0f, randZ);
     temporaryActor->material = 2;
     //temporaryActor->velocity = vec3(0.01f, 0, 0.01f);
     temporaryActor->velocity = vec3(randVelX * 0.1f, 0.1f, randVelZ * 0.1f);

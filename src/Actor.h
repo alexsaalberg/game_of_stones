@@ -38,6 +38,10 @@ public:
     
     float collisionCooldown = 5;
     
+    glm::vec3 rotation;
+    glm::vec3 omega; //rotational velocity
+    glm::vec3 modelOffset;
+    
     static std::shared_ptr<Actor> interpolate(std::shared_ptr<Actor> &previous, std::shared_ptr<Actor> &current, float alpha);
     glm::vec3 calculateAcceleration(float t);
     void integrate(float t, float dt);
@@ -63,11 +67,6 @@ public:
     int material;
     
 protected:
-    glm::vec3 rotation;
-    
-    glm::vec3 omega; //rotational velocity
-    
-    glm::vec3 modelOffset;
     
     
     std::vector<std::shared_ptr<Model>> models;
