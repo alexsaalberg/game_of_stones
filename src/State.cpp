@@ -18,7 +18,7 @@ State State::interpolate(State &previous, State &current, float alpha)
     unsigned int currentNumberOfGameObjects = current.gameObjects.size();
     unsigned int previousNumberOfGameObjects = previous.gameObjects.size();
     
-    if(currentNumberOfGameObjects > previousNumberOfGameObjects) {
+    if(currentNumberOfGameObjects >= previousNumberOfGameObjects) {
     
         for( int i = 0; i < previousNumberOfGameObjects; i++ ) {
             temporaryGameObject = GameObject::interpolate( previous.gameObjects.at(i), current.gameObjects.at(i), alpha );
@@ -27,7 +27,6 @@ State State::interpolate(State &previous, State &current, float alpha)
         for( int i = previousNumberOfGameObjects; i < currentNumberOfGameObjects; i++) {
             state.gameObjects.push_back( current.gameObjects.at(i) );
         }
-        
     }
     
     return state;
