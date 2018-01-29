@@ -103,12 +103,10 @@ public:
     void initShaders(const std::string& resourceDirectory);
     
     void initMainProgram(const std::string& resourceDirectory);
-    
     void initGroundProgram(const std::string& resourceDirectory);
-    
     void initTextures(const std::string& resourceDirectory);
-    
     void initGeom(const std::string& resourceDirectory);
+    
     void initPlayer(std::shared_ptr<Model> model);
     void initCamera();
     

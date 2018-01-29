@@ -11,7 +11,6 @@
 using namespace std;
 using namespace glm;
 
-
 void Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -299,6 +298,7 @@ void Application::renderState(State& state) {
         vec3 directionTowardsLight = -directionFromLight;
         CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
+        SetMaterial(mainProgram, 0);
         for(auto& gameObject : state.gameObjects) {
             gameObject->render(mainProgram);
         }
