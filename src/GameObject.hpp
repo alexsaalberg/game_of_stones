@@ -40,6 +40,7 @@ public:
     //Functions
     static std::shared_ptr<GameObject> interpolate(std::shared_ptr<GameObject> previous, std::shared_ptr<GameObject> current, float alpha);
     
+    GameObject(const GameObject &gameObject); //Copy constructor
     GameObject(InputComponent *input, PhysicsComponent *physics, GraphicsComponent *graphics);
     
     void interpolate(float t, float alpha);
