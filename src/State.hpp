@@ -10,13 +10,11 @@
 
 #include <iostream>
 #include <vector>
-#include "Actor.h"
-#include "Player.h"
+#include "GameObject.hpp"
 
 class State {
 public:
-    std::shared_ptr<Player> player;
-    std::vector<std::shared_ptr<Actor>> actors;
+    std::vector<std::shared_ptr<GameObject>> gameObjects;
     
     static State interpolate(State &previous, State &current, float alpha);
     //float acceleration(const State &state, float t);

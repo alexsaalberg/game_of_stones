@@ -19,6 +19,7 @@
 
 class DefaultGraphicsComponent : public GraphicsComponent
 {
+public:
     //Variables
     std::vector<std::shared_ptr<Model>> models;
     

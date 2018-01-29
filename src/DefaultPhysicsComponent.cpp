@@ -25,19 +25,23 @@ void DefaultPhysicsComponent::integrate(GameObject& gameObject, float dt) {
     gameObject.position += gameObject.velocity * dt;
     
     float groundHeight = calculateGroundHeight();
+    
     if(gameObject.position.y < groundHeight ) {
         gameObject.velocity.y = 0.0f;
         gameObject.position.y = groundHeight;
     }
 }
 
-float calculateGroundHeight(){
-    return 0.0f;
+float DefaultPhysicsComponent::calculateGroundHeight() {
+    return 1.0f;
 }
 
 vec3 DefaultPhysicsComponent::calculateAcceleration(GameObject& gameObject, float dt) {
     vec3 acceleration = vec3(0.0f); // meters per second per second
     acceleration.y = -9.8f;
+    
+    float frictionMultiplier = 0.95f;
+    acceleration.x = -1.0f * frictionMultiplier * gameObject.velocity.x;
     
     return acceleration;
 }

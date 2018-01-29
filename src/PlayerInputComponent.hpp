@@ -17,8 +17,9 @@ class PlayerInputComponent : public InputComponent
 {
 public:
     //Variables
-    bool movingForward;
-    bool movingBackward;
+    bool movingForward = false;
+    bool movingBackward = false;
+    bool jumping = false;
     
     //Functions
     virtual void update(GameObject& gameObject);

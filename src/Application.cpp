@@ -20,23 +20,23 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
     else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
     {
-        player->moveBackward();
+        playerInputComponent->movingForward = true;
     }
     else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
     {
-        player->moveForward();
+        playerInputComponent->movingBackward = true;
     }
     else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
     {
-        player->stopMovingBackward();
+        playerInputComponent->movingForward = false;
     }
     else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
     {
-        player->stopMovingForward();
+        playerInputComponent->movingBackward = false;
     }
     else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
     {
-        player->jump();
+        playerInputComponent->jumping = true;
     }
 }
 
@@ -64,6 +64,8 @@ void Application::init(const std::string& resourceDirectory) {
     initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
+    initPlayer(sphereModel);
+    initCamera();
     initQuad();
 }
 
@@ -149,26 +151,30 @@ void Application::initGeom(const std::string& resourceDirectory) {
     {
         cerr << errStr << endl;
     } else {
-        
-        temporaryModel = make_shared<Model>();
         sphereModel = make_shared<Model>();
-        //temporaryModel->createModel(TOshapes, objMaterials);
         sphereModel->createModel(TOshapes, objMaterials);
-        
-        for(int i = 0; i < 15; i++) {
-            createOrb();
-        }
     }
+}
+
+void Application::initPlayer(shared_ptr<Model> model) {
+    shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
+    inputComponents.push_back(input);
     
-    player = make_shared<Player>();
-    player->position.z += gridDistanceFromCenter + 5.0f;
-    //player->height = texturePixelHeight/2
-    player->cameraTheta = -90.0f;
-    temporaryActor->position = player->position;
-    player->avatar = temporaryActor;
+    shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent> ();
+    physicsComponents.push_back(physics);
     
-    currentState.player = player;
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model);
     
+    playerInputComponent = input;
+    player = make_shared<GameObject>(input, physics, graphics);
+    currentState.gameObjects.push_back(player);
+}
+
+void Application::initCamera() {
+    camera = make_shared<Camera>();
+    camera->player = player;
 }
 
 void Application::createOrb() {
@@ -192,7 +198,8 @@ void Application::createOrb() {
     temporaryActor->gridDistanceFromCenter = gridDistanceFromCenter;
     
     freeOrbCount++;
-    currentState.actors.push_back(temporaryActor);
+    
+    //currentState.actors.push_back(temporaryActor);
 }
 
 /**** geometry set up for ground plane *****/
@@ -294,7 +301,7 @@ void Application::render(float t, float alpha) {
     renderState(state);
 }
 
-void Application::renderState(State state) {
+void Application::renderState(State& state) {
     int windowWidth, windowHeight;
     glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
@@ -307,37 +314,38 @@ void Application::renderState(State state) {
     
     mainProgram->bind();
     
-    player->setModelIdentityMatrix(mainProgram);
-    player->setHelicopterViewMatrix(mainProgram);
-    player->setProjectionMatrix(mainProgram, aspect);
+        camera->setModelIdentityMatrix(mainProgram);
+        camera->setHelicopterViewMatrix(mainProgram);
+        camera->setProjectionMatrix(mainProgram, aspect);
     
-    player->setEyePosition(mainProgram);
+        camera->setEyePosition(mainProgram);
     
-    vec3 directionFromLight = vec3(0) - vec3(1); //from 1,1,1 to origin
-    vec3 directionTowardsLight = -directionFromLight;
-    CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
+        vec3 directionFromLight = vec3(0) - vec3(1); //from 1,1,1 to origin
+        vec3 directionTowardsLight = -directionFromLight;
+        CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
-    for(auto &actor : currentState.actors) {
-        SetMaterial(mainProgram, actor->material);
-        actor->draw(mainProgram);
-    }
+        for(auto& gameObject : state.gameObjects) {
+            gameObject->render(mainProgram);
+        }
     
     mainProgram->unbind();
     
-    groundProgram->bind();
-    player->setModelIdentityMatrix(groundProgram);
-    player->setHelicopterViewMatrix(groundProgram);
-    player->setProjectionMatrix(groundProgram, aspect);
     
-    /*draw the ground */
-    grassTexture->bind(groundProgram->getUniform("Texture0"));
-    renderGround();
+    groundProgram->bind();
+        camera->setModelIdentityMatrix(groundProgram);
+        camera->setHelicopterViewMatrix(groundProgram);
+        camera->setProjectionMatrix(groundProgram, aspect);
+    
+        /*draw the ground */
+        grassTexture->bind(groundProgram->getUniform("Texture0"));
+        renderGround();
     groundProgram->unbind();
     
 }
 
 void Application::calculateCollisions() {
     //collision loop
+    /*
     for(auto &actor : currentState.actors) {
         if(testPlayerCollision(player, actor) && actor->captured == false) {
             actor->captured = true;
@@ -364,6 +372,7 @@ void Application::calculateCollisions() {
         }
         
     }
+    */
 }
 
 bool Application::testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2) {

@@ -9,7 +9,7 @@
 
 using namespace std;
 
-shared_ptr<GameObject> interpolate(shared_ptr<GameObject> previous, shared_ptr<GameObject> current, float alpha)
+shared_ptr<GameObject> GameObject::interpolate(shared_ptr<GameObject> previous, shared_ptr<GameObject> current, float alpha)
 {
     shared_ptr<GameObject> gameObject;
     
@@ -32,8 +32,7 @@ GameObject::GameObject(const GameObject& gameObject) { //Copy Constructor
     this->graphics = gameObject.graphics;
 }
 
-GameObject::GameObject(InputComponent* inputComponent,
-                       PhysicsComponent* physicsComponent, GraphicsComponent* graphicsComponent) {
+GameObject::GameObject(std::shared_ptr<InputComponent> inputComponent, std::shared_ptr<PhysicsComponent> physicsComponent, std::shared_ptr<GraphicsComponent> graphicsComponent) {
     this->input = inputComponent;
     this->physics = physicsComponent;
     this->graphics = graphicsComponent;
