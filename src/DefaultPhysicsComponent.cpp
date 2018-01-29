@@ -15,25 +15,29 @@ void DefaultPhysicsComponent::update(GameObject& gameObject, float dt) {
 }
 
 void DefaultPhysicsComponent::integrate(GameObject& gameObject, float dt) {
-    vec3 acceleration = calculateAcceleration();
-    vec3 impulse = calculateImpulse();
+    
+    gameObject.velocity += gameObject.impulse;
+    gameObject.impulse = vec3(0.0f);
+    
+    vec3 acceleration = calculateAcceleration(gameObject, dt);
     
     gameObject.velocity += acceleration * dt;
     gameObject.position += gameObject.velocity * dt;
     
-    /*
-    if( actorIsOnGround() ) {
+    float groundHeight = calculateGroundHeight();
+    if(gameObject.position.y < groundHeight ) {
         gameObject.velocity.y = 0.0f;
-        gameObject.position.y = calculateGroundHeight();
-    } */
+        gameObject.position.y = groundHeight;
+    }
 }
 
-vec3 DefaultPhysicsComponent::calculateAcceleration() {
+float calculateGroundHeight(){
+    return 0.0f;
+}
+
+vec3 DefaultPhysicsComponent::calculateAcceleration(GameObject& gameObject, float dt) {
     vec3 acceleration = vec3(0.0f); // meters per second per second
     acceleration.y = -9.8f;
+    
     return acceleration;
-}
-
-vec3 DefaultPhysicsComponent::calculateImpulse() {
-    return vec3(0.0f);
 }

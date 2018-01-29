@@ -120,6 +120,7 @@ void Player::setModelIdentityMatrix(const std::shared_ptr<Program> prog) const {
     M->popMatrix();
 }
 
+
 void Player::setHelicopterViewMatrix(const std::shared_ptr<Program> prog) const {
     float x = cos(radians(cameraPhi))*cos(radians(cameraTheta));
     float y = sin(radians(cameraPhi));

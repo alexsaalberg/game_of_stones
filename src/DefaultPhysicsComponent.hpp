@@ -19,8 +19,9 @@ public:
     virtual void update(GameObject& gameObject, float dt);
     void integrate(GameObject& gameObject, float dt);
     
-    glm::vec3 calculateAcceleration();
-    glm::vec3 calculateImpulse();
+    float calculateGroundHeight();
+    
+    glm::vec3 calculateAcceleration(GameObject& gameObject, float dt);
 };
 
 #endif /* DefaultPhysicsComponent_hpp */

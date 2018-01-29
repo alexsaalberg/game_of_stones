@@ -9,7 +9,7 @@
 #define GameObject_hpp
 
 #include <stdio.h>
-#include <memory>
+#include <memory> //std::shared_ptr
 
 #include "glm/glm.hpp"
 
@@ -23,6 +23,8 @@ class GraphicsComponent;
 class GameObject
 {
 public:
+    const glm::vec3 forwardDirection = glm::vec3(1.0f, 0.0f, 0.0f);
+    
     //Variables
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 velocity = glm::vec3(0.0f);
@@ -30,7 +32,14 @@ public:
     glm::vec3 rotation = glm::vec3(0.0f);
     glm::vec3 omega = glm::vec3(0.0f); //rotational velocity
     
+    glm::vec3 impulse = glm::vec3(0.0f);
+    
+    float scale = 1.0f; 
+    float mass = 1.0f; //1 gram?
+    
     //Functions
+    static std::shared_ptr<GameObject> interpolate(std::shared_ptr<GameObject> previous, std::shared_ptr<GameObject> current, float alpha);
+    
     GameObject(InputComponent *input, PhysicsComponent *physics, GraphicsComponent *graphics);
     
     void interpolate(float t, float alpha);

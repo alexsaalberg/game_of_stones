@@ -15,13 +15,12 @@ void DefaultGraphicsComponent::update(GameObject& gameObject, std::shared_ptr<Pr
 }
 
 void DefaultGraphicsComponent::draw(GameObject& gameObject, const std::shared_ptr<Program> prog) {
-    
     auto M = make_shared<MatrixStack>();
     
     M->pushMatrix();
     M->loadIdentity();
         M->translate(gameObject.position);
-        //M->scale(gameObject.scale);
+        M->scale(gameObject.scale);
         M->rotate(radians(gameObject.rotation.x), vec3(1, 0, 0));
         M->rotate(radians(gameObject.rotation.y), vec3(0, 1, 0));
         M->rotate(radians(gameObject.rotation.z), vec3(0, 0, 1));
