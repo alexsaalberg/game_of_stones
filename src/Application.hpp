@@ -19,9 +19,6 @@
 #include "GLTextureWriter.h"
 
 //Helico-opter
-#include "Actor.h"
-#include "Player.h"
-#include "Helper.h"
 #include "State.hpp"
 
 #include "Camera.hpp"
@@ -62,7 +59,6 @@ public:
     std::shared_ptr<Camera> camera;
     std::shared_ptr<GameObject> player;
     
-    std::shared_ptr<Actor> temporaryActor;
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
     
@@ -116,8 +112,6 @@ public:
     void initPlayer(std::shared_ptr<Model> model);
     void initCamera();
     
-    void createOrb();
-    
     /**** geometry set up for ground plane *****/
     void initQuad();
     
@@ -129,14 +123,6 @@ public:
     void renderState(State& state);
     
     void simulate(float dt);
-    
-    void calculateCollisions();
-    
-    void makeOrbsGreen();
-    
-    bool testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2);
-    
-    bool testPlayerCollision(std::shared_ptr<Player> player, std::shared_ptr<Actor> actor);
     
     // helper function to set materials for shading
     void SetMaterial(const std::shared_ptr<Program> prog, int i);

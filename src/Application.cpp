@@ -177,31 +177,6 @@ void Application::initCamera() {
     camera->player = player;
 }
 
-void Application::createOrb() {
-    temporaryActor = make_shared<Actor>();
-    temporaryActor->initActor(sphereModel);
-    
-    float randX = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
-    float randZ = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
-    
-    float randVelX = ((randFloat() - 0.5f) * 20.0f);
-    float randVelZ = ((randFloat() - 0.5f) * 20.0f);
-    
-    temporaryActor->position = vec3(randX, 1.0f, randZ);
-    temporaryActor->material = 2;
-    //temporaryActor->velocity = vec3(0.01f, 0, 0.01f);
-    temporaryActor->velocity = vec3(randVelX * 0.1f, 0.1f, randVelZ * 0.1f);
-    temporaryActor->velocity += score * 0.001f;
-    //temporaryActor->addOffset(vec3(0, -2, 0));
-    temporaryActor->scale *= 0.2f;
-    temporaryActor->gridHeight = gridHeight;
-    temporaryActor->gridDistanceFromCenter = gridDistanceFromCenter;
-    
-    freeOrbCount++;
-    
-    //currentState.actors.push_back(temporaryActor);
-}
-
 /**** geometry set up for ground plane *****/
 void Application::initQuad()
 {
@@ -342,49 +317,6 @@ void Application::renderState(State& state) {
     groundProgram->unbind();
     
 }
-
-void Application::calculateCollisions() {
-    //collision loop
-    /*
-    for(auto &actor : currentState.actors) {
-        if(testPlayerCollision(player, actor) && actor->captured == false) {
-            actor->captured = true;
-            actor->gridHeight -= 1.0f;
-            actor->material = 0;
-            actor->velocity = vec3(0);
-            actor->velocity.y += 0.3f;
-            score++;
-            freeOrbCount--;
-            // +2 because player and grid
-            printf("Score: %d\tFree-Orbs: %d\n", score, freeOrbCount);
-        }
-        if(actor->captured == false && actor->collisionCooldown == 0.0f) {
-            for(auto &innerActor : currentState.actors) {
-                if(actor.get() != innerActor.get()) {
-                    if ( testCollision(actor, innerActor) ){
-                        actor->velocity *= -1.0f;
-                        actor->material = 3;
-                        //actor->material %= 6;
-                        actor->collisionCooldown = 20.0f;
-                    }
-                }
-            }
-        }
-        
-    }
-    */
-}
-
-bool Application::testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2) {
-    float distance = length( (actor1->position - actor2->position) );
-    return (distance < (actor1->radius*actor1->scale + actor2->radius*actor2->scale));
-}
-
-bool Application::testPlayerCollision(std::shared_ptr<Player> player, std::shared_ptr<Actor> actor) {
-    float distance = length( (player->position - actor->position) );
-    return (distance < (player->radius - actor->radius*actor->scale));
-}
-
 
 // helper function to set materials for shading
 void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
