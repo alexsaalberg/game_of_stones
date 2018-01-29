@@ -15,7 +15,6 @@
 
 #include <glad/glad.h>
 
-
 #include "Shape.h"
 #include "glm/glm.hpp"
 #include "tiny_obj_loader.h"

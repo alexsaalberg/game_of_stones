@@ -41,7 +41,7 @@ State State::interpolate(State &previous, State &current, float alpha)
 }
 
 
-void State::integrate(float t, float dt)
+void State::integrate(float t, double dt)
 {
     for(auto &actor : actors) {
         actor->integrate( t, dt );

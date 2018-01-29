@@ -37,80 +37,22 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
     {
         player->jump();
-        //player->moveForward();
-    }
-    else if (key == GLFW_KEY_R && (action == GLFW_PRESS || GLFW_REPEAT))
-    {
-        player->height += 0.1f;
-    }
-    else if (key == GLFW_KEY_F && (action == GLFW_PRESS || GLFW_REPEAT))
-    {
-        player->height -= 0.1f;
-    }
-    else if (key == GLFW_KEY_S && (action == GLFW_PRESS || GLFW_REPEAT))
-    {
-        //player->moveBackward();
-    }
-    else if (key == GLFW_KEY_SPACE  && (action == GLFW_PRESS || GLFW_REPEAT))
-    {
-        player->jump();
-    }
-    else if (key == GLFW_KEY_P  && (action == GLFW_PRESS || GLFW_REPEAT))
-    {
-        printf("Position: %fx %fy %fz\n", player->position.x, player->position.y, player->position.z);
-        printf("Angle: %ft %fp\n", player->cameraTheta, player->cameraPhi);
     }
 }
 
 void Application::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
 {
-    if(mouseDown) {
-        player -> cameraTheta += (float) deltaX;
-        player -> cameraPhi += (float) deltaY;
-        
-        player->restrictCamera();
-    }
+    
 }
 
 void Application::mouseCallback(GLFWwindow *window, int button, int action, int mods)
 {
-    double posX, posY;
     
-    if (action == GLFW_PRESS)
-    {
-        mouseDown = !mouseDown; //Flip mouseDown;
-        glfwGetCursorPos(window, &posX, &posY);
-        
-        if(mouseDown) {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            mouse_prevX = posX;
-            mouse_prevY = posY;
-        } else {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
-    }
 }
 
 void Application::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
-    double deltaX, deltaY;
     
-    if(mouseDown) {
-        //change in mouse pos since last
-        deltaX = mouse_prevX - xpos;
-        deltaY = mouse_prevY - ypos;
-        mouse_prevX = xpos;
-        mouse_prevY = ypos;
-        
-        //THIS LINE MAKES vertical moving mouse down MOVE camera up;
-        deltaY *= -1;
-        //THIS LINE MAKES horizontal mouse work as expected
-        deltaX *= -1;
-        player -> cameraTheta += (float) deltaX / pixelsToDegrees_X;
-        player -> cameraPhi += (float) deltaY / pixelsToDegrees_Y;
-        
-        player->restrictCamera();
-    }
 }
 
 void Application::resizeCallback(GLFWwindow *window, int width, int height)
@@ -231,7 +173,7 @@ void Application::initGeom(const std::string& resourceDirectory) {
 
 void Application::createOrb() {
     temporaryActor = make_shared<Actor>();
-    temporaryActor->createActor(sphereModel);
+    temporaryActor->initActor(sphereModel);
     
     float randX = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
     float randZ = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
@@ -408,7 +350,7 @@ void Application::calculateCollisions() {
             // +2 because player and grid
             printf("Score: %d\tFree-Orbs: %d\n", score, freeOrbCount);
         }
-        if(actor->captured == false && actor->collisionCooldown == 0) {
+        if(actor->captured == false && actor->collisionCooldown == 0.0f) {
             for(auto &innerActor : currentState.actors) {
                 if(actor.get() != innerActor.get()) {
                     if ( testCollision(actor, innerActor) ){
@@ -421,14 +363,6 @@ void Application::calculateCollisions() {
             }
         }
         
-    }
-}
-
-void Application::makeOrbsGreen() {
-    for(auto &actor : currentState.actors) {
-        if(actor->captured == false) {
-            actor->material = 5;
-        }
     }
 }
 

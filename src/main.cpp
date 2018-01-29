@@ -7,8 +7,6 @@
 const int windowWidth = 800;
 const int windowHeight = 420;
 
-const float secondsPerOrb = 0.5f;
-
 int main(int argc, char **argv)
 {
     // Where the resources are loaded from
@@ -43,7 +41,6 @@ int main(int argc, char **argv)
     float simulationsPerSecond = 60.0f;
     float dt = 1.0f / simulationsPerSecond;
     
-    //double remainingTime = 20.0f;
     int numSimulationsThisFrame = 0;
     
     // Loop until the user closes the window.

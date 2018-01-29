@@ -111,7 +111,7 @@ public:
     void render(float t,  float alpha);
     void renderState(State state);
     
-    void simulate(double dt);
+    void simulate(float dt);
     
     void calculateCollisions();
     

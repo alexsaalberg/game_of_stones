@@ -15,7 +15,6 @@
 
 #include <glad/glad.h>
 
-
 #include "Shape.h"
 #include "glm/glm.hpp"
 #include "tiny_obj_loader.h"
@@ -27,48 +26,42 @@ class Actor
 {
     
 public:
-    glm::vec3 position;
-    glm::vec3 velocity;
+    //Variables
+    glm::vec3 modelOffset = glm::vec3(0.0f);
+    
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 velocity = glm::vec3(0.0f);
+    
+    glm::vec3 rotation = glm::vec3(0.0f);
+    glm::vec3 omega = glm::vec3(0.0f); //rotational velocity
+    
     float scale = 1.0f;
+    float radius = 1.0f;
+    
+    int material = 1;
     
     float gridDistanceFromCenter = 100.0f;
-    float radius = 1.0f;
     float gridHeight = -1.5f;
+    
     bool captured = false;
+    float collisionCooldown = 5.0f;
     
-    float collisionCooldown = 5;
+
+    //Functions
+    void initActor(std::shared_ptr<Model> inModels);
     
-    glm::vec3 rotation;
-    glm::vec3 omega; //rotational velocity
-    glm::vec3 modelOffset;
+    void integrate(float t, float dt);
     
     static std::shared_ptr<Actor> interpolate(std::shared_ptr<Actor> &previous, std::shared_ptr<Actor> &current, float alpha);
+    
     glm::vec3 calculateAcceleration(float t);
-    void integrate(float t, float dt);
     
     bool actorIsOnGround();
     float calculateGroundHeight();
     
-    void createActor(std::shared_ptr<Model> inModels);
     void draw(const std::shared_ptr<Program> prog) const;
-    virtual void step(double dt);
     
-    void setPosition(glm::vec3 newPosition);
-    glm::vec3 getPosition();
-    void addVelocity(glm::vec3 deltaVelocity);
-    
-    void setRotation(glm::vec3 newRotation);
-    void addRotation(glm::vec3 deltaRotation);
-    glm::vec3 getRotation();
-    
-    void addOffset(glm::vec3 deltaOffset);
-    float getScale();
-    
-    int material;
-    
-protected:
-    
-    
+private:
     std::vector<std::shared_ptr<Model>> models;
 };
 

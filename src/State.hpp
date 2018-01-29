@@ -20,7 +20,7 @@ public:
     
     static State interpolate(State &previous, State &current, float alpha);
     //float acceleration(const State &state, float t);
-    void integrate(float t, float dt);
+    void integrate(float t, double dt);
 };
 
 #endif /* State_hpp */
