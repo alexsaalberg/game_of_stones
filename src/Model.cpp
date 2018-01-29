@@ -36,24 +36,19 @@ void Model::createModel(shared_ptr<Shape> shape) {
     gMax.y = fmax(shapes[i]->max.y, gMax.y);
     gMax.z = fmax(shapes[i]->max.z, gMax.z);
     
-    
-    //mTranslate = 0.5f*(gMax-gMin);
-    //mTranslate = 0.5f*(gMax-gMin);
-    mTranslate = gMin + 0.5f*(gMax - gMin);
-    
-    
+    translation = gMin + 0.5f*(gMax - gMin);
     
     if (gMax.x > gMax.y && gMax.x > gMax.z)
     {
-        mScale = 2.0/(gMax.x-gMin.x);
+        scale = 2.0/(gMax.x-gMin.x);
     }
     else if (gMax.y > gMax.x && gMax.y > gMax.z)
     {
-        mScale = 2.0/(gMax.y-gMin.y);
+        scale = 2.0/(gMax.y-gMin.y);
     }
     else
     {
-        mScale = 2.0/(gMax.z-gMin.z);
+        scale = 2.0/(gMax.z-gMin.z);
     }
 }
 
@@ -90,34 +85,34 @@ void Model::createModel(vector<shape_t> inShapes, vector<material_t> inMaterials
         // based on the results of calling measure on each peice
     }
     
-    mTranslate = 0.5f*(gMax-gMin);
+    translation = 0.5f*(gMax-gMin);
     //mTranslate = gMin + 0.5f*(gMax - gMin);
     if (gMax.x > gMax.y && gMax.x > gMax.z)
     {
-        mScale = 2.0/(gMax.x-gMin.x);
+        scale = 2.0/(gMax.x-gMin.x);
     }
     else if (gMax.y > gMax.x && gMax.y > gMax.z)
     {
-        mScale = 2.0/(gMax.y-gMin.y);
+        scale = 2.0/(gMax.y-gMin.y);
     }
     else
     {
-        mScale = 2.0/(gMax.z-gMin.z);
+        scale = 2.0/(gMax.z-gMin.z);
     }
 }
 
 void Model::rotate(vec3 deltaRotation) {
-    mRotate += deltaRotation;
+    rotation += deltaRotation;
 }
 
 void Model::draw(const std::shared_ptr<Program> prog, shared_ptr<MatrixStack> M) const {
     
     M->pushMatrix();
-    M->scale(mScale);
-    M->rotate(radians(mRotate.x), vec3(1, 0, 0));
-    M->rotate(radians(mRotate.y), vec3(0, 1, 0));
-    M->rotate(radians(mRotate.z), vec3(0, 0, 1));
-    M->translate(-mTranslate);
+    M->scale(scale);
+    M->rotate(radians(rotation.x), vec3(1, 0, 0));
+    M->rotate(radians(rotation.y), vec3(0, 1, 0));
+    M->rotate(radians(rotation.z), vec3(0, 0, 1));
+    M->translate(-translation); //Negative translation
     
     //mat4 normMatrix = glm::transpose(glm::inverse(M->topMatrix()));
     //glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(normMatrix));
