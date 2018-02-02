@@ -81,6 +81,8 @@ public:
     
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
+    std::shared_ptr<Model> birdModel;
+    std::shared_ptr<Model> helicopterModel;
     
     std::vector< std::shared_ptr<Model> > models;
     

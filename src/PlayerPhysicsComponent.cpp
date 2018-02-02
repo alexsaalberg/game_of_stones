@@ -42,13 +42,23 @@ vec3 PlayerPhysicsComponent::calculateAcceleration(GameObject& gameObject, float
     
     float frictionMultiplier = 0.95f;
     
-    float diff = maxHorizontalSpeed - gameObject.velocity.x; //accelerate towards max speed
-    if( abs(diff) > 0.01f ) {
-        acceleration.x = diff;  //(should take ~1 sec to achieve max speed)
+    float speedDiff = maxHorizontalSpeed - gameObject.velocity.x; //accelerate towards max speed
+    if( abs(speedDiff) > 0.01f ) {
+        acceleration.x = speedDiff;  //(should take ~1 sec to achieve max speed)
     }
-
+    
     //acceleration.x = -1.0f * frictionMultiplier * gameObject.velocity.x;
     acceleration.y = -1.0f * frictionMultiplier * gameObject.velocity.y;
+    
+    const float maximumHeight = 10.0f; //BirdHighSpawnY = ~10.0
+    float heightDiff = maximumHeight - gameObject.position.y;
+    if( heightDiff < 0.0f ) { //heightDiff will be (-) if player above max
+        acceleration.y += heightDiff * 20.0f;
+        if(gameObject.impulse.y < 0.0f) {
+            //gameObject.impulse.y *= 0.5f;
+        }
+    }
+
     
     return acceleration;
 }

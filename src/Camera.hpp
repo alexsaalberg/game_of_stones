@@ -27,7 +27,7 @@ public:
     //Variables
     float cameraTheta = 0; //around Y axis (turn head left & right)
     float cameraPhi = 0; // around Z axis (nod up & down)
-    float cameraDistance = 50.0f; //Distance from view to character (think 2.5d view)
+    float cameraDistance = 20.0f; //Distance from view to character (think 2.5d view)
     
     
     std::shared_ptr<GameObject> player; //GameObject to center camera around (almost always player)

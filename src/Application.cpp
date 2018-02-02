@@ -69,7 +69,7 @@ void Application::init(const std::string& resourceDirectory) {
     initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
-    initPlayer(sphereModel);
+    initPlayer(helicopterModel);
     initCamera();
     initBirds();
     initQuad();
@@ -161,6 +161,29 @@ void Application::initGeom(const std::string& resourceDirectory) {
     } else {
         sphereModel = make_shared<Model>();
         sphereModel->createModel(TOshapes, objMaterials);
+    }
+    //load in the mesh and make the shapes
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                               (resourceDirectory + "/Bird_01.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        birdModel = make_shared<Model>();
+        birdModel->createModel(TOshapes, objMaterials);
+        birdModel->rotate( vec3(90.0f, 180.0f, 0.0f) );
+    }
+    
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/Helicopter.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        helicopterModel = make_shared<Model>();
+        helicopterModel->createModel(TOshapes, objMaterials);
+        helicopterModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
+        helicopterModel->scale *= 2.0f;
     }
 }
 
@@ -304,11 +327,11 @@ void Application::renderState(State& state) {
     
         camera->setEyePosition(mainProgram);
     
-        vec3 directionFromLight = vec3(0) - vec3(1); //from 1,1,1 to origin
+        vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 20.0f, 10.0f); //from X to origin
         vec3 directionTowardsLight = -directionFromLight;
         CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
-        SetMaterial(mainProgram, 0);
+        SetMaterial(mainProgram, 2);
         for(auto& gameObject : state.gameObjects) {
             gameObject->render(mainProgram);
         }
@@ -330,8 +353,9 @@ void Application::renderState(State& state) {
     auto M = make_shared<MatrixStack>();
     M->pushMatrix();
         M->loadIdentity();
+        //M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
+        M->translate(glm::vec3(player->position.x+2.0f, 0.0f, 0.0f));
         M->scale(glm::vec3(10.0f, 10.0f, 10.0f));
-        M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
         CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
     M->popMatrix();
     /*draw the ground */
@@ -345,7 +369,7 @@ void Application::renderState(State& state) {
 // helper function to set materials for shading
 void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
 {
-    CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.3f, 0.3f) );
+    CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.2f, 0.1f) );
     CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 3.0f) );
     
     switch (i)
@@ -401,6 +425,7 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
     shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
     graphicsComponents.push_back(graphics);
     graphics->models.push_back(model); //Give this graphics component model
+    graphics->material = 1;
     //Todo: Give constructor to graphics for models.
     
     temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
@@ -436,7 +461,7 @@ void Application::initBirds() {
         float yOffset = randomFloatNegativePossible() * ( (highBirdY - lowBirdY)/ 4.0f );
         currentPosition.y += yOffset;
         
-        createBird(sphereModel, currentPosition);
+        createBird(birdModel, currentPosition);
         
         currentX += distancePerBird; //Make next bird X meters to the right
         high = !high; //flip high/low
