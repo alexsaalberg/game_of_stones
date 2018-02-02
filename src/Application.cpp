@@ -175,14 +175,14 @@ void Application::initGeom(const std::string& resourceDirectory) {
     }
     
     rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-                          (resourceDirectory + "/Helicopter.obj").c_str());
+                          (resourceDirectory + "/Helicopter2.obj").c_str());
     if (!rc)
     {
         cerr << errStr << endl;
     } else {
         helicopterModel = make_shared<Model>();
         helicopterModel->createModel(TOshapes, objMaterials);
-        helicopterModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
+        helicopterModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
         helicopterModel->scale *= 2.0f;
     }
 }
