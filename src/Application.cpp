@@ -59,6 +59,7 @@ void Application::init(const std::string& resourceDirectory) {
     initGeom(resourceDirectory+"/models");
     initPlayer(sphereModel);
     initCamera();
+    initBirds();
     initQuad();
 }
 
@@ -354,4 +355,27 @@ void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
 //[0,1.0]
 float Application::randFloat() {
     return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+}
+
+void Application::createBird(shared_ptr<Model> model) {
+    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent> ();
+    inputComponents.push_back(input);
+    
+    shared_ptr<BirdPhysicsComponent> physics = make_shared<BirdPhysicsComponent> ();
+    physicsComponents.push_back(physics);
+    
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model); //Give this graphics component model
+    //Todo: Give constructor to graphics for models.
+    
+    temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
+    currentState.gameObjects.push_back(temporaryGameObjectPointer);
+}
+
+void Application::initBirds() {
+    float distanceBetweenBirds = 20.0f;
+    int numberOfBirds = 100;
+    
+    createBird(sphereModel);
 }

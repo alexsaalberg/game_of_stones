@@ -26,9 +26,14 @@
 
 //Components
 #include "Component.hpp"
+
+#include "DefaultInputComponent.hpp"
 #include "DefaultPhysicsComponent.hpp"
 #include "DefaultGraphicsComponent.hpp"
+
 #include "PlayerInputComponent.hpp"
+
+#include "BirdPhysicsComponent.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -46,6 +51,8 @@ class Application : public EventCallbacks
     
     
 public:
+    
+//Variables
     bool mouseDown = false;
     WindowManager * windowManager = nullptr;
     
@@ -57,7 +64,9 @@ public:
     State previousState = currentState;
     
     std::shared_ptr<Camera> camera;
+    
     std::shared_ptr<GameObject> player;
+    std::shared_ptr<GameObject> temporaryGameObjectPointer;
     
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
@@ -70,6 +79,7 @@ public:
     
     std::shared_ptr<PlayerInputComponent> playerInputComponent;
     
+    
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
     
@@ -78,6 +88,7 @@ public:
     double mouse_prevX;
     double mouse_prevY;
     
+//Functions
     //ground plane info
     GLuint GroundBufferObject, GroundNormalBufferObject, GroundTextureBufferObject, GroundIndexBufferObject;
     int gGiboLen;
@@ -123,6 +134,9 @@ public:
     
     //[0,1.0]
     float randFloat();
+    
+    void createBird(std::shared_ptr<Model> model);
+    void initBirds();
 };
 
 
