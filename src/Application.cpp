@@ -333,7 +333,7 @@ void Application::renderState(State state) {
     
     //texture offset
     glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
-    w = glfwGetTime();
+    w = glfwGetTime()/10;
     CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
     CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
     auto M = make_shared<MatrixStack>();
