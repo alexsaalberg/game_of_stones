@@ -429,8 +429,11 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
     graphics->material = 1;
     //Todo: Give constructor to graphics for models.
     
+    
     temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
     temporaryGameObjectPointer->position = position;
+    float randomVelocityX = randomFloat() * -1.0f;
+    temporaryGameObjectPointer->velocity += randomVelocityX;
     currentState.gameObjects.push_back(temporaryGameObjectPointer);
 }
 
