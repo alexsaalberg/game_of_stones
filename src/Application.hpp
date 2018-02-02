@@ -19,10 +19,21 @@
 #include "GLTextureWriter.h"
 
 //Helico-opter
-#include "Actor.h"
-#include "Player.h"
-#include "Helper.h"
 #include "State.hpp"
+
+#include "Camera.hpp"
+#include "GameObject.hpp"
+
+//Components
+#include "Component.hpp"
+
+#include "DefaultInputComponent.hpp"
+#include "DefaultPhysicsComponent.hpp"
+#include "DefaultGraphicsComponent.hpp"
+
+#include "PlayerInputComponent.hpp"
+
+#include "BirdPhysicsComponent.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -40,6 +51,8 @@ class Application : public EventCallbacks
     
     
 public:
+    
+//Variables
     bool mouseDown = false;
     WindowManager * windowManager = nullptr;
     
@@ -50,28 +63,40 @@ public:
     State currentState;
     State previousState = currentState;
     
-    std::shared_ptr<Actor> temporaryActor;
+    std::shared_ptr<Camera> camera;
+    
+    std::shared_ptr<GameObject> player;
+    std::shared_ptr<GameObject> temporaryGameObjectPointer;
+    
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
     
-    std::vector<std::shared_ptr<Model>> models;
-    //std::vector<std::shared_ptr<Actor>> actors;
+    std::vector< std::shared_ptr<Model> > models;
     
-    std::shared_ptr<Player> player;
+    std::vector< std::shared_ptr<InputComponent> > inputComponents;
+    std::vector< std::shared_ptr<PhysicsComponent> > physicsComponents;
+    std::vector< std::shared_ptr<GraphicsComponent> > graphicsComponents;
+    
+    std::shared_ptr<PlayerInputComponent> playerInputComponent;
+    
     
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
     std::shared_ptr<Texture> waterTexture;
     
+
     float cHeight = 0.0f;
     int score = 0;
     int freeOrbCount = 0;
     double w = 0; //w is for sin wave frequency. 
+
     bool gameOver = false;
     
     double mouse_prevX;
     double mouse_prevY;
-        
+
+//Functions
+
     //ground plane info
     GLuint GroundBufferObject, GroundNormalBufferObject, GroundTextureBufferObject, GroundIndexBufferObject;
     int gGiboLen;
@@ -93,43 +118,38 @@ public:
     void initShaders(const std::string& resourceDirectory);
     
     void initMainProgram(const std::string& resourceDirectory);
-    
     void initGroundProgram(const std::string& resourceDirectory);
-    
     void initTextures(const std::string& resourceDirectory);
+
     
     void initWaterTextures(const std::string& resourceDirectory);
     
+
     void initGeom(const std::string& resourceDirectory);
     
-    void createOrb();
+    void initPlayer(std::shared_ptr<Model> model);
+    void initCamera();
     
     /**** geometry set up for ground plane *****/
     void initQuad();
     
     void renderGround();
-    void render();
     
     //Physics
     void integrate(float t, float dt);
     void render(float t,  float alpha);
-    void renderState(State state);
+    void renderState(State& state);
     
     void simulate(float dt);
-    
-    void calculateCollisions();
-    
-    void makeOrbsGreen();
-    
-    bool testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2);
-    
-    bool testPlayerCollision(std::shared_ptr<Player> player, std::shared_ptr<Actor> actor);
     
     // helper function to set materials for shading
     void SetMaterial(const std::shared_ptr<Program> prog, int i);
     
     //[0,1.0]
     float randFloat();
+    
+    void createBird(std::shared_ptr<Model> model);
+    void initBirds();
 };
 
 

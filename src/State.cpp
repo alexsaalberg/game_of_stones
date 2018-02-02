@@ -13,28 +13,20 @@ State State::interpolate(State &previous, State &current, float alpha)
 {
     State state;
     
-    shared_ptr<Actor> temporaryActor;
-    temporaryActor = make_shared<Actor>();
+    shared_ptr<GameObject> temporaryGameObject;
     
-    unsigned int currentNumberOfActors = current.actors.size();
-    unsigned int previousNumberOfActors = previous.actors.size();
+    unsigned int currentNumberOfGameObjects = current.gameObjects.size();
+    unsigned int previousNumberOfGameObjects = previous.gameObjects.size();
     
-    if(currentNumberOfActors > previousNumberOfActors) {
+    if(currentNumberOfGameObjects >= previousNumberOfGameObjects) {
     
-        for( int i = 0; i < previousNumberOfActors; i++ ) {
-            temporaryActor = Actor::interpolate( previous.actors.at(i), current.actors.at(i), alpha );
-            state.actors.push_back( temporaryActor );
+        for( int i = 0; i < previousNumberOfGameObjects; i++ ) {
+            temporaryGameObject = GameObject::interpolate( previous.gameObjects.at(i), current.gameObjects.at(i), alpha );
+            state.gameObjects.push_back( temporaryGameObject );
         }
-        for( int i = previousNumberOfActors; i < currentNumberOfActors; i++) {
-            state.actors.push_back( current.actors.at(i) );
+        for( int i = previousNumberOfGameObjects; i < currentNumberOfGameObjects; i++) {
+            state.gameObjects.push_back( current.gameObjects.at(i) );
         }
-        
-    }
-    
-    if( previous.player == nullptr) {
-        state.player = current.player;
-    } else {
-        state.player = Player::interpolate( previous.player, current.player, alpha);
     }
     
     return state;
@@ -43,8 +35,7 @@ State State::interpolate(State &previous, State &current, float alpha)
 
 void State::integrate(float t, double dt)
 {
-    for(auto &actor : actors) {
-        actor->integrate( t, dt );
+    for(auto &gameObject : gameObjects) {
+        gameObject->simulate(dt);
     }
-    player->integrate( t, dt );
 }

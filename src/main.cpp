@@ -72,6 +72,7 @@ int main(int argc, char **argv)
         printf("Num Simulations: %d\n", numSimulationsThisFrame);
         
         float alpha = accumulator/dt;
+        
         //Interpolates automatically in application
         application->render( t, alpha);
         

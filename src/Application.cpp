@@ -11,7 +11,6 @@
 using namespace std;
 using namespace glm;
 
-
 void Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -20,40 +19,34 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
     else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
     {
-        player->moveBackward();
+        playerInputComponent->movingForward = true;
     }
     else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
     {
-        player->moveForward();
+        playerInputComponent->movingBackward = true;
     }
     else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
     {
-        player->stopMovingBackward();
+        playerInputComponent->movingForward = false;
     }
     else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
     {
-        player->stopMovingForward();
+        playerInputComponent->movingBackward = false;
     }
     else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
     {
-        player->jump();
+        playerInputComponent->jumping = true;
     }
 }
 
+//Todo: Remove these (Idk if they're being optimized out, but hopefully
+//                    they're not being called every time the mouse moves)
 void Application::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-{
-    
-}
-
+{}
 void Application::mouseCallback(GLFWwindow *window, int button, int action, int mods)
-{
-    
-}
-
+{}
 void Application::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-{
-    
-}
+{}
 
 void Application::resizeCallback(GLFWwindow *window, int width, int height)
 {
@@ -64,6 +57,9 @@ void Application::init(const std::string& resourceDirectory) {
     initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
+    initPlayer(sphereModel);
+    initCamera();
+    initBirds();
     initQuad();
 }
 
@@ -151,50 +147,30 @@ void Application::initGeom(const std::string& resourceDirectory) {
     {
         cerr << errStr << endl;
     } else {
-        
-        temporaryModel = make_shared<Model>();
         sphereModel = make_shared<Model>();
-        //temporaryModel->createModel(TOshapes, objMaterials);
         sphereModel->createModel(TOshapes, objMaterials);
-        
-        for(int i = 0; i < 15; i++) {
-            createOrb();
-        }
     }
-    
-    player = make_shared<Player>();
-    player->position.z += gridDistanceFromCenter + 5.0f;
-    //player->height = texturePixelHeight/2
-    player->cameraTheta = -90.0f;
-    temporaryActor->position = player->position;
-    player->avatar = temporaryActor;
-    
-    currentState.player = player;
-    
 }
 
-void Application::createOrb() {
-    temporaryActor = make_shared<Actor>();
-    temporaryActor->initActor(sphereModel);
+void Application::initPlayer(shared_ptr<Model> model) {
+    shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
+    inputComponents.push_back(input);
     
-    float randX = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
-    float randZ = ((randFloat() - 0.5f) * 2.0f) * (gridDistanceFromCenter - 1.0f);
+    shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent> ();
+    physicsComponents.push_back(physics);
     
-    float randVelX = ((randFloat() - 0.5f) * 20.0f);
-    float randVelZ = ((randFloat() - 0.5f) * 20.0f);
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model);
     
-    temporaryActor->position = vec3(randX, 1.0f, randZ);
-    temporaryActor->material = 2;
-    //temporaryActor->velocity = vec3(0.01f, 0, 0.01f);
-    temporaryActor->velocity = vec3(randVelX * 0.1f, 0.1f, randVelZ * 0.1f);
-    temporaryActor->velocity += score * 0.001f;
-    //temporaryActor->addOffset(vec3(0, -2, 0));
-    temporaryActor->scale *= 0.2f;
-    temporaryActor->gridHeight = gridHeight;
-    temporaryActor->gridDistanceFromCenter = gridDistanceFromCenter;
-    
-    freeOrbCount++;
-    currentState.actors.push_back(temporaryActor);
+    playerInputComponent = input;
+    player = make_shared<GameObject>(input, physics, graphics);
+    currentState.gameObjects.push_back(player);
+}
+
+void Application::initCamera() {
+    camera = make_shared<Camera>();
+    camera->player = player;
 }
 
 /**** geometry set up for ground plane *****/
@@ -296,7 +272,7 @@ void Application::render(float t, float alpha) {
     renderState(state);
 }
 
-void Application::renderState(State state) {
+void Application::renderState(State& state) {
     int windowWidth, windowHeight;
     glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
@@ -309,28 +285,30 @@ void Application::renderState(State state) {
     
     mainProgram->bind();
     
-    player->setModelIdentityMatrix(mainProgram);
-    player->setHelicopterViewMatrix(mainProgram);
-    player->setProjectionMatrix(mainProgram, aspect);
+        camera->setModelIdentityMatrix(mainProgram);
+        camera->setHelicopterViewMatrix(mainProgram);
+        camera->setProjectionMatrix(mainProgram, aspect);
     
-    player->setEyePosition(mainProgram);
+        camera->setEyePosition(mainProgram);
     
-    vec3 directionFromLight = vec3(0) - vec3(1); //from 1,1,1 to origin
-    vec3 directionTowardsLight = -directionFromLight;
-    CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
+        vec3 directionFromLight = vec3(0) - vec3(1); //from 1,1,1 to origin
+        vec3 directionTowardsLight = -directionFromLight;
+        CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
-    for(auto &actor : currentState.actors) {
-        SetMaterial(mainProgram, actor->material);
-        actor->draw(mainProgram);
-    }
+        SetMaterial(mainProgram, 0);
+        for(auto& gameObject : state.gameObjects) {
+            gameObject->render(mainProgram);
+        }
     
     mainProgram->unbind();
     
-    groundProgram->bind();
-    player->setModelIdentityMatrix(groundProgram);
-    player->setHelicopterViewMatrix(groundProgram);
-    player->setProjectionMatrix(groundProgram, aspect);
     
+    groundProgram->bind();
+        camera->setModelIdentityMatrix(groundProgram);
+        camera->setHelicopterViewMatrix(groundProgram);
+        camera->setProjectionMatrix(groundProgram, aspect);
+    
+
     //texture offset
     glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
     w = glfwGetTime()/10;
@@ -346,50 +324,10 @@ void Application::renderState(State state) {
     /*draw the ground */
     grassTexture->bind(groundProgram->getUniform("Texture0"));
     renderGround();
+
     groundProgram->unbind();
     
 }
-
-void Application::calculateCollisions() {
-    //collision loop
-    for(auto &actor : currentState.actors) {
-        if(testPlayerCollision(player, actor) && actor->captured == false) {
-            actor->captured = true;
-            actor->gridHeight -= 1.0f;
-            actor->material = 0;
-            actor->velocity = vec3(0);
-            actor->velocity.y += 0.3f;
-            score++;
-            freeOrbCount--;
-            // +2 because player and grid
-            printf("Score: %d\tFree-Orbs: %d\n", score, freeOrbCount);
-        }
-        if(actor->captured == false && actor->collisionCooldown == 0.0f) {
-            for(auto &innerActor : currentState.actors) {
-                if(actor.get() != innerActor.get()) {
-                    if ( testCollision(actor, innerActor) ){
-                        actor->velocity *= -1.0f;
-                        actor->material = 3;
-                        //actor->material %= 6;
-                        actor->collisionCooldown = 20.0f;
-                    }
-                }
-            }
-        }
-        
-    }
-}
-
-bool Application::testCollision(std::shared_ptr<Actor> actor1, std::shared_ptr<Actor> actor2) {
-    float distance = length( (actor1->position - actor2->position) );
-    return (distance < (actor1->radius*actor1->scale + actor2->radius*actor2->scale));
-}
-
-bool Application::testPlayerCollision(std::shared_ptr<Player> player, std::shared_ptr<Actor> actor) {
-    float distance = length( (player->position - actor->position) );
-    return (distance < (player->radius - actor->radius*actor->scale));
-}
-
 
 // helper function to set materials for shading
 void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
@@ -433,4 +371,27 @@ void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
 //[0,1.0]
 float Application::randFloat() {
     return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+}
+
+void Application::createBird(shared_ptr<Model> model) {
+    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent> ();
+    inputComponents.push_back(input);
+    
+    shared_ptr<BirdPhysicsComponent> physics = make_shared<BirdPhysicsComponent> ();
+    physicsComponents.push_back(physics);
+    
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model); //Give this graphics component model
+    //Todo: Give constructor to graphics for models.
+    
+    temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
+    currentState.gameObjects.push_back(temporaryGameObjectPointer);
+}
+
+void Application::initBirds() {
+    float distanceBetweenBirds = 20.0f;
+    int numberOfBirds = 100;
+    
+    createBird(sphereModel);
 }
