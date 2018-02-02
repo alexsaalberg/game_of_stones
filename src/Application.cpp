@@ -356,7 +356,7 @@ void Application::renderState(State& state) {
         M->loadIdentity();
         //M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
         M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
-        M->scale(glm::vec3(10.0f, 10.0f, 10.0f));
+        M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
         CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
     M->popMatrix();
     /*draw the ground */
