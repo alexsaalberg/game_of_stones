@@ -306,6 +306,7 @@ void Application::render(float t, float alpha) {
     State state = State::interpolate(previousState, currentState, alpha);
     //state = currentState;
     renderState(state);
+    testCollisions();
 }
 
 void Application::renderState(State& state) {
@@ -331,8 +332,8 @@ void Application::renderState(State& state) {
         vec3 directionTowardsLight = -directionFromLight;
         CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
-        SetMaterial(mainProgram, 2);
         for(auto& gameObject : state.gameObjects) {
+            SetMaterial(mainProgram, gameObject->graphics->material);
             gameObject->render(mainProgram);
         }
     
@@ -434,6 +435,7 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
     temporaryGameObjectPointer->position = position;
     float randomVelocityX = randomFloat() * -1.0f;
     temporaryGameObjectPointer->velocity += randomVelocityX;
+    temporaryGameObjectPointer->radius = 0.5f;
     currentState.gameObjects.push_back(temporaryGameObjectPointer);
 }
 
@@ -470,4 +472,54 @@ void Application::initBirds() {
         currentX += distancePerBird; //Make next bird X meters to the right
         high = !high; //flip high/low
     }
+}
+
+void Application::testCollisions() {
+    if(gameOver) {
+        return;
+    }
+    
+    for(auto &gameObject : currentState.gameObjects) {
+        if(gameObject != player && player->collisionCooldown <= 0.0f && gameObject->collisionCooldown <= 0.0f) {
+            if( isCollision(player, gameObject) ) {
+                setCollisionCooldown(player);
+                setCollisionCooldown(gameObject);
+                
+                decrementPlayerHealth();
+            }
+        }
+    }
+}
+
+bool Application::isCollision(shared_ptr<GameObject> player, shared_ptr<GameObject> bird) {
+    float distance = length( (player->position - bird->position) );
+    float maxDistanceWithoutCollision = player->radius * player->scale + bird->radius * bird->scale;
+    return distance < maxDistanceWithoutCollision; //true if collision
+}
+
+void Application::setCollisionCooldown(shared_ptr<GameObject> gameObject) {
+    gameObject->collisionCooldown = 3.0f; //3 seconds
+}
+
+void Application::decrementPlayerHealth() {
+    playerHealth -= 1;
+    
+    switch(playerHealth) {
+        case 2:
+            player->graphics->material = 0;
+            break;
+        case 1:
+            player->graphics->material = 6;
+            break;
+        case 0:
+            player->graphics->material = 5;
+            gameLost();
+            break;
+    }
+}
+
+void Application:: gameLost() {
+    for(int i = 0; i < 10; i ++)
+        printf("GAME OVER!\n");
+    gameOver = true;
 }

@@ -35,7 +35,7 @@ State State::interpolate(State &previous, State &current, float alpha)
 
 void State::integrate(float t, double dt)
 {
-    printf("NumObjects: %d\n", gameObjects.size());
+    //printf("NumObjects: %d\n", gameObjects.size());
     for(auto &gameObject : gameObjects) {
         gameObject->simulate(dt);
     }
