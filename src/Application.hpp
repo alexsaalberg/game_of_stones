@@ -62,8 +62,7 @@ public:
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
     
-    std::vector<std::shared_ptr<Model>> models;
-    //std::vector<std::shared_ptr<Actor>> actors;
+    std::vector< std::shared_ptr<Model> > models;
     
     std::vector< std::shared_ptr<InputComponent> > inputComponents;
     std::vector< std::shared_ptr<PhysicsComponent> > physicsComponents;
@@ -74,9 +73,6 @@ public:
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
     
-    float cHeight = 0.0f;
-    int score = 0;
-    int freeOrbCount = 0;
     bool gameOver = false;
     
     double mouse_prevX;

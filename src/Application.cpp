@@ -39,20 +39,14 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
 }
 
+//Todo: Remove these (Idk if they're being optimized out, but hopefully
+//                    they're not being called every time the mouse moves)
 void Application::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-{
-    
-}
-
+{}
 void Application::mouseCallback(GLFWwindow *window, int button, int action, int mods)
-{
-    
-}
-
+{}
 void Application::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-{
-    
-}
+{}
 
 void Application::resizeCallback(GLFWwindow *window, int width, int height)
 {
