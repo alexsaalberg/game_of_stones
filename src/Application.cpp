@@ -346,7 +346,8 @@ void Application::renderState(State& state) {
     
 
     //texture offset
-    glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
+    glm::vec2 offset(player->position.x / 10.0f, 0.0f);
+    //glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
     w = glfwGetTime()/10;
     CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
     CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
@@ -354,7 +355,7 @@ void Application::renderState(State& state) {
     M->pushMatrix();
         M->loadIdentity();
         //M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
-        M->translate(glm::vec3(player->position.x+2.0f, 0.0f, 0.0f));
+        M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
         M->scale(glm::vec3(10.0f, 10.0f, 10.0f));
         CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
     M->popMatrix();
