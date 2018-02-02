@@ -61,15 +61,17 @@ public:
     
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
+    std::shared_ptr<Texture> waterTexture;
     
     float cHeight = 0.0f;
     int score = 0;
     int freeOrbCount = 0;
+    double w = 0; //w is for sin wave frequency. 
     bool gameOver = false;
     
     double mouse_prevX;
     double mouse_prevY;
-    
+        
     //ground plane info
     GLuint GroundBufferObject, GroundNormalBufferObject, GroundTextureBufferObject, GroundIndexBufferObject;
     int gGiboLen;
@@ -95,6 +97,8 @@ public:
     void initGroundProgram(const std::string& resourceDirectory);
     
     void initTextures(const std::string& resourceDirectory);
+    
+    void initWaterTextures(const std::string& resourceDirectory);
     
     void initGeom(const std::string& resourceDirectory);
     

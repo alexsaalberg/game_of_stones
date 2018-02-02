@@ -110,8 +110,8 @@ void Application::initGroundProgram(const std::string& resourceDirectory) {
     groundProgram = make_shared<Program>();
     groundProgram->setVerbose(true);
     groundProgram->setShaderNames(
-                                  resourceDirectory + "/tex_vert.glsl",
-                                  resourceDirectory + "/tex_frag0.glsl");
+                                  resourceDirectory + "/water_vert.glsl",
+                                  resourceDirectory + "/water_frag.glsl");
     if (! groundProgram->init())
     {
         std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -120,6 +120,8 @@ void Application::initGroundProgram(const std::string& resourceDirectory) {
     groundProgram->addUniform("P");
     groundProgram->addUniform("V");
     groundProgram->addUniform("M");
+    groundProgram->addUniform("offset");
+    groundProgram->addUniform("w");
     groundProgram->addAttribute("vertPos");
     groundProgram->addAttribute("vertNor");
     groundProgram->addAttribute("vertTex");
@@ -128,7 +130,7 @@ void Application::initGroundProgram(const std::string& resourceDirectory) {
 
 void Application::initTextures(const std::string& resourceDirectory) {
     grassTexture = make_shared<Texture>();
-    grassTexture->setFilename(resourceDirectory + "/grass.jpg");
+    grassTexture->setFilename(resourceDirectory + "/water.jpg");
     grassTexture->init();
     grassTexture->setUnit(0);
     grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
@@ -329,6 +331,18 @@ void Application::renderState(State state) {
     player->setHelicopterViewMatrix(groundProgram);
     player->setProjectionMatrix(groundProgram, aspect);
     
+    //texture offset
+    glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
+    w = glfwGetTime();
+    CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
+    CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
+    auto M = make_shared<MatrixStack>();
+    M->pushMatrix();
+        M->loadIdentity();
+        M->scale(glm::vec3(10.0f, 10.0f, 10.0f));
+        M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
+        CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+    M->popMatrix();
     /*draw the ground */
     grassTexture->bind(groundProgram->getUniform("Texture0"));
     renderGround();
