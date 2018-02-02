@@ -32,6 +32,7 @@
 #include "DefaultGraphicsComponent.hpp"
 
 #include "PlayerInputComponent.hpp"
+#include "PlayerPhysicsComponent.hpp"
 
 #include "BirdPhysicsComponent.hpp"
 
@@ -43,12 +44,22 @@
 
 class Application : public EventCallbacks
 {
+//const (private?)
     const double pixelsToDegrees_X = 40;
     const double pixelsToDegrees_Y = 40;
     
     const float gridDistanceFromCenter = 10.0f;
     const float gridHeight = -1.5f;
     
+    //birds
+    const float winDistance = 1000.0f;
+    const int numberOfBirds = 100;
+    const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
+    //vvv (1000-30*2) = 940; 940/100 = 9.4f
+    const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
+    const float birdInitialHorizontalVelocity = -10.0f;
+    const float highBirdY = 10.0f;
+    const float lowBirdY = 2.0f;
     
 public:
     
@@ -133,9 +144,11 @@ public:
     void SetMaterial(const std::shared_ptr<Program> prog, int i);
     
     //[0,1.0]
-    float randFloat();
+    float randomFloat();
+    //[-1.0, 1.0]
+    float randomFloatNegativePossible();
     
-    void createBird(std::shared_ptr<Model> model);
+    void createBird(std::shared_ptr<Model> model, glm::vec3 position);
     void initBirds();
 };
 

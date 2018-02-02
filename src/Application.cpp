@@ -35,7 +35,19 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
     else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
     {
-        playerInputComponent->jumping = true;
+        playerInputComponent->movingUpward = true;
+    }
+    else if (key == GLFW_KEY_S && (action == GLFW_PRESS))
+    {
+        playerInputComponent->movingDownward = true;
+    }
+    else if (key == GLFW_KEY_W && (action == GLFW_RELEASE))
+    {
+        playerInputComponent->movingUpward = false;
+    }
+    else if (key == GLFW_KEY_S && (action == GLFW_RELEASE))
+    {
+        playerInputComponent->movingDownward = false;
     }
 }
 
@@ -154,7 +166,7 @@ void Application::initPlayer(shared_ptr<Model> model) {
     shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
     inputComponents.push_back(input);
     
-    shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent> ();
+    shared_ptr<PlayerPhysicsComponent> physics = make_shared<PlayerPhysicsComponent> ();
     physicsComponents.push_back(physics);
     
     shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
@@ -163,6 +175,7 @@ void Application::initPlayer(shared_ptr<Model> model) {
     
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
+    
     currentState.gameObjects.push_back(player);
 }
 
@@ -353,11 +366,16 @@ void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
 }
 
 //[0,1.0]
-float Application::randFloat() {
+float Application::randomFloat() {
     return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 }
 
-void Application::createBird(shared_ptr<Model> model) {
+//[-1.0, 1.0]
+float Application::randomFloatNegativePossible() {
+    return (randomFloat() * 2.0f) - 1.0f;
+}
+
+void Application::createBird(shared_ptr<Model> model, vec3 position) {
     shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent> ();
     inputComponents.push_back(input);
     
@@ -370,12 +388,41 @@ void Application::createBird(shared_ptr<Model> model) {
     //Todo: Give constructor to graphics for models.
     
     temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
+    temporaryGameObjectPointer->position = position;
     currentState.gameObjects.push_back(temporaryGameObjectPointer);
 }
 
 void Application::initBirds() {
-    float distanceBetweenBirds = 20.0f;
-    int numberOfBirds = 100;
+    /*
+     //birds
+     const float winDistance = 1000.0f;
+     const int numberOfBirds = 100;
+     const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
+     //vvv (1000-30*2) = 940; 940/100 = 9.4f
+     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
+    */
+    float currentX = bufferDistance;
+    glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
     
-    createBird(sphereModel);
+    
+    bool high = true; //switch high & low every other bird
+    for(int i = 0; i < numberOfBirds; i ++) {
+        
+        if(high == true) {
+            currentPosition.y = highBirdY;
+        } else {
+            currentPosition.y = lowBirdY;
+        }
+        currentPosition.x = currentX;
+        
+        float xOffset = randomFloatNegativePossible() * (distancePerBird/0.4f);
+        currentPosition.x += xOffset;
+        float yOffset = randomFloatNegativePossible() * ( (highBirdY - lowBirdY)/ 4.0f );
+        currentPosition.y += yOffset;
+        
+        createBird(sphereModel, currentPosition);
+        
+        currentX += distancePerBird; //Make next bird X meters to the right
+        high = !high; //flip high/low
+    }
 }
