@@ -6,6 +6,7 @@
 //
 
 #include "Application.hpp"
+#include "stb_image.h"
 #define PI 3.1415
 
 using namespace std;
@@ -73,6 +74,7 @@ void Application::init(const std::string& resourceDirectory) {
     initCamera();
     initBirds();
     initQuad();
+	initSkybox(resourceDirectory + "/shaders");
 }
 
 //code to set up the two shaders - a diffuse shader and texture mapping
@@ -117,9 +119,9 @@ void Application::initMainProgram(const std::string& resourceDirectory) {
 void Application::initGroundProgram(const std::string& resourceDirectory) {
     groundProgram = make_shared<Program>();
     groundProgram->setVerbose(true);
-    groundProgram->setShaderNames(
-                                  resourceDirectory + "/water_vert.glsl",
+    groundProgram->setShaderNames(resourceDirectory + "/water_vert.glsl",
                                   resourceDirectory + "/water_frag.glsl");
+
     if (! groundProgram->init())
     {
         std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -296,6 +298,130 @@ void Application::renderGround()
     glDisableVertexAttribArray(2);
 }
 
+void Application::initSkybox(const std::string& resourceDirectory) {
+	sky = make_shared<Program>();
+	sky->setVerbose(true);
+	sky->setShaderNames(resourceDirectory + "/skybox_vert.glsl",
+						resourceDirectory + "/skybox_frag.glsl");
+
+	float points[] = {
+		-10.0f,  10.0f, -10.0f,
+		-10.0f, -10.0f, -10.0f,
+		 10.0f, -10.0f, -10.0f,
+		 10.0f, -10.0f, -10.0f,
+		 10.0f,  10.0f, -10.0f,
+
+		-10.0f, -10.0f,  10.0f,
+		-10.0f, -10.0f, -10.0f,
+		-10.0f,  10.0f, -10.0f,
+		-10.0f,  10.0f, -10.0f,
+		-10.0f,  10.0f,  10.0f,
+		-10.0f, -10.0f,  10.0f,
+
+		 10.0f, -10.0f, -10.0f,
+		 10.0f, -10.0f,  10.0f,
+		 10.0f,  10.0f,  10.0f,
+		 10.0f,  10.0f,  10.0f,
+		 10.0f,  10.0f, -10.0f,
+		 10.0f, -10.0f, -10.0f,
+
+		-10.0f, -10.0f,  10.0f,
+		-10.0f,  10.0f,  10.0f,
+		 10.0f,  10.0f,  10.0f,
+		 10.0f,  10.0f,  10.0f,
+		 10.0f, -10.0f,  10.0f,
+		-10.0f, -10.0f,  10.0f,
+
+		-10.0f,  10.0f, -10.0f,
+		 10.0f,  10.0f, -10.0f,
+		 10.0f,  10.0f,  10.0f,
+		 10.0f,  10.0f,  10.0f,
+		-10.0f,  10.0f,  10.0f,
+		-10.0f,  10.0f, -10.0f,
+
+		-10.0f, -10.0f, -10.0f,
+		-10.0f, -10.0f,  10.0f,
+		 10.0f, -10.0f, -10.0f,
+		 10.0f, -10.0f, -10.0f,
+		-10.0f, -10.0f,  10.0f,
+		 10.0f, -10.0f,  10.0f
+	};
+
+	GLuint vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, 3 * 36 * sizeof(float), &points, GL_STATIC_DRAW);
+
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+	createCubeMap("../resources/skybox/lake1_ft.png", 
+		"../resources/skybox/lake1_bk.png", "../resources/skybox/lake1_up.png",
+		"../resources/skybox/lake1_dn.png", "../resources/skybox/lake1_lf.png",
+		"../resources/skybox/lake1_rt.png", &vbo);
+
+	glDepthMask(GL_FALSE);
+	glUseProgram(sky);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, vbo);
+	glBindVertexArray(vao);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glDepthMask(GL_TRUE);
+}
+
+void Application::createCubeMap(const char* front, const char* back,
+	const char* top, const char* bottom, const char* left,
+	const char* right, GLuint* tex_cube) {
+	//generate cube-map texture to hold in all the sides
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, tex_cube);
+
+	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, front);
+	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, back);
+	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, top);
+	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, bottom);
+	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, left);
+	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_X, right);
+
+	//format cube map texture
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
+bool Application::loadCubeMapSide(GLuint texture, GLenum side_target,
+	const char* filename) {
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+
+	int x, y, n;
+	int force = 4;
+	unsigned char* imageData = stbi_load(filename, &x, &y,
+		&n, force);
+
+	if (!imageData) {
+		fprintf(stderr, "ERROR: could not load %s\n", filename);	
+		return false;
+	}
+
+	//non-power-of-2 dimensions check
+	if ((x & (x - 1)) != 0 || (y & (y - 1)) != 0) {
+		fprintf(stderr, "WARNING: image %s is not power-of-2 dimensions\n",
+			filename);
+	}
+
+	//copy image data into target side of cube map
+	glTexImage2D(side_target, 0, GL_RGBA, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+		imageData);
+	free(imageData);
+	return true;
+}
+
 void Application::integrate(float t, float dt) {
     previousState = currentState;
     
@@ -364,6 +490,10 @@ void Application::renderState(State& state) {
     renderGround();
 
     groundProgram->unbind();
+
+	sky->bind();
+
+	sky->unbind();
     
 }
 

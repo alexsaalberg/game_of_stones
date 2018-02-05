@@ -147,6 +147,14 @@ public:
     void initQuad();
     
     void renderGround();
+
+	//Skybox
+	void initSkybox(const std::string& resourceDirectory);
+	void createCubeMap(const char* front, const char* back,
+		const char* top, const char* bottom, const char* left,
+		const char* right, GLuint* tex_cube);
+	bool loadCubeMapSide(GLuint texture, GLenum side_target,
+		const char* filename);
     
     //Physics
     void integrate(float t, float dt);
