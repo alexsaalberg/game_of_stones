@@ -35,24 +35,30 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
     else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
     {
-        playerInputComponent->jumping = true;
+        playerInputComponent->movingUpward = true;
+    }
+    else if (key == GLFW_KEY_S && (action == GLFW_PRESS))
+    {
+        playerInputComponent->movingDownward = true;
+    }
+    else if (key == GLFW_KEY_W && (action == GLFW_RELEASE))
+    {
+        playerInputComponent->movingUpward = false;
+    }
+    else if (key == GLFW_KEY_S && (action == GLFW_RELEASE))
+    {
+        playerInputComponent->movingDownward = false;
     }
 }
 
+//Todo: Remove these (Idk if they're being optimized out, but hopefully
+//                    they're not being called every time the mouse moves)
 void Application::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-{
-    
-}
-
+{}
 void Application::mouseCallback(GLFWwindow *window, int button, int action, int mods)
-{
-    
-}
-
+{}
 void Application::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-{
-    
-}
+{}
 
 void Application::resizeCallback(GLFWwindow *window, int width, int height)
 {
@@ -63,8 +69,9 @@ void Application::init(const std::string& resourceDirectory) {
     initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
-    initPlayer(sphereModel);
+    initPlayer(helicopterModel);
     initCamera();
+    initBirds();
     initQuad();
 }
 
@@ -111,8 +118,8 @@ void Application::initGroundProgram(const std::string& resourceDirectory) {
     groundProgram = make_shared<Program>();
     groundProgram->setVerbose(true);
     groundProgram->setShaderNames(
-                                  resourceDirectory + "/tex_vert.glsl",
-                                  resourceDirectory + "/tex_frag0.glsl");
+                                  resourceDirectory + "/water_vert.glsl",
+                                  resourceDirectory + "/water_frag.glsl");
     if (! groundProgram->init())
     {
         std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -121,6 +128,8 @@ void Application::initGroundProgram(const std::string& resourceDirectory) {
     groundProgram->addUniform("P");
     groundProgram->addUniform("V");
     groundProgram->addUniform("M");
+    groundProgram->addUniform("offset");
+    groundProgram->addUniform("w");
     groundProgram->addAttribute("vertPos");
     groundProgram->addAttribute("vertNor");
     groundProgram->addAttribute("vertTex");
@@ -129,7 +138,7 @@ void Application::initGroundProgram(const std::string& resourceDirectory) {
 
 void Application::initTextures(const std::string& resourceDirectory) {
     grassTexture = make_shared<Texture>();
-    grassTexture->setFilename(resourceDirectory + "/grass.jpg");
+    grassTexture->setFilename(resourceDirectory + "/water.jpg");
     grassTexture->init();
     grassTexture->setUnit(0);
     grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
@@ -153,13 +162,36 @@ void Application::initGeom(const std::string& resourceDirectory) {
         sphereModel = make_shared<Model>();
         sphereModel->createModel(TOshapes, objMaterials);
     }
+    //load in the mesh and make the shapes
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                               (resourceDirectory + "/Bird_01.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        birdModel = make_shared<Model>();
+        birdModel->createModel(TOshapes, objMaterials);
+        birdModel->rotate( vec3(90.0f, 180.0f, 0.0f) );
+    }
+    
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/Helicopter2.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        helicopterModel = make_shared<Model>();
+        helicopterModel->createModel(TOshapes, objMaterials);
+        helicopterModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
+        helicopterModel->scale *= 2.0f;
+    }
 }
 
 void Application::initPlayer(shared_ptr<Model> model) {
     shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
     inputComponents.push_back(input);
     
-    shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent> ();
+    shared_ptr<PlayerPhysicsComponent> physics = make_shared<PlayerPhysicsComponent> ();
     physicsComponents.push_back(physics);
     
     shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
@@ -168,6 +200,7 @@ void Application::initPlayer(shared_ptr<Model> model) {
     
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
+    
     currentState.gameObjects.push_back(player);
 }
 
@@ -273,6 +306,7 @@ void Application::render(float t, float alpha) {
     State state = State::interpolate(previousState, currentState, alpha);
     //state = currentState;
     renderState(state);
+    testCollisions();
 }
 
 void Application::renderState(State& state) {
@@ -294,12 +328,12 @@ void Application::renderState(State& state) {
     
         camera->setEyePosition(mainProgram);
     
-        vec3 directionFromLight = vec3(0) - vec3(1); //from 1,1,1 to origin
+        vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 20.0f, 10.0f); //from X to origin
         vec3 directionTowardsLight = -directionFromLight;
         CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
-        SetMaterial(mainProgram, 0);
         for(auto& gameObject : state.gameObjects) {
+            SetMaterial(mainProgram, gameObject->graphics->material);
             gameObject->render(mainProgram);
         }
     
@@ -311,9 +345,25 @@ void Application::renderState(State& state) {
         camera->setHelicopterViewMatrix(groundProgram);
         camera->setProjectionMatrix(groundProgram, aspect);
     
-        /*draw the ground */
-        grassTexture->bind(groundProgram->getUniform("Texture0"));
-        renderGround();
+
+    //texture offset
+    glm::vec2 offset(player->position.x / 10.0f, 0.0f);
+    //glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
+    w = glfwGetTime()/10;
+    CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
+    CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
+    auto M = make_shared<MatrixStack>();
+    M->pushMatrix();
+        M->loadIdentity();
+        //M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
+        M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
+        M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
+        CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+    M->popMatrix();
+    /*draw the ground */
+    grassTexture->bind(groundProgram->getUniform("Texture0"));
+    renderGround();
+
     groundProgram->unbind();
     
 }
@@ -321,7 +371,7 @@ void Application::renderState(State& state) {
 // helper function to set materials for shading
 void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
 {
-    CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.3f, 0.3f) );
+    CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.2f, 0.1f) );
     CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 3.0f) );
     
     switch (i)
@@ -358,6 +408,118 @@ void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
 }
 
 //[0,1.0]
-float Application::randFloat() {
+float Application::randomFloat() {
     return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+}
+
+//[-1.0, 1.0]
+float Application::randomFloatNegativePossible() {
+    return (randomFloat() * 2.0f) - 1.0f;
+}
+
+void Application::createBird(shared_ptr<Model> model, vec3 position) {
+    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent> ();
+    inputComponents.push_back(input);
+    
+    shared_ptr<BirdPhysicsComponent> physics = make_shared<BirdPhysicsComponent> ();
+    physicsComponents.push_back(physics);
+    
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model); //Give this graphics component model
+    graphics->material = 1;
+    //Todo: Give constructor to graphics for models.
+    
+    
+    temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
+    temporaryGameObjectPointer->position = position;
+    float randomVelocityX = randomFloat() * -1.0f;
+    temporaryGameObjectPointer->velocity += randomVelocityX;
+    temporaryGameObjectPointer->radius = 0.5f;
+    currentState.gameObjects.push_back(temporaryGameObjectPointer);
+}
+
+void Application::initBirds() {
+    /*
+     //birds
+     const float winDistance = 1000.0f;
+     const int numberOfBirds = 100;
+     const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
+     //vvv (1000-30*2) = 940; 940/100 = 9.4f
+     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
+    */
+    float currentX = bufferDistance;
+    glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
+    
+    
+    bool high = true; //switch high & low every other bird
+    for(int i = 0; i < numberOfBirds; i ++) {
+        
+        if(high == true) {
+            currentPosition.y = highBirdY;
+        } else {
+            currentPosition.y = lowBirdY;
+        }
+        currentPosition.x = currentX;
+        
+        float xOffset = randomFloatNegativePossible() * (distancePerBird/0.4f);
+        currentPosition.x += xOffset;
+        float yOffset = randomFloatNegativePossible() * ( (highBirdY - lowBirdY)/ 4.0f );
+        currentPosition.y += yOffset;
+        
+        createBird(birdModel, currentPosition);
+        
+        currentX += distancePerBird; //Make next bird X meters to the right
+        high = !high; //flip high/low
+    }
+}
+
+void Application::testCollisions() {
+    if(gameOver) {
+        return;
+    }
+    
+    for(auto &gameObject : currentState.gameObjects) {
+        if(gameObject != player && player->collisionCooldown <= 0.0f && gameObject->collisionCooldown <= 0.0f) {
+            if( isCollision(player, gameObject) ) {
+                setCollisionCooldown(player);
+                setCollisionCooldown(gameObject);
+                
+                decrementPlayerHealth();
+            }
+        }
+    }
+}
+
+bool Application::isCollision(shared_ptr<GameObject> player, shared_ptr<GameObject> bird) {
+    float distance = length( (player->position - bird->position) );
+    float maxDistanceWithoutCollision = player->radius * player->scale + bird->radius * bird->scale;
+    return distance < maxDistanceWithoutCollision; //true if collision
+}
+
+void Application::setCollisionCooldown(shared_ptr<GameObject> gameObject) {
+    gameObject->collisionCooldown = 3.0f; //3 seconds
+}
+
+void Application::decrementPlayerHealth() {
+    playerHealth -= 1;
+    
+    switch(playerHealth) {
+        case 2:
+            player->graphics->material = 0;
+            break;
+        case 1:
+            player->graphics->material = 6;
+            break;
+        case 0:
+            player->graphics->material = 5;
+            gameLost();
+            break;
+    }
+}
+
+void Application:: gameLost() {
+    for(int i = 0; i < 10; i ++)
+        printf("GAME OVER!\n");
+    gameOver = true;
 }

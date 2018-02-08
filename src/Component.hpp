@@ -34,6 +34,7 @@ public:
 class GraphicsComponent
 {
 public:
+    int material = 2;
     virtual ~GraphicsComponent() {}
     virtual void update(GameObject& gameObject, std::shared_ptr<Program> prog) = 0;
 };

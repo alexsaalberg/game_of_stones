@@ -23,18 +23,20 @@ void Camera::setHelicopterViewMatrix(const std::shared_ptr<Program> prog) const 
     float y = sin(radians(cameraPhi));
     float z = cos(radians(cameraPhi))*sin(radians(cameraTheta));
     
-    x = 0.0f;
-    z = -cameraDistance;
-    y = 0.0f;
+    x = -2.0f;
+    z = cameraDistance;
+    y = 3.0f;
+    vec3 identityVector = vec3(0.0f) - vec3(x, y, z); //from origin to xyz
     
-    vec3 cameraIdentityVector = vec3(x, y, z);
+    vec3 offsetVector = vec3(10.0f, 0.0f, 0.0f);
     
     auto V = make_shared<MatrixStack>();
     V->pushMatrix();
     V->loadIdentity();
-        V->lookAt(vec3(0, 0, 0), cameraIdentityVector, vec3(0, 1, 0));
+        V->lookAt(vec3(0, 0, 0), identityVector, vec3(0, 1, 0));
         V->translate((-1.0f * player->position)); //Negative
-        V->translate(vec3(0.0f, 0.0f, -cameraDistance));
+        V->translate(identityVector - offsetVector);
+        //V->translate(vec3(0.0f, 0.0f, -cameraDistance));
         CHECKED_GL_CALL( glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix())) );
     V->popMatrix();
 }

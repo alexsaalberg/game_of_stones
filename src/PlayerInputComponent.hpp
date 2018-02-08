@@ -19,6 +19,8 @@ public:
     //Variables
     bool movingForward = false;
     bool movingBackward = false;
+    bool movingUpward = false;
+    bool movingDownward = false;
     bool jumping = false;
     
     //Functions
