@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     double currentTime = glfwGetTime();
     double accumulator = 0.0f;
     
-    float simulationsPerSecond = 60.0f;
+    float simulationsPerSecond = 27.578f;
     float dt = 1.0f / simulationsPerSecond;
     
     int numSimulationsThisFrame = 0;

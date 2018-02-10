@@ -300,13 +300,13 @@ void Application::integrate(float t, float dt) {
     previousState = currentState;
     
     currentState.integrate(t, dt);
+    testCollisions();
 }
 
 void Application::render(float t, float alpha) {
     State state = State::interpolate(previousState, currentState, alpha);
     //state = currentState;
     renderState(state);
-    testCollisions();
 }
 
 void Application::renderState(State& state) {
@@ -355,7 +355,6 @@ void Application::renderState(State& state) {
     auto M = make_shared<MatrixStack>();
     M->pushMatrix();
         M->loadIdentity();
-        //M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
         M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
         M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
         CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
