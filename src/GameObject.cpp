@@ -23,10 +23,15 @@ shared_ptr<GameObject> GameObject::interpolate(shared_ptr<GameObject> previous, 
     gameObject->position = current->position*alpha + previous->position*(1-alpha);
     gameObject->velocity = current->velocity*alpha + previous->velocity*(1-alpha);
     
+    
     return gameObject;
 }
 
 GameObject::GameObject(const GameObject& gameObject) { //Copy Constructor
+    
+    this->position = gameObject.position;
+    this->velocity = gameObject.velocity;
+    
     this->input = gameObject.input;
     this->physics = gameObject.physics;
     this->graphics = gameObject.graphics;

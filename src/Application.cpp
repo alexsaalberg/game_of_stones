@@ -66,6 +66,9 @@ void Application::resizeCallback(GLFWwindow *window, int width, int height)
 }
 
 void Application::init(const std::string& resourceDirectory) {
+    currentState = make_shared<State>();
+    previousState = make_shared<State>();
+    
     initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
@@ -201,7 +204,7 @@ void Application::initPlayer(shared_ptr<Model> model) {
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
     
-    currentState.gameObjects.push_back(player);
+    currentState->gameObjects.push_back(player);
 }
 
 void Application::initCamera() {
@@ -297,15 +300,28 @@ void Application::renderGround()
 }
 
 void Application::integrate(float t, float dt) {
-    previousState = currentState;
+    //previousState = currentState;
+    previousState = make_shared<State>( *currentState );
     
-    currentState.integrate(t, dt);
+    currentState->integrate(t, dt);
+    
     testCollisions();
 }
 
 void Application::render(float t, float alpha) {
-    State state = State::interpolate(previousState, currentState, alpha);
+    State state = State::interpolate( *previousState, *currentState, alpha);
     //state = currentState;
+    vec3 rendered = state.gameObjects.at(0).get()->position;
+    vec3 previous = vec3(0);
+    if(previousState->gameObjects.size() > 0)
+        previous = previousState->gameObjects.at(0).get()->position;
+    vec3 current = currentState->gameObjects.at(0).get()->position;
+    
+    printf("Ren %f %f %f\n", rendered.x, rendered.y, rendered.z);
+    printf("Cur %f %f %f\n", current.x, current.y, current.z);
+    printf("Prv %f %f %f\n", previous.x, current.y, current.z);
+    
+    camera->player = state.gameObjects.at(0);
     renderState(state);
 }
 
@@ -435,7 +451,7 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
     float randomVelocityX = randomFloat() * -1.0f;
     temporaryGameObjectPointer->velocity += randomVelocityX;
     temporaryGameObjectPointer->radius = 0.5f;
-    currentState.gameObjects.push_back(temporaryGameObjectPointer);
+    currentState->gameObjects.push_back(temporaryGameObjectPointer);
 }
 
 void Application::initBirds() {
@@ -478,7 +494,7 @@ void Application::testCollisions() {
         return;
     }
     
-    for(auto &gameObject : currentState.gameObjects) {
+    for(auto &gameObject : currentState->gameObjects) {
         if(gameObject != player && player->collisionCooldown <= 0.0f && gameObject->collisionCooldown <= 0.0f) {
             if( isCollision(player, gameObject) ) {
                 setCollisionCooldown(player);

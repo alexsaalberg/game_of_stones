@@ -76,8 +76,9 @@ public:
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> groundProgram;
     
-    State currentState;
-    State previousState = currentState;
+    std::shared_ptr<State> currentState, previousState;
+    //State currentState;
+    //State previousState = currentState;
     
     std::shared_ptr<Camera> camera;
     
