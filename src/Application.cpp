@@ -212,17 +212,35 @@ void Application::initCamera() {
 /**** geometry set up for ground plane *****/
 void Application::initQuad()
 {
-    float g_groundSize = gridDistanceFromCenter;
-    float g_groundY = gridHeight;
+    GLuint VertexArrayID;
+    //generate the VAO
+    glGenVertexArrays(1, &VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+    //float g_groundSize = gridDistanceFromCenter;
+    //float g_groundY = gridHeight;
     
     // A x-z plane at y = g_groundY of dim[-g_groundSize, g_groundSize]^2
-    float GroundPos[] = {
+    /*float GroundPos[] = {
         -g_groundSize, g_groundY, -g_groundSize,
         -g_groundSize, g_groundY,  g_groundSize,
         g_groundSize, g_groundY,  g_groundSize,
         g_groundSize, g_groundY, -g_groundSize
-    };
+    };*/
+   
+    GLfloat *GroundPos = new GLfloat[10000*18];
     
+    int verc = 0;
+    for (int i = 0; i < 100; i++){
+        for(int j = 0; j < 100; j++){
+            GroundPos[verc++] = 0.0 + j, GroundPos[verc++] = 0.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 1.0 + j, GroundPos[verc++] = 0.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 0.0 + j, GroundPos[verc++] = 1.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 1.0 + j, GroundPos[verc++] = 0.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 1.0 + j, GroundPos[verc++] = 1.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 0.0 + j, GroundPos[verc++] = 1.0 + i, GroundPos[verc++] = 0.0;
+        }
+    }
+   
     float GroundNorm[] = {
         0, 1, 0,
         0, 1, 0,
@@ -241,32 +259,51 @@ void Application::initQuad()
      }; */
     
     
-    float GroundTex[] = {
+    /*float GroundTex[] = {
         0, 0, // back
         0, g_groundSize,
         g_groundSize, g_groundSize,
         g_groundSize, 0
-    };
+    };*/
+   
+
+    float t= 1./100.;
+    int texc = 0;
+    GLfloat *GroundTex = new GLfloat[10000*12];
+    for (int i = 0; i < 100; i++) {
+        for (int j = 0; j < 100; j++) {
+            GroundTex[texc++] = (GLfloat)j*t, GroundTex[texc++] = (GLfloat)i*t;
+            GroundTex[texc++] = (GLfloat)(j + 1)*t, GroundTex[texc++] = (GLfloat)i*t;
+            GroundTex[texc++] = (GLfloat)j*t, GroundTex[texc++] = (GLfloat)(i + 1)*t;
+            GroundTex[texc++] = (GLfloat)(j + 1)*t, GroundTex[texc++] = 0.0 + (GLfloat)i*t;
+            GroundTex[texc++] = (GLfloat)(j + 1)*t, GroundTex[texc++] = (GLfloat)(i + 1)*t;
+            GroundTex[texc++] = (GLfloat)j*t, GroundTex[texc++] = (GLfloat)(i + 1)*t;
+        }
+    }
+   
     
     unsigned short idx[] = {0, 1, 2, 0, 2, 3};
     
-    GLuint VertexArrayID;
-    //generate the VAO
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    
     
     gGiboLen = 6;
+    
     glGenBuffers(1, &GroundBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, GroundBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GroundPos), GroundPos, GL_STATIC_DRAW);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(GroundPos), GroundPos, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT)*10000*18, GroundPos, GL_STATIC_DRAW);
+    
+    
+    
+    glGenBuffers(1, &GroundTextureBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT)*10000*12, GroundTex, GL_STATIC_DRAW);
     
     glGenBuffers(1, &GroundNormalBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, GroundNormalBufferObject);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GroundNorm), GroundNorm, GL_STATIC_DRAW);
     
-    glGenBuffers(1, &GroundTextureBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GroundTex), GroundTex, GL_STATIC_DRAW);
+    
     
     glGenBuffers(1, &GroundIndexBufferObject);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GroundIndexBufferObject);
@@ -277,7 +314,7 @@ void Application::renderGround()
 {
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, GroundBufferObject);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, GroundNormalBufferObject);
@@ -285,11 +322,12 @@ void Application::renderGround()
     
     glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
     
     // draw!
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GroundIndexBufferObject);
-    glDrawElements(GL_TRIANGLES, gGiboLen, GL_UNSIGNED_SHORT, 0);
+    //glDrawElements(GL_TRIANGLES, gGiboLen, GL_UNSIGNED_SHORT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 10000*12);
     
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
@@ -347,7 +385,7 @@ void Application::renderState(State& state) {
     
 
     //texture offset
-    glm::vec2 offset(player->position.x / 10.0f, 0.0f);
+    glm::vec2 offset(player->position.x / 50.0f, 0.0f);
     //glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
     w = glfwGetTime()/10;
     CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
@@ -356,8 +394,14 @@ void Application::renderState(State& state) {
     M->pushMatrix();
         M->loadIdentity();
         //M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
-        M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
-        M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
+        //M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
+    
+
+        M->translate(glm::vec3(player->position.x-40.0f, -10.0f, -20.0f));
+        M->scale(glm::vec3(1.0f, 1.0f, 1.0f));
+        M->rotate(1.5, glm::vec3(1.0f, 0.0f, 0.0f));
+        //M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
+    
         CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
     M->popMatrix();
     /*draw the ground */
