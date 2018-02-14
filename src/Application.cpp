@@ -300,7 +300,6 @@ void Application::renderGround()
 }
 
 void Application::integrate(float t, float dt) {
-    //previousState = currentState;
     previousState = make_shared<State>( *currentState );
     
     currentState->integrate(t, dt);
@@ -310,16 +309,6 @@ void Application::integrate(float t, float dt) {
 
 void Application::render(float t, float alpha) {
     State state = State::interpolate( *previousState, *currentState, alpha);
-    //state = currentState;
-    vec3 rendered = state.gameObjects.at(0).get()->position;
-    vec3 previous = vec3(0);
-    if(previousState->gameObjects.size() > 0)
-        previous = previousState->gameObjects.at(0).get()->position;
-    vec3 current = currentState->gameObjects.at(0).get()->position;
-    
-    printf("Ren %f %f %f\n", rendered.x, rendered.y, rendered.z);
-    printf("Cur %f %f %f\n", current.x, current.y, current.z);
-    printf("Prv %f %f %f\n", previous.x, current.y, current.z);
     
     camera->player = state.gameObjects.at(0);
     renderState(state);
@@ -348,37 +337,34 @@ void Application::renderState(State& state) {
         vec3 directionTowardsLight = -directionFromLight;
         CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
+        /* PRIMARY RENDER LOOP */
         for(auto& gameObject : state.gameObjects) {
             SetMaterial(mainProgram, gameObject->graphics->material);
             gameObject->render(mainProgram);
         }
-    
     mainProgram->unbind();
-    
     
     groundProgram->bind();
         camera->setModelIdentityMatrix(groundProgram);
         camera->setHelicopterViewMatrix(groundProgram);
         camera->setProjectionMatrix(groundProgram, aspect);
-    
 
-    //texture offset
-    glm::vec2 offset(player->position.x / 10.0f, 0.0f);
-    //glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
-    w = glfwGetTime()/10;
-    CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
-    CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
-    auto M = make_shared<MatrixStack>();
-    M->pushMatrix();
-        M->loadIdentity();
-        M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
-        M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
-        CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
-    M->popMatrix();
-    /*draw the ground */
-    grassTexture->bind(groundProgram->getUniform("Texture0"));
-    renderGround();
-
+        //texture offset
+        glm::vec2 offset(camera->player->position.x / 10.0f, 0.0f);
+        //glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
+        w = glfwGetTime()/10;
+        CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
+        CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
+        auto M = make_shared<MatrixStack>();
+        M->pushMatrix();
+            M->loadIdentity();
+            M->translate(glm::vec3(camera->player->position.x+20.0f, 0.0f, 0.0f));
+            M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
+            CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+        M->popMatrix();
+        /*draw the ground */
+        grassTexture->bind(groundProgram->getUniform("Texture0"));
+        renderGround();
     groundProgram->unbind();
     
 }
@@ -444,7 +430,6 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
     graphics->models.push_back(model); //Give this graphics component model
     graphics->material = 1;
     //Todo: Give constructor to graphics for models.
-    
     
     temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
     temporaryGameObjectPointer->position = position;

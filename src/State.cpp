@@ -20,7 +20,6 @@ State::State(const State &oldState) { //copy constructor
     
     for( int i = 0; i < numberOfGameObjects; i++ ) {
         temporaryGameObject = make_shared<GameObject>( *oldState.gameObjects.at(i).get() );
-        //temporaryGameObject = new GameObject( *oldState.gameObjects.at(i).get() );
         gameObjects.push_back( temporaryGameObject );
     }
 }
@@ -32,7 +31,6 @@ State& State::operator= (const State &oldState) { //assignment operator
     
     for( int i = 0; i < numberOfGameObjects; i++ ) {
         temporaryGameObject = make_shared<GameObject>( *oldState.gameObjects.at(i).get() );
-        //temporaryGameObject = new GameObject( *oldState.gameObjects.at(i).get() );
         this->gameObjects.push_back( temporaryGameObject );
     }
     
@@ -73,7 +71,6 @@ State State::interpolate(State &previous, State &current, float alpha)
 
 void State::integrate(float t, double dt)
 {
-    //printf("NumObjects: %d\n", gameObjects.size());
     for(auto &gameObject : gameObjects) {
         gameObject->simulate(dt);
     }
