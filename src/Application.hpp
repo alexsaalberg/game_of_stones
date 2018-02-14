@@ -70,6 +70,7 @@ public:
     // Our shader program
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> groundProgram;
+	std::shared_ptr<Program> sky;
     
     State currentState;
     State previousState = currentState;
@@ -149,12 +150,13 @@ public:
     void renderGround();
 
 	//Skybox
-	void initSkybox(const std::string& resourceDirectory);
-	void createCubeMap(const char* front, const char* back,
-		const char* top, const char* bottom, const char* left,
-		const char* right, GLuint* tex_cube);
+	void initSkybox(const std::string& resourceDirectory, 
+		const std::string& skyboxDirectory);
+	void createCubeMap(const std::string& front, const std::string& back,
+		const std::string& top, const std::string& bottom, const std::string& left,
+		const std::string& right, GLuint* tex_cube);
 	bool loadCubeMapSide(GLuint texture, GLenum side_target,
-		const char* filename);
+		const std::string& filename);
     
     //Physics
     void integrate(float t, float dt);

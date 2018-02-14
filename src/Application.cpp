@@ -74,7 +74,8 @@ void Application::init(const std::string& resourceDirectory) {
     initCamera();
     initBirds();
     initQuad();
-	initSkybox(resourceDirectory + "/shaders");
+	initSkybox(resourceDirectory + "/shaders", 
+				resourceDirectory + "/skybox");
 }
 
 //code to set up the two shaders - a diffuse shader and texture mapping
@@ -94,7 +95,7 @@ void Application::initMainProgram(const std::string& resourceDirectory) {
     // Initialize the GLSL program.
     mainProgram = make_shared<Program>();
     mainProgram->setVerbose(true);
-    mainProgram->setShaderNames(  resourceDirectory + "/mainVert.glsl",
+    mainProgram->setShaderNames(resourceDirectory + "/mainVert.glsl",
                                 resourceDirectory + "/mainFrag.glsl");
     
     if (! mainProgram->init()) {
@@ -298,11 +299,27 @@ void Application::renderGround()
     glDisableVertexAttribArray(2);
 }
 
-void Application::initSkybox(const std::string& resourceDirectory) {
+void Application::initSkybox(const std::string& resourceDirectory,
+	const std::string& skyboxDirectory) {
+	int windowWidth, windowHeight;
+	glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
+	float aspect = windowWidth / (float)windowHeight;
+
 	sky = make_shared<Program>();
 	sky->setVerbose(true);
 	sky->setShaderNames(resourceDirectory + "/skybox_vert.glsl",
 						resourceDirectory + "/skybox_frag.glsl");
+	if (!sky->init())
+	{
+		std::cerr << "One or more skybox shaders failed to compile... exiting!" << std::endl;
+		exit(1);
+	}
+
+	sky->addUniform("P");
+	sky->addUniform("V");
+	sky->addUniform("cube_texture");
+	sky->addAttribute("texcoords");
+	sky->addAttribute("vp");
 
 	float points[] = {
 		-10.0f,  10.0f, -10.0f,
@@ -310,6 +327,7 @@ void Application::initSkybox(const std::string& resourceDirectory) {
 		 10.0f, -10.0f, -10.0f,
 		 10.0f, -10.0f, -10.0f,
 		 10.0f,  10.0f, -10.0f,
+		-10.0f,  10.0f, -10.0f,
 
 		-10.0f, -10.0f,  10.0f,
 		-10.0f, -10.0f, -10.0f,
@@ -357,25 +375,33 @@ void Application::initSkybox(const std::string& resourceDirectory) {
 	glBindVertexArray(vao);
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *) 0);
 
-	createCubeMap("../resources/skybox/lake1_ft.png", 
-		"../resources/skybox/lake1_bk.png", "../resources/skybox/lake1_up.png",
-		"../resources/skybox/lake1_dn.png", "../resources/skybox/lake1_lf.png",
-		"../resources/skybox/lake1_rt.png", &vbo);
+	const std::string front = skyboxDirectory + "/lake1_ft.jpg";
+	const std::string back = skyboxDirectory + "/lake1_bk.jpg";
+	const std::string top = skyboxDirectory + "/lake1_up.jpg";
+	const std::string bottom = skyboxDirectory + "/lake1_dn.jpg";
+	const std::string left = skyboxDirectory + "/lake1_lf.jpg";
+	const std::string right = skyboxDirectory + "/lake1_rt.jpg";
+	createCubeMap(front, back, top, bottom, left, right, &vbo);
 
 	glDepthMask(GL_FALSE);
-	glUseProgram(sky);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, vbo);
-	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-	glDepthMask(GL_TRUE);
+	sky->bind();
+		camera->setViewMatrix(sky);
+		camera->setProjectionMatrix(sky, aspect);
+		CHECKED_GL_CALL(glUniform1i(sky->getUniform("cube_texture"), 0));
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, vbo);
+		glBindVertexArray(vao);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDepthMask(GL_TRUE);
+	sky->unbind();
 }
 
-void Application::createCubeMap(const char* front, const char* back,
-	const char* top, const char* bottom, const char* left,
-	const char* right, GLuint* tex_cube) {
+void Application::createCubeMap(const std::string& front, const std::string& back,
+	const std::string& top, const std::string& bottom, const std::string& left,
+	const std::string& right, GLuint* tex_cube) {
 	//generate cube-map texture to hold in all the sides
 	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, tex_cube);
@@ -396,16 +422,16 @@ void Application::createCubeMap(const char* front, const char* back,
 }
 
 bool Application::loadCubeMapSide(GLuint texture, GLenum side_target,
-	const char* filename) {
+	const std::string& filename) {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 
 	int x, y, n;
 	int force = 4;
-	unsigned char* imageData = stbi_load(filename, &x, &y,
+	unsigned char* imageData = stbi_load(filename.c_str(), &x, &y,
 		&n, force);
 
 	if (!imageData) {
-		fprintf(stderr, "ERROR: could not load %s\n", filename);	
+		fprintf(stderr, "ERROR: could not load %s\n", filename.c_str());	
 		return false;
 	}
 
@@ -490,10 +516,6 @@ void Application::renderState(State& state) {
     renderGround();
 
     groundProgram->unbind();
-
-	sky->bind();
-
-	sky->unbind();
     
 }
 
