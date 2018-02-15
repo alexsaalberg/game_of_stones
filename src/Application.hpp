@@ -150,6 +150,8 @@ public:
     void renderGround();
 
 	//Skybox
+	GLuint vbo, vao, tex_cube;
+
 	void initSkybox(const std::string& resourceDirectory, 
 		const std::string& skyboxDirectory);
 	void createCubeMap(const std::string& front, const std::string& back,
