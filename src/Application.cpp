@@ -318,59 +318,57 @@ void Application::initSkybox(const std::string& resourceDirectory,
 	sky->addUniform("P");
 	sky->addUniform("V");
 	sky->addUniform("cube_texture");
-	sky->addAttribute("texcoords");
 	sky->addAttribute("vp");
 
 	float points[] = {
-		-10.0f,  10.0f, -10.0f,
-		-10.0f, -10.0f, -10.0f,
-		 10.0f, -10.0f, -10.0f,
-		 10.0f, -10.0f, -10.0f,
-		 10.0f,  10.0f, -10.0f,
-		-10.0f,  10.0f, -10.0f,
+		-70.0f,  70.0f, -70.0f,
+		-70.0f, -70.0f, -70.0f,
+		 70.0f, -70.0f, -70.0f,
+		 70.0f, -70.0f, -70.0f,
+		 70.0f,  70.0f, -70.0f,
+		-70.0f,  70.0f, -70.0f,
 
-		-10.0f, -10.0f,  10.0f,
-		-10.0f, -10.0f, -10.0f,
-		-10.0f,  10.0f, -10.0f,
-		-10.0f,  10.0f, -10.0f,
-		-10.0f,  10.0f,  10.0f,
-		-10.0f, -10.0f,  10.0f,
+		-70.0f, -70.0f,  70.0f,
+		-70.0f, -70.0f, -70.0f,
+		-70.0f,  70.0f, -70.0f,
+		-70.0f,  70.0f, -70.0f,
+		-70.0f,  70.0f,  70.0f,
+		-70.0f, -70.0f,  70.0f,
 
-		 10.0f, -10.0f, -10.0f,
-		 10.0f, -10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f, -10.0f,
-		 10.0f, -10.0f, -10.0f,
+		 70.0f, -70.0f, -70.0f,
+		 70.0f, -70.0f,  70.0f,
+		 70.0f,  70.0f,  70.0f,
+		 70.0f,  70.0f,  70.0f,
+		 70.0f,  70.0f, -70.0f,
+		 70.0f, -70.0f, -70.0f,
 
-		-10.0f, -10.0f,  10.0f,
-		-10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f, -10.0f,  10.0f,
-		-10.0f, -10.0f,  10.0f,
+		-70.0f, -70.0f,  70.0f,
+		-70.0f,  70.0f,  70.0f,
+		 70.0f,  70.0f,  70.0f,
+		 70.0f,  70.0f,  70.0f,
+		 70.0f, -70.0f,  70.0f,
+		-70.0f, -70.0f,  70.0f,
 
-		-10.0f,  10.0f, -10.0f,
-		 10.0f,  10.0f, -10.0f,
-		 10.0f,  10.0f,  10.0f,
-		 10.0f,  10.0f,  10.0f,
-		-10.0f,  10.0f,  10.0f,
-		-10.0f,  10.0f, -10.0f,
+		-70.0f,  70.0f, -70.0f,
+		 70.0f,  70.0f, -70.0f,
+		 70.0f,  70.0f,  70.0f,
+		 70.0f,  70.0f,  70.0f,
+		-70.0f,  70.0f,  70.0f,
+		-70.0f,  70.0f, -70.0f,
 
-		-10.0f, -10.0f, -10.0f,
-		-10.0f, -10.0f,  10.0f,
-		 10.0f, -10.0f, -10.0f,
-		 10.0f, -10.0f, -10.0f,
-		-10.0f, -10.0f,  10.0f,
-		 10.0f, -10.0f,  10.0f
+		-70.0f, -70.0f, -70.0f,
+		-70.0f, -70.0f,  70.0f,
+		 70.0f, -70.0f, -70.0f,
+		 70.0f, -70.0f, -70.0f,
+		-70.0f, -70.0f,  70.0f,
+		 70.0f, -70.0f,  70.0f
 	};
 
-	GLuint vbo;
+	
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, 3 * 36 * sizeof(float), &points, GL_STATIC_DRAW);
 
-	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	glEnableVertexAttribArray(0);
@@ -383,20 +381,8 @@ void Application::initSkybox(const std::string& resourceDirectory,
 	const std::string bottom = skyboxDirectory + "/lake1_dn.jpg";
 	const std::string left = skyboxDirectory + "/lake1_lf.jpg";
 	const std::string right = skyboxDirectory + "/lake1_rt.jpg";
-	createCubeMap(front, back, top, bottom, left, right, &vbo);
+	createCubeMap(front, back, top, bottom, left, right, &tex_cube);
 
-	glDepthMask(GL_FALSE);
-	sky->bind();
-		camera->setViewMatrix(sky);
-		camera->setProjectionMatrix(sky, aspect);
-		CHECKED_GL_CALL(glUniform1i(sky->getUniform("cube_texture"), 0));
-		
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, vbo);
-		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glDepthMask(GL_TRUE);
-	sky->unbind();
 }
 
 void Application::createCubeMap(const std::string& front, const std::string& back,
@@ -410,8 +396,8 @@ void Application::createCubeMap(const std::string& front, const std::string& bac
 	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, back);
 	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, top);
 	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, bottom);
-	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, left);
-	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_X, right);
+	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_X, left);
+	loadCubeMapSide(*tex_cube, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, right);
 
 	//format cube map texture
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -517,6 +503,18 @@ void Application::renderState(State& state) {
 
     groundProgram->unbind();
     
+	glDepthMask(GL_FALSE);
+	sky->bind();
+		camera->setViewMatrix(sky);
+		camera->setProjectionMatrix(sky, aspect);
+		CHECKED_GL_CALL(glUniform1i(sky->getUniform("cube_texture"), 0));
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, tex_cube);
+		glBindVertexArray(vao);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	sky->unbind();
+	glDepthMask(GL_TRUE);
 }
 
 // helper function to set materials for shading
