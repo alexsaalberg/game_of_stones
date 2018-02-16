@@ -339,10 +339,6 @@ void Application::renderGround()
 
 void Application::initSkybox(const std::string& resourceDirectory,
 	const std::string& skyboxDirectory) {
-	int windowWidth, windowHeight;
-	glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
-	float aspect = windowWidth / (float)windowHeight;
-
 	sky = make_shared<Program>();
 	sky->setVerbose(true);
 	sky->setShaderNames(resourceDirectory + "/skybox_vert.glsl",
@@ -402,7 +398,6 @@ void Application::initSkybox(const std::string& resourceDirectory,
 		 70.0f, -70.0f,  70.0f
 	};
 
-	
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, 3 * 36 * sizeof(float), &points, GL_STATIC_DRAW);
@@ -413,12 +408,12 @@ void Application::initSkybox(const std::string& resourceDirectory,
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *) 0);
 
-	const std::string front = skyboxDirectory + "/lake1_ft.jpg";
-	const std::string back = skyboxDirectory + "/lake1_bk.jpg";
-	const std::string top = skyboxDirectory + "/lake1_up.jpg";
-	const std::string bottom = skyboxDirectory + "/lake1_dn.jpg";
-	const std::string left = skyboxDirectory + "/lake1_lf.jpg";
-	const std::string right = skyboxDirectory + "/lake1_rt.jpg";
+	const std::string front = skyboxDirectory + "/lake1_ft.JPG";
+	const std::string back = skyboxDirectory + "/lake1_bk.JPG";
+	const std::string top = skyboxDirectory + "/lake1_up.JPG";
+	const std::string bottom = skyboxDirectory + "/lake1_dn.JPG";
+	const std::string left = skyboxDirectory + "/lake1_lf.JPG";
+	const std::string right = skyboxDirectory + "/lake1_rt.JPG";
 	createCubeMap(front, back, top, bottom, left, right, &tex_cube);
 
 }
@@ -462,7 +457,7 @@ bool Application::loadCubeMapSide(GLuint texture, GLenum side_target,
 	//non-power-of-2 dimensions check
 	if ((x & (x - 1)) != 0 || (y & (y - 1)) != 0) {
 		fprintf(stderr, "WARNING: image %s is not power-of-2 dimensions\n",
-			filename);
+			filename.c_str());
 	}
 
 	//copy image data into target side of cube map
@@ -548,6 +543,7 @@ void Application::renderState(State& state) {
 
     groundProgram->unbind();
     
+	/*draw skybox*/
 	glDepthMask(GL_FALSE);
 	sky->bind();
 		camera->setViewMatrix(sky);
