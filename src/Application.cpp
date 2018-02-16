@@ -11,60 +11,6 @@
 using namespace std;
 using namespace glm;
 
-void Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, GL_TRUE);
-    }
-    else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
-    {
-        playerInputComponent->movingForward = true;
-    }
-    else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
-    {
-        playerInputComponent->movingBackward = true;
-    }
-    else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
-    {
-        playerInputComponent->movingForward = false;
-    }
-    else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
-    {
-        playerInputComponent->movingBackward = false;
-    }
-    else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
-    {
-        playerInputComponent->movingUpward = true;
-    }
-    else if (key == GLFW_KEY_S && (action == GLFW_PRESS))
-    {
-        playerInputComponent->movingDownward = true;
-    }
-    else if (key == GLFW_KEY_W && (action == GLFW_RELEASE))
-    {
-        playerInputComponent->movingUpward = false;
-    }
-    else if (key == GLFW_KEY_S && (action == GLFW_RELEASE))
-    {
-        playerInputComponent->movingDownward = false;
-    }
-}
-
-//Todo: Remove these (Idk if they're being optimized out, but hopefully
-//                    they're not being called every time the mouse moves)
-void Application::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-{}
-void Application::mouseCallback(GLFWwindow *window, int button, int action, int mods)
-{}
-void Application::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-{}
-
-void Application::resizeCallback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
 void Application::init(const std::string& resourceDirectory) {
     currentState = make_shared<State>();
     previousState = make_shared<State>();
@@ -522,4 +468,58 @@ void Application:: gameLost() {
     for(int i = 0; i < 10; i ++)
         printf("GAME OVER!\n");
     gameOver = true;
+}
+
+void Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+    else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
+    {
+        playerInputComponent->movingForward = true;
+    }
+    else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
+    {
+        playerInputComponent->movingBackward = true;
+    }
+    else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
+    {
+        playerInputComponent->movingForward = false;
+    }
+    else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
+    {
+        playerInputComponent->movingBackward = false;
+    }
+    else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
+    {
+        playerInputComponent->movingUpward = true;
+    }
+    else if (key == GLFW_KEY_S && (action == GLFW_PRESS))
+    {
+        playerInputComponent->movingDownward = true;
+    }
+    else if (key == GLFW_KEY_W && (action == GLFW_RELEASE))
+    {
+        playerInputComponent->movingUpward = false;
+    }
+    else if (key == GLFW_KEY_S && (action == GLFW_RELEASE))
+    {
+        playerInputComponent->movingDownward = false;
+    }
+}
+
+//Todo: Remove these (Idk if they're being optimized out, but hopefully
+//                    they're not being called every time the mouse moves)
+void Application::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
+{}
+void Application::mouseCallback(GLFWwindow *window, int button, int action, int mods)
+{}
+void Application::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+{}
+
+void Application::resizeCallback(GLFWwindow *window, int width, int height)
+{
+    glViewport(0, 0, width, height);
 }
