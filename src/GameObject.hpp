@@ -16,6 +16,8 @@
 #include "Program.h"
 #include "Component.hpp"
 
+#include "Box2D/Box2D.h"
+
 class InputComponent;
 class PhysicsComponent;
 class GraphicsComponent;
@@ -26,6 +28,8 @@ public:
     const glm::vec3 forwardDirection = glm::vec3(1.0f, 0.0f, 0.0f);
     
     //Variables
+    b2Body *body;
+    
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 velocity = glm::vec3(0.0f);
     

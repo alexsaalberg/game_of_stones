@@ -16,15 +16,17 @@ void Application::init(const std::string& resourceDirectory) {
     previousState = make_shared<State>();
     
     initShaders(resourceDirectory+"/shaders");
+    
     initTextures(resourceDirectory+"/models");
+    
     initGeom(resourceDirectory+"/models");
-    initPlayer(helicopterModel);
-    initCamera();
-    initBirds();
     initQuad();
+    
+    initBox2DWorld();
+    initEntities();
 }
 
-//code to set up the two shaders - a diffuse shader and texture mapping
+
 void Application::initShaders(const std::string& resourceDirectory)
 {
     int width, height;
@@ -136,6 +138,17 @@ void Application::initGeom(const std::string& resourceDirectory) {
     }
 }
 
+void Application::initBox2DWorld() {
+    b2Vec2 gravity(0.0f, 0.0f);
+    world = make_shared<b2World>(gravity);
+}
+
+void Application::initEntities() {
+    initPlayer(helicopterModel);
+    initCamera();
+    initBirds();
+}
+
 void Application::initPlayer(shared_ptr<Model> model) {
     shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
     inputComponents.push_back(input);
@@ -150,6 +163,20 @@ void Application::initPlayer(shared_ptr<Model> model) {
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
     
+    
+    b2BodyDef playerBodyDefinition;
+    playerBodyDefinition.position.Set(0.0f, 5.0f);
+    playerBodyDefinition.type = b2_dynamicBody;
+    player->body = world->CreateBody(&playerBodyDefinition);
+    
+    b2PolygonShape playerBox;
+    //The extents are the half-widths of the box.
+    playerBox.SetAsBox(1.0f, 1.8f);
+    //Create fixture directly from shape
+    player->body->CreateFixture(&playerBox, 10.0f); //0.5f = density
+    
+    player->body->ApplyLinearImpulseToCenter(b2Vec2(1000.0f, 0.0f), true);
+    
     currentState->gameObjects.push_back(player);
 }
 
@@ -158,7 +185,77 @@ void Application::initCamera() {
     camera->player = player;
 }
 
-/**** geometry set up for ground plane *****/
+void Application::createBird(shared_ptr<Model> model, vec3 position) {
+    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent> ();
+    inputComponents.push_back(input);
+    
+    shared_ptr<BirdPhysicsComponent> physics = make_shared<BirdPhysicsComponent> ();
+    physicsComponents.push_back(physics);
+    
+   
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model); //Give this graphics component model
+    graphics->material = 1;
+    //Todo: Give constructor to graphics for models.
+    
+    temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
+    temporaryGameObjectPointer->position = position;
+    float randomVelocityX = randomFloat() * -1.0f;
+    temporaryGameObjectPointer->velocity += randomVelocityX;
+    temporaryGameObjectPointer->radius = 0.5f;
+    
+    b2BodyDef birdBodyDefinition;
+    birdBodyDefinition.position.Set(position.x, position.y); //set position from param
+    birdBodyDefinition.type = b2_dynamicBody;
+    temporaryGameObjectPointer->body = world->CreateBody(&birdBodyDefinition);
+    
+    b2PolygonShape birdBox;
+    //The extents are the half-widths of the box.
+    birdBox.SetAsBox(0.5f, 0.5f);
+    //Create fixture directly from shape
+    temporaryGameObjectPointer->body->CreateFixture(&birdBox, 0.5f); //0.0f = density
+    
+    
+    
+    currentState->gameObjects.push_back(temporaryGameObjectPointer);
+}
+
+void Application::initBirds() {
+    /*
+     //birds
+     const float winDistance = 1000.0f;
+     const int numberOfBirds = 100;
+     const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
+     //vvv (1000-30*2) = 940; 940/100 = 9.4f
+     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
+     */
+    float currentX = bufferDistance;
+    glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
+    
+    
+    bool high = true; //switch high & low every other bird
+    for(int i = 0; i < numberOfBirds; i ++) {
+        
+        if(high == true) {
+            currentPosition.y = highBirdY;
+        } else {
+            currentPosition.y = lowBirdY;
+        }
+        currentPosition.x = currentX;
+        
+        float xOffset = randomFloatNegativePossible() * (distancePerBird/0.4f);
+        currentPosition.x += xOffset;
+        float yOffset = randomFloatNegativePossible() * ( (highBirdY - lowBirdY)/ 4.0f );
+        currentPosition.y += yOffset;
+        
+        createBird(birdModel, currentPosition);
+        
+        currentX += distancePerBird; //Make next bird X meters to the right
+        high = !high; //flip high/low
+    }
+}
+
 void Application::initQuad()
 {
     float g_groundSize = gridDistanceFromCenter;
@@ -246,18 +343,22 @@ void Application::renderGround()
 }
 
 void Application::integrate(float t, float dt) {
-    previousState = make_shared<State>( *currentState );
+    //previousState = make_shared<State>( *currentState );
+    
+    
+    int32 velocityIterations = 6;
+    int32 positionIterations = 2;
+    
+    world->Step(dt, velocityIterations, positionIterations);
     
     currentState->integrate(t, dt);
-    
-    testCollisions();
 }
 
 void Application::render(float t, float alpha) {
-    State state = State::interpolate( *previousState, *currentState, alpha);
+    //State state = State::interpolate( *previousState, *currentState, alpha);
     
-    camera->player = state.gameObjects.at(0);
-    renderState(state);
+    camera->player = currentState->gameObjects.at(0);
+    renderState(*currentState.get());
 }
 
 void Application::renderState(State& state) {
@@ -362,62 +463,6 @@ float Application::randomFloat() {
 //[-1.0, 1.0]
 float Application::randomFloatNegativePossible() {
     return (randomFloat() * 2.0f) - 1.0f;
-}
-
-void Application::createBird(shared_ptr<Model> model, vec3 position) {
-    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent> ();
-    inputComponents.push_back(input);
-    
-    shared_ptr<BirdPhysicsComponent> physics = make_shared<BirdPhysicsComponent> ();
-    physicsComponents.push_back(physics);
-    
-    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
-    graphicsComponents.push_back(graphics);
-    graphics->models.push_back(model); //Give this graphics component model
-    graphics->material = 1;
-    //Todo: Give constructor to graphics for models.
-    
-    temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
-    temporaryGameObjectPointer->position = position;
-    float randomVelocityX = randomFloat() * -1.0f;
-    temporaryGameObjectPointer->velocity += randomVelocityX;
-    temporaryGameObjectPointer->radius = 0.5f;
-    currentState->gameObjects.push_back(temporaryGameObjectPointer);
-}
-
-void Application::initBirds() {
-    /*
-     //birds
-     const float winDistance = 1000.0f;
-     const int numberOfBirds = 100;
-     const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
-     //vvv (1000-30*2) = 940; 940/100 = 9.4f
-     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
-    */
-    float currentX = bufferDistance;
-    glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
-    
-    
-    bool high = true; //switch high & low every other bird
-    for(int i = 0; i < numberOfBirds; i ++) {
-        
-        if(high == true) {
-            currentPosition.y = highBirdY;
-        } else {
-            currentPosition.y = lowBirdY;
-        }
-        currentPosition.x = currentX;
-        
-        float xOffset = randomFloatNegativePossible() * (distancePerBird/0.4f);
-        currentPosition.x += xOffset;
-        float yOffset = randomFloatNegativePossible() * ( (highBirdY - lowBirdY)/ 4.0f );
-        currentPosition.y += yOffset;
-        
-        createBird(birdModel, currentPosition);
-        
-        currentX += distancePerBird; //Make next bird X meters to the right
-        high = !high; //flip high/low
-    }
 }
 
 void Application::testCollisions() {

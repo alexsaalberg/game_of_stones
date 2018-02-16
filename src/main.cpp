@@ -10,27 +10,20 @@ const int windowHeight = 420;
 int main(int argc, char **argv)
 {
     // Where the resources are loaded from
-    std::string resourceDir = "../resources";
+    std::string resourceDir = "../../resources";
     
     if (argc >= 2)
     {
         resourceDir = argv[1];
     }
     
-    
     Application *application = new Application();
     
-    // Your main will always include a similar set up to establish your window
-    // and GL context, etc.
-    
+    //Set up window manager (internally uses GLFW)
     WindowManager *windowManager = new WindowManager();
     windowManager->init(windowWidth, windowHeight);
     windowManager->setEventCallbacks(application);
     application->windowManager = windowManager;
-    
-    // This is the code that will likely change program to program as you
-    // may need to initialize or set up different data and state
-    
     
     application->init(resourceDir);
     
