@@ -26,10 +26,11 @@ void PlayerPhysicsComponent::integrate(GameObject& gameObject, float dt) {
     
     float groundHeight = calculateGroundHeight();
     
+    /*
     if(gameObject.position.y < groundHeight ) {
         gameObject.velocity.y = 0.0f;
         gameObject.position.y = groundHeight;
-    }
+    }*/
 }
 
 float PlayerPhysicsComponent::calculateGroundHeight() {
@@ -54,9 +55,12 @@ vec3 PlayerPhysicsComponent::calculateAcceleration(GameObject& gameObject, float
     float heightDiff = maximumHeight - gameObject.position.y;
     if( heightDiff < 0.0f ) { //heightDiff will be (-) if player above max
         acceleration.y += heightDiff * 20.0f;
-        if(gameObject.impulse.y < 0.0f) {
-            //gameObject.impulse.y *= 0.5f;
-        }
+    }
+    
+    const float minimumHeight = 0.0f; //BirdHighSpawnY = ~10.0
+    heightDiff = minimumHeight - gameObject.position.y;
+    if( heightDiff > 0.0f ) { //heightDiff will be (+) if player below min
+        acceleration.y += heightDiff * 20.0f;
     }
 
     

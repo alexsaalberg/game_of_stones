@@ -22,7 +22,6 @@ class DefaultGraphicsComponent : public GraphicsComponent
 public:
     //Variables
     std::vector<std::shared_ptr<Model>> models;
-    int material = 0;
     
     //Functions
     virtual void update(GameObject& gameObject, std::shared_ptr<Program> prog);

@@ -53,17 +53,22 @@ class Application : public EventCallbacks
     
     //birds
     const float winDistance = 1000.0f;
-    const int numberOfBirds = 100;
+    const int numberOfBirds = 150;
     const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
     //vvv (1000-30*2) = 940; 940/100 = 9.4f
     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
     const float birdInitialHorizontalVelocity = -10.0f;
-    const float highBirdY = 10.0f;
+    const float highBirdY = 11.0f;
     const float lowBirdY = 2.0f;
     
 public:
     
 //Variables
+    bool gameOver = false;
+    int playerHealth = 3;
+    
+    double w = 0; //w is for sin wave frequency.
+    
     bool mouseDown = false;
     WindowManager * windowManager = nullptr;
     
@@ -93,22 +98,9 @@ public:
     
     std::shared_ptr<PlayerInputComponent> playerInputComponent;
     
-    
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
     std::shared_ptr<Texture> waterTexture;
-    
-
-    float cHeight = 0.0f;
-    int score = 0;
-    int freeOrbCount = 0;
-    double w = 0; //w is for sin wave frequency. 
-
-    bool gameOver = false;
-    
-    double mouse_prevX;
-    double mouse_prevY;
-
 //Functions
 
     //ground plane info
@@ -177,6 +169,12 @@ public:
     
     void createBird(std::shared_ptr<Model> model, glm::vec3 position);
     void initBirds();
+    
+    void testCollisions();
+    bool isCollision(std::shared_ptr<GameObject> player, std::shared_ptr<GameObject> bird);
+    void setCollisionCooldown(std::shared_ptr<GameObject> gameObject);
+    void decrementPlayerHealth();
+    void gameLost();
 };
 
 

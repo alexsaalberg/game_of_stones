@@ -178,14 +178,14 @@ void Application::initGeom(const std::string& resourceDirectory) {
     }
     
     rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-                          (resourceDirectory + "/Helicopter.obj").c_str());
+                          (resourceDirectory + "/Helicopter2.obj").c_str());
     if (!rc)
     {
         cerr << errStr << endl;
     } else {
         helicopterModel = make_shared<Model>();
         helicopterModel->createModel(TOshapes, objMaterials);
-        helicopterModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
+        helicopterModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
         helicopterModel->scale *= 2.0f;
     }
 }
@@ -215,17 +215,35 @@ void Application::initCamera() {
 /**** geometry set up for ground plane *****/
 void Application::initQuad()
 {
-    float g_groundSize = gridDistanceFromCenter;
-    float g_groundY = gridHeight;
+    GLuint VertexArrayID;
+    //generate the VAO
+    glGenVertexArrays(1, &VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+    //float g_groundSize = gridDistanceFromCenter;
+    //float g_groundY = gridHeight;
     
     // A x-z plane at y = g_groundY of dim[-g_groundSize, g_groundSize]^2
-    float GroundPos[] = {
+    /*float GroundPos[] = {
         -g_groundSize, g_groundY, -g_groundSize,
         -g_groundSize, g_groundY,  g_groundSize,
         g_groundSize, g_groundY,  g_groundSize,
         g_groundSize, g_groundY, -g_groundSize
-    };
+    };*/
+   
+    GLfloat *GroundPos = new GLfloat[10000*18];
     
+    int verc = 0;
+    for (int i = 0; i < 100; i++){
+        for(int j = 0; j < 100; j++){
+            GroundPos[verc++] = 0.0 + j, GroundPos[verc++] = 0.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 1.0 + j, GroundPos[verc++] = 0.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 0.0 + j, GroundPos[verc++] = 1.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 1.0 + j, GroundPos[verc++] = 0.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 1.0 + j, GroundPos[verc++] = 1.0 + i, GroundPos[verc++] = 0.0;
+            GroundPos[verc++] = 0.0 + j, GroundPos[verc++] = 1.0 + i, GroundPos[verc++] = 0.0;
+        }
+    }
+   
     float GroundNorm[] = {
         0, 1, 0,
         0, 1, 0,
@@ -244,32 +262,51 @@ void Application::initQuad()
      }; */
     
     
-    float GroundTex[] = {
+    /*float GroundTex[] = {
         0, 0, // back
         0, g_groundSize,
         g_groundSize, g_groundSize,
         g_groundSize, 0
-    };
+    };*/
+   
+
+    float t= 1./100.;
+    int texc = 0;
+    GLfloat *GroundTex = new GLfloat[10000*12];
+    for (int i = 0; i < 100; i++) {
+        for (int j = 0; j < 100; j++) {
+            GroundTex[texc++] = (GLfloat)j*t, GroundTex[texc++] = (GLfloat)i*t;
+            GroundTex[texc++] = (GLfloat)(j + 1)*t, GroundTex[texc++] = (GLfloat)i*t;
+            GroundTex[texc++] = (GLfloat)j*t, GroundTex[texc++] = (GLfloat)(i + 1)*t;
+            GroundTex[texc++] = (GLfloat)(j + 1)*t, GroundTex[texc++] = 0.0 + (GLfloat)i*t;
+            GroundTex[texc++] = (GLfloat)(j + 1)*t, GroundTex[texc++] = (GLfloat)(i + 1)*t;
+            GroundTex[texc++] = (GLfloat)j*t, GroundTex[texc++] = (GLfloat)(i + 1)*t;
+        }
+    }
+   
     
     unsigned short idx[] = {0, 1, 2, 0, 2, 3};
     
-    GLuint VertexArrayID;
-    //generate the VAO
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    
     
     gGiboLen = 6;
+    
     glGenBuffers(1, &GroundBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, GroundBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GroundPos), GroundPos, GL_STATIC_DRAW);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(GroundPos), GroundPos, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT)*10000*18, GroundPos, GL_STATIC_DRAW);
+    
+    
+    
+    glGenBuffers(1, &GroundTextureBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT)*10000*12, GroundTex, GL_STATIC_DRAW);
     
     glGenBuffers(1, &GroundNormalBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, GroundNormalBufferObject);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GroundNorm), GroundNorm, GL_STATIC_DRAW);
     
-    glGenBuffers(1, &GroundTextureBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GroundTex), GroundTex, GL_STATIC_DRAW);
+    
     
     glGenBuffers(1, &GroundIndexBufferObject);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GroundIndexBufferObject);
@@ -280,7 +317,7 @@ void Application::renderGround()
 {
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, GroundBufferObject);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, GroundNormalBufferObject);
@@ -288,11 +325,12 @@ void Application::renderGround()
     
     glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
     
     // draw!
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GroundIndexBufferObject);
-    glDrawElements(GL_TRIANGLES, gGiboLen, GL_UNSIGNED_SHORT, 0);
+    //glDrawElements(GL_TRIANGLES, gGiboLen, GL_UNSIGNED_SHORT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 10000*12);
     
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
@@ -444,6 +482,7 @@ void Application::render(float t, float alpha) {
     State state = State::interpolate(previousState, currentState, alpha);
     //state = currentState;
     renderState(state);
+    testCollisions();
 }
 
 void Application::renderState(State& state) {
@@ -469,8 +508,8 @@ void Application::renderState(State& state) {
         vec3 directionTowardsLight = -directionFromLight;
         CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
-        SetMaterial(mainProgram, 2);
         for(auto& gameObject : state.gameObjects) {
+            SetMaterial(mainProgram, gameObject->graphics->material);
             gameObject->render(mainProgram);
         }
     
@@ -484,7 +523,7 @@ void Application::renderState(State& state) {
     
 
     //texture offset
-    glm::vec2 offset(player->position.x / 10.0f, 0.0f);
+    glm::vec2 offset(player->position.x / 50.0f, 0.0f);
     //glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
     w = glfwGetTime()/10;
     CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
@@ -493,8 +532,14 @@ void Application::renderState(State& state) {
     M->pushMatrix();
         M->loadIdentity();
         //M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
-        M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
-        M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
+        //M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
+    
+
+        M->translate(glm::vec3(player->position.x-40.0f, -10.0f, -20.0f));
+        M->scale(glm::vec3(1.0f, 1.0f, 1.0f));
+        M->rotate(1.5, glm::vec3(1.0f, 0.0f, 0.0f));
+        //M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
+    
         CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
     M->popMatrix();
     /*draw the ground */
@@ -579,8 +624,12 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
     graphics->material = 1;
     //Todo: Give constructor to graphics for models.
     
+    
     temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
     temporaryGameObjectPointer->position = position;
+    float randomVelocityX = randomFloat() * -1.0f;
+    temporaryGameObjectPointer->velocity += randomVelocityX;
+    temporaryGameObjectPointer->radius = 0.5f;
     currentState.gameObjects.push_back(temporaryGameObjectPointer);
 }
 
@@ -617,4 +666,54 @@ void Application::initBirds() {
         currentX += distancePerBird; //Make next bird X meters to the right
         high = !high; //flip high/low
     }
+}
+
+void Application::testCollisions() {
+    if(gameOver) {
+        return;
+    }
+    
+    for(auto &gameObject : currentState.gameObjects) {
+        if(gameObject != player && player->collisionCooldown <= 0.0f && gameObject->collisionCooldown <= 0.0f) {
+            if( isCollision(player, gameObject) ) {
+                setCollisionCooldown(player);
+                setCollisionCooldown(gameObject);
+                
+                decrementPlayerHealth();
+            }
+        }
+    }
+}
+
+bool Application::isCollision(shared_ptr<GameObject> player, shared_ptr<GameObject> bird) {
+    float distance = length( (player->position - bird->position) );
+    float maxDistanceWithoutCollision = player->radius * player->scale + bird->radius * bird->scale;
+    return distance < maxDistanceWithoutCollision; //true if collision
+}
+
+void Application::setCollisionCooldown(shared_ptr<GameObject> gameObject) {
+    gameObject->collisionCooldown = 3.0f; //3 seconds
+}
+
+void Application::decrementPlayerHealth() {
+    playerHealth -= 1;
+    
+    switch(playerHealth) {
+        case 2:
+            player->graphics->material = 0;
+            break;
+        case 1:
+            player->graphics->material = 6;
+            break;
+        case 0:
+            player->graphics->material = 5;
+            gameLost();
+            break;
+    }
+}
+
+void Application:: gameLost() {
+    for(int i = 0; i < 10; i ++)
+        printf("GAME OVER!\n");
+    gameOver = true;
 }
