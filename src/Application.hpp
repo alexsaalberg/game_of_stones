@@ -60,8 +60,8 @@ class Application : public EventCallbacks
     //vvv (1000-30*2) = 940; 940/100 = 9.4f
     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
     const float birdInitialHorizontalVelocity = -10.0f;
-    const float highBirdY = 11.0f;
-    const float lowBirdY = 2.0f;
+    const float highBirdY = 6.0f;
+    const float lowBirdY = 3.0f;
 public:
 //Variables
     
@@ -78,6 +78,7 @@ public:
     std::shared_ptr<Program> groundProgram;
     
     //Physics & Collisions
+    //at global scope
     std::shared_ptr<b2World> world;
     
     //State

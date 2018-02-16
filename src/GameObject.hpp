@@ -43,6 +43,8 @@ public:
     float mass = 1.0f; //1 gram?
     float collisionCooldown = 0.0f;
     
+    int health = 30;
+    
     //Functions
     static std::shared_ptr<GameObject> interpolate(std::shared_ptr<GameObject> previous, std::shared_ptr<GameObject> current, float alpha);
     

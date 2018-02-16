@@ -169,13 +169,19 @@ void Application::initPlayer(shared_ptr<Model> model) {
     playerBodyDefinition.type = b2_dynamicBody;
     player->body = world->CreateBody(&playerBodyDefinition);
     
+    float width = 3.0f;
+    float height = 2.0f;
+    float mass = 100.0f; //kilogram
+    float area = width * height;
+    float density = mass / area;
+    
     b2PolygonShape playerBox;
     //The extents are the half-widths of the box.
-    playerBox.SetAsBox(1.0f, 1.8f);
+    playerBox.SetAsBox(width / 2.0f, height / 2.0f);
     //Create fixture directly from shape
-    player->body->CreateFixture(&playerBox, 10.0f); //0.5f = density
+    player->body->CreateFixture(&playerBox, density); //0.5f = density
     
-    player->body->ApplyLinearImpulseToCenter(b2Vec2(1000.0f, 0.0f), true);
+    player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
     
     currentState->gameObjects.push_back(player);
 }
@@ -212,9 +218,16 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
     
     b2PolygonShape birdBox;
     //The extents are the half-widths of the box.
-    birdBox.SetAsBox(0.5f, 0.5f);
+    
+    float width = 1.0f;
+    float height = 1.0f;
+    float mass = 0.1f; //kilogram
+    float area = width * height;
+    float density = mass / area;
+    
+    birdBox.SetAsBox(width / 2.0f, height / 2.0f);
     //Create fixture directly from shape
-    temporaryGameObjectPointer->body->CreateFixture(&birdBox, 0.5f); //0.0f = density
+    temporaryGameObjectPointer->body->CreateFixture(&birdBox, density); //0.0f = density
     
     
     
