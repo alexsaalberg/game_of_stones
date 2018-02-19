@@ -13,6 +13,7 @@ file(GLOB_RECURSE GLSL "resources/*.glsl")
 file(GLOB_RECURSE SRC_EXT "ext/*.cpp" "ext/*.c" "ext/.h") 
 
 include_directories("ext/glad/include")
+link_directories("/usr/local/lib/")
 
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
@@ -110,3 +111,5 @@ else()
 		target_link_libraries(${CMAKE_PROJECT_NAME} "GL" "dl")
 	endif()
 endif()
+
+#set(CMAKE_SUPPRESS_REGENERATION true) #surpress generation of ZERO_CHECK
