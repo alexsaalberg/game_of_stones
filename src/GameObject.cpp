@@ -45,14 +45,21 @@ GameObject::GameObject(std::shared_ptr<InputComponent> inputComponent, std::shar
 
 void GameObject::simulate(float dt)
 {
+    /*
     velocity.z = 0.0f; //don't want them moving zed
     position.z = 0.0f; //don't want them not being 0
+    */
     
     if(collisionCooldown > 0.0f) {
         collisionCooldown -= dt;
     } else if (collisionCooldown < 0.0f) {
         collisionCooldown = 0.0f;
     }
+    
+    b2Vec2 position2D = body->GetPosition(); //Box2D vec2
+    glm::vec3 position3D = glm::vec3(position2D.x, position2D.y, 0.0f); //glm::vec3
+    position = position3D;
+    
     input->update(*this);
     physics->update(*this, dt);
 }

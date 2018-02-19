@@ -21,11 +21,17 @@ void PlayerInputComponent::update(GameObject& gameObject) {
         jumping = false;
     }*/
     
-    const float moveSpeed = 1.0f;
+    const float moveSpeed = 10.0f;
+    
+    b2Vec2 desiredVelocity = b2Vec2(0.0f, 0.0f);
     
     if (movingUpward) {
-        gameObject.impulse += vec3(0.0f, moveSpeed, 0.0f);
+        desiredVelocity.y = 1.0f * moveSpeed;
     } else if (movingDownward) {
-        gameObject.impulse += vec3(0.0f, -1.0f * moveSpeed, 0.0f);
+        desiredVelocity.y = -1.0f * moveSpeed;
     }
+    b2Vec2 velocityChange = desiredVelocity - gameObject.body->GetLinearVelocity();
+    b2Vec2 desiredImpulse = gameObject.body->GetMass() * velocityChange;
+    desiredImpulse.x = 0.0f;
+    gameObject.body->ApplyLinearImpulseToCenter(desiredImpulse, true);
 }
