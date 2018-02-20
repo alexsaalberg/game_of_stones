@@ -108,7 +108,10 @@ public:
     int gGiboLen;
     
     void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
-   
+	void moveForward(bool b);
+	void moveBackward(bool b);
+	void moveUpward(bool b);
+	void moveDownward(bool b);
     
     void scrollCallback(GLFWwindow* window, double deltaX, double deltaY);
     

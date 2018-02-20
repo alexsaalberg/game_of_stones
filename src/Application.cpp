@@ -20,36 +20,49 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
     else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
     {
-        playerInputComponent->movingForward = true;
+        moveForward(true);
     }
     else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
     {
-        playerInputComponent->movingBackward = true;
+        moveBackward(true);
     }
     else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
     {
-        playerInputComponent->movingForward = false;
+        moveForward(false);
     }
     else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
     {
-        playerInputComponent->movingBackward = false;
+        moveBackward(false);
     }
     else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
     {
-        playerInputComponent->movingUpward = true;
+        moveUpward(true);
     }
     else if (key == GLFW_KEY_S && (action == GLFW_PRESS))
     {
-        playerInputComponent->movingDownward = true;
+        moveDownward(true);
     }
     else if (key == GLFW_KEY_W && (action == GLFW_RELEASE))
     {
-        playerInputComponent->movingUpward = false;
+        moveUpward(false);
     }
     else if (key == GLFW_KEY_S && (action == GLFW_RELEASE))
     {
-        playerInputComponent->movingDownward = false;
+        moveDownward(false);
     }
+}
+
+void Application::moveForward(bool b) {
+	playerInputComponent->movingForward = b;
+}
+void Application::moveBackward(bool b) {
+	playerInputComponent->movingBackward = b;
+}
+void Application::moveUpward(bool b) {
+	playerInputComponent->movingUpward = b;
+}
+void Application::moveDownward(bool b) {
+	playerInputComponent->movingDownward = b;
 }
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully
@@ -204,7 +217,7 @@ void Application::initPlayer(shared_ptr<Model> model) {
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
     
-    currentState.gameObjects.push_back(player);
+    currentState->gameObjects.push_back(player);
 }
 
 void Application::initCamera() {
@@ -408,12 +421,12 @@ void Application::initSkybox(const std::string& resourceDirectory,
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *) 0);
 
-	const std::string front = skyboxDirectory + "/lake1_ft.JPG";
-	const std::string back = skyboxDirectory + "/lake1_bk.JPG";
-	const std::string top = skyboxDirectory + "/lake1_up.JPG";
-	const std::string bottom = skyboxDirectory + "/lake1_dn.JPG";
-	const std::string left = skyboxDirectory + "/lake1_lf.JPG";
-	const std::string right = skyboxDirectory + "/lake1_rt.JPG";
+	const std::string front = skyboxDirectory + "/TropicalSunnyDayFront2048.png";
+	const std::string back = skyboxDirectory + "/TropicalSunnyDayBack2048.png";
+	const std::string top = skyboxDirectory + "/TropicalSunnyDayUp2048.png";
+	const std::string bottom = skyboxDirectory + "/TropicalSunnyDayDown2048.png";
+	const std::string left = skyboxDirectory + "/TropicalSunnyDayLeft2048.png";
+	const std::string right = skyboxDirectory + "/TropicalSunnyDayRight2048.png";
 	createCubeMap(front, back, top, bottom, left, right, &tex_cube);
 
 }
@@ -470,7 +483,7 @@ bool Application::loadCubeMapSide(GLuint texture, GLenum side_target,
 void Application::integrate(float t, float dt) {
     previousState = currentState;
     
-    currentState.integrate(t, dt);
+    //currentState.integrate(t, dt);
 }
 
 void Application::render(float t, float alpha) {
@@ -626,7 +639,7 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
     float randomVelocityX = randomFloat() * -1.0f;
     temporaryGameObjectPointer->velocity += randomVelocityX;
     temporaryGameObjectPointer->radius = 0.5f;
-    currentState.gameObjects.push_back(temporaryGameObjectPointer);
+    //currentState.gameObjects.push_back(temporaryGameObjectPointer);
 }
 
 void Application::initBirds() {
@@ -669,7 +682,7 @@ void Application::testCollisions() {
         return;
     }
     
-    for(auto &gameObject : currentState.gameObjects) {
+    for(auto &gameObject : currentState->gameObjects) {
         if(gameObject != player && player->collisionCooldown <= 0.0f && gameObject->collisionCooldown <= 0.0f) {
             if( isCollision(player, gameObject) ) {
                 setCollisionCooldown(player);
