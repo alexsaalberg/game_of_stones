@@ -80,10 +80,14 @@ void Application::resizeCallback(GLFWwindow *window, int width, int height)
 }
 
 void Application::init(const std::string& resourceDirectory) {
-    initShaders(resourceDirectory+"/shaders");
+	currentState = make_shared<State>();
+	previousState = make_shared<State>();
+	
+	initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
     initPlayer(helicopterModel);
+	initGUI();
     initCamera();
     initBirds();
     initQuad();
@@ -481,17 +485,32 @@ bool Application::loadCubeMapSide(GLuint texture, GLenum side_target,
 }
 
 void Application::integrate(float t, float dt) {
-    previousState = currentState;
+	previousState = make_shared<State>(*currentState);
     
     //currentState.integrate(t, dt);
 	currentState->integrate(t, dt);
+	testCollisions();
 }
 
 void Application::render(float t, float alpha) {
+	moveGUIElements();
+
     State state = State::interpolate(*previousState, *currentState, alpha);
     //state = currentState;
+	vec3 rendered = state.gameObjects.at(0).get()->position;
+	vec3 previous = vec3(0);
+
+	if (previousState->gameObjects.size() > 0) {
+		previous = previousState->gameObjects.at(0).get()->position;
+	}
+	vec3 current = currentState->gameObjects.at(0).get()->position;
+
+	printf("Ren %f %f %f\n", rendered.x, rendered.y, rendered.z);
+	printf("Cur %f %f %f\n", current.x, current.y, current.z);
+	printf("Prv %f %f %f\n", previous.x, current.y, current.z);
+
+	camera->player = state.gameObjects.at(0);
     renderState(state);
-    testCollisions();
 }
 
 void Application::renderState(State& state) {
@@ -518,8 +537,10 @@ void Application::renderState(State& state) {
         CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
         for(auto& gameObject : state.gameObjects) {
-            SetMaterial(mainProgram, gameObject->graphics->material);
-            gameObject->render(mainProgram);
+			if (gameObject->enabled) {
+				SetMaterial(mainProgram, gameObject->graphics->material);
+				gameObject->render(mainProgram);
+			}
         }
     
     mainProgram->unbind();
@@ -581,7 +602,7 @@ void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
     switch (i)
     {
         case 0: //shiny blue plastic
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.02f, 0.04f, 0.2f);
+           glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.02f, 0.04f, 0.2f);
             glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.0f, 0.16f, 0.9f);;
             break;
         case 1: // flat grey
@@ -678,6 +699,37 @@ void Application::initBirds() {
     }
 }
 
+void Application::initGUI() {
+	shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
+	inputComponents.push_back(input);
+	
+	shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent>();
+	physicsComponents.push_back(physics);
+	
+	shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent>();
+	graphicsComponents.push_back(graphics);
+	graphics->models.push_back(helicopterModel); //Give this graphics component model
+	graphics->material = 7;
+	//Todo: Give constructor to graphics for models.
+	
+	for (int i = 0; i < 3; i++) {
+		temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
+		temporaryGameObjectPointer->position = vec3(-15 + (i * 5), -25, 0);
+		temporaryGameObjectPointer->velocity = vec3(0, 0, 0);
+		temporaryGameObjectPointer->radius = 0;
+		temporaryGameObjectPointer->scale = 0.6f;
+		copterHealthObjs[i] = temporaryGameObjectPointer;
+		currentState->gameObjects.push_back(temporaryGameObjectPointer);
+	}
+}
+
+void Application::moveGUIElements() {
+	for (int i = 0; i < copterHealth; i++) {
+		copterHealthObjs[i]->position = vec3((player->position.x - 7) + (4 * i), player->position.y - 10 - (float)(i / 2.5), player->position.z);
+		copterHealthObjs[i]->scale = 0.6f;
+	}
+}
+
 void Application::testCollisions() {
     if(gameOver) {
         return;
@@ -688,8 +740,7 @@ void Application::testCollisions() {
             if( isCollision(player, gameObject) ) {
                 setCollisionCooldown(player);
                 setCollisionCooldown(gameObject);
-                
-                decrementPlayerHealth();
+				changeCopterHealth(-1);
             }
         }
     }
@@ -705,24 +756,43 @@ void Application::setCollisionCooldown(shared_ptr<GameObject> gameObject) {
     gameObject->collisionCooldown = 3.0f; //3 seconds
 }
 
-void Application::decrementPlayerHealth() {
-    playerHealth -= 1;
-    
-    switch(playerHealth) {
-        case 2:
-            player->graphics->material = 0;
-            break;
-        case 1:
-            player->graphics->material = 6;
-            break;
-        case 0:
-            player->graphics->material = 5;
-            gameLost();
-            break;
-    }
+void Application::changeCopterHealth(int i) {
+	copterHealth += i;
+
+	switch (copterHealth) {
+	case 2:
+		player->graphics->material = 0;
+		break;
+	case 1:
+		copterHealthObjs[1]->enabled = false;
+		player->graphics->material = 6;
+		break;
+	case 0:
+		copterHealthObjs[0]->enabled = false;
+		player->graphics->material = 5;
+		gameLost();
+		break;
+	}
 }
 
-void Application:: gameLost() {
+void Application::changeManHealth(int i) {
+	manHealth += i;
+
+	switch (manHealth) {
+	case 2:
+		player->graphics->material = 0;
+		break;
+	case 1:
+		player->graphics->material = 6;
+		break;
+	case 0:
+		player->graphics->material = 5;
+		gameLost();
+		break;
+	}
+}
+
+void Application::gameLost() {
     for(int i = 0; i < 10; i ++)
         printf("GAME OVER!\n");
     gameOver = true;

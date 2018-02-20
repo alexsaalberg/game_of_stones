@@ -70,6 +70,9 @@ public:
     double w = 0; //w is for sin wave frequency.
     
     bool mouseDown = false;
+	int copterHealth = 3;
+	int manHealth = 3;
+
     WindowManager * windowManager = nullptr;
     
     // Our shader program
@@ -84,6 +87,8 @@ public:
     std::shared_ptr<Camera> camera;
     
     std::shared_ptr<GameObject> player;
+	std::shared_ptr<GameObject> copterHealthObjs[3];
+	std::shared_ptr<PlayerInputComponent> playerInputComponent;
     std::shared_ptr<GameObject> temporaryGameObjectPointer;
     
     std::shared_ptr<Model> temporaryModel;
@@ -96,8 +101,6 @@ public:
     std::vector< std::shared_ptr<InputComponent> > inputComponents;
     std::vector< std::shared_ptr<PhysicsComponent> > physicsComponents;
     std::vector< std::shared_ptr<GraphicsComponent> > graphicsComponents;
-    
-    std::shared_ptr<PlayerInputComponent> playerInputComponent;
     
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
@@ -173,11 +176,16 @@ public:
     
     void createBird(std::shared_ptr<Model> model, glm::vec3 position);
     void initBirds();
+
+	void initGUI();
+	void moveGUIElements();
     
     void testCollisions();
     bool isCollision(std::shared_ptr<GameObject> player, std::shared_ptr<GameObject> bird);
     void setCollisionCooldown(std::shared_ptr<GameObject> gameObject);
-    void decrementPlayerHealth();
+    
+	void changeCopterHealth(int i);
+	void changeManHealth(int i);
     void gameLost();
 };
 

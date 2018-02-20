@@ -4,8 +4,8 @@
 
 #include "WindowManager.h"
 
-const int windowWidth = 1200;
-const int windowHeight = 800;
+const int windowWidth = 800;
+const int windowHeight = 420;
 
 int main(int argc, char **argv)
 {
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     double currentTime = glfwGetTime();
     double accumulator = 0.0f;
     
-    float simulationsPerSecond = 1.f;
+    float simulationsPerSecond = 60.0f;
     float dt = 1.0f / simulationsPerSecond;
     
     int numSimulationsThisFrame = 0;
