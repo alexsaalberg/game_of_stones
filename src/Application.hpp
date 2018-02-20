@@ -77,8 +77,9 @@ public:
     std::shared_ptr<Program> groundProgram;
 	std::shared_ptr<Program> sky;
     
-    State currentState;
-    State previousState = currentState;
+	std::shared_ptr<State> currentState, previousState;
+    //State currentState;
+    //State previousState = currentState;
     
     std::shared_ptr<Camera> camera;
     

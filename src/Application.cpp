@@ -484,10 +484,11 @@ void Application::integrate(float t, float dt) {
     previousState = currentState;
     
     //currentState.integrate(t, dt);
+	currentState->integrate(t, dt);
 }
 
 void Application::render(float t, float alpha) {
-    State state = State::interpolate(previousState, currentState, alpha);
+    State state = State::interpolate(*previousState, *currentState, alpha);
     //state = currentState;
     renderState(state);
     testCollisions();
@@ -639,7 +640,7 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
     float randomVelocityX = randomFloat() * -1.0f;
     temporaryGameObjectPointer->velocity += randomVelocityX;
     temporaryGameObjectPointer->radius = 0.5f;
-    //currentState.gameObjects.push_back(temporaryGameObjectPointer);
+    currentState->gameObjects.push_back(temporaryGameObjectPointer);
 }
 
 void Application::initBirds() {
