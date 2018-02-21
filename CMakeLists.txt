@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 2.7)
 project(Helico-opter)
 
 # Use glob to get the list of all source files.
-file(GLOB_RECURSE SOURCES "src/*.cpp" "ext/glad/src/*.c" "src/*.h" "ext/Box2D/*/*.cpp" "ext/Box2D/*/*.h") 
+file(GLOB_RECURSE SOURCES "src/*.cpp" "ext/glad/src/*.c")
+file(GLOB_RECURSE BOX2D_SOURCES "ext/Box2D/*/*.cpp" "ext/Box2D/*/*.h")
 
 # We don't really need to include header and resource files to build, but it's
 # nice to have them show up in IDEs.
@@ -13,19 +14,24 @@ file(GLOB_RECURSE GLSL "resources/*.glsl")
 file(GLOB_RECURSE SRC_EXT "ext/*.cpp" "ext/*.c" "ext/.h") 
 
 include_directories("ext/glad/include")
+link_directories("/usr/local/lib/")
 
 # Set the executable.
-add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
+add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${BOX2D_SOURCES} ${GLSL})
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "ext")
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "ext/glad/include")
 
 source_group("src"  FILES ${SOURCES})
+source_group("headers" FILES ${HEADERS})
 source_group("ext"  FILES ${SRC_EXT})
 source_group("glsl" FILES ${GLSL})
+source_group("box2d" FILES ${BOX2D_SOURCES})
 
 # Add GLFW
 # Get the GLFW environment variable.
 # There should be a CMakeLists.txt in the specified directory.
+message(STATUS "")
+message(STATUS "=====> START GLFW <=====")
 set(GLFW_DIR "$ENV{GLFW_DIR}")
 if(GLFW_DIR)
 	message(STATUS "GLFW environment variable found")
@@ -48,6 +54,7 @@ else()
 	if (PKGCONFIG_FOUND)
 		message(STATUS "PkgConfig found")
 		pkg_search_module(GLFW REQUIRED glfw3)
+		message(STATUS "PkgConfig has found glfw3")
 		target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})
 		target_link_libraries(${CMAKE_PROJECT_NAME} ${GLFW_LIBRARIES})
 	else()
@@ -63,21 +70,30 @@ else()
 	endif()
 endif()
 
+message(STATUS "=====> END GLFW <=====")
+message(STATUS "")
 
+message(STATUS "=====> START GLM <=====")
 # Add GLM
 # Get the GLM environment variable. Since GLM is a header-only library, we
 # just need to add it to the include directory.
 set(GLM_INCLUDE_DIR "$ENV{GLM_INCLUDE_DIR}")
 if(GLM_INCLUDE_DIR)
+	message(STATUS "GLM include dir found with env var 'GLM_INCLUDE_DIR': ${GLM_INCLUDE_DIR}")
 	target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIR})
-	message(STATUS "GLM environment variable found")
 else()
 	# If the GLM_INCLUDE_DIR environment variable is not set, we assume
 	# the user has installed GLM properly on their system
-	message(STATUS "GLM environment variable `GLM_INCLUDE_DIR` not found, GLM must be installed with the system")
+	find_path(GLM_INCLUDE_DIR_FINDPATH "glm/glm.hpp")
+	if(GLM_INCLUDE_DIR_FINDPATH)
+		message(STATUS "GLM include dir found with find_path(): ${GLM_INCLUDE_DIR_FINDPATH}")
+		target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIR_FINDPATH})
+	else()
+		message(STATUS "GLM include dir not found, GLM must be installed with the system")
+	endif()
 endif()
-
-
+message(STATUS "=====> END GLFW <=====")
+message(STATUS "")
 
 # OS specific options and libraries
 if(WIN32)
@@ -98,3 +114,5 @@ else()
 		target_link_libraries(${CMAKE_PROJECT_NAME} "GL" "dl")
 	endif()
 endif()
+
+#set(CMAKE_SUPPRESS_REGENERATION true) #surpress generation of ZERO_CHECK
