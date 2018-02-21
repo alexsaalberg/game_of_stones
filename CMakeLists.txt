@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 2.7)
 project(Helico-opter)
 
 # Use glob to get the list of all source files.
-file(GLOB_RECURSE SOURCES "src/*.cpp" "ext/glad/src/*.c" "src/*.h" "ext/Box2D/*/*.cpp" "ext/Box2D/*/*.h") 
+file(GLOB_RECURSE SOURCES "src/*.cpp" "ext/glad/src/*.c")
+file(GLOB_RECURSE BOX2D_SOURCES "ext/Box2D/*/*.cpp" "ext/Box2D/*/*.h")
 
 # We don't really need to include header and resource files to build, but it's
 # nice to have them show up in IDEs.
@@ -16,13 +17,15 @@ include_directories("ext/glad/include")
 link_directories("/usr/local/lib/")
 
 # Set the executable.
-add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
+add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${BOX2D_SOURCES} ${GLSL})
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "ext")
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "ext/glad/include")
 
 source_group("src"  FILES ${SOURCES})
+source_group("headers" FILES ${HEADERS})
 source_group("ext"  FILES ${SRC_EXT})
 source_group("glsl" FILES ${GLSL})
+source_group("box2d" FILES ${BOX2D_SOURCES})
 
 # Add GLFW
 # Get the GLFW environment variable.
