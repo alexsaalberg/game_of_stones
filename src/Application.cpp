@@ -7,6 +7,7 @@
 
 #include "Application.hpp"
 #include "stb_image.h"
+
 #define PI 3.1415
 
 using namespace std;
@@ -301,10 +302,7 @@ void Application::initQuad()
         }
     }
    
-    
     unsigned short idx[] = {0, 1, 2, 0, 2, 3};
-    
-    
     
     gGiboLen = 6;
     
@@ -313,8 +311,6 @@ void Application::initQuad()
     //glBufferData(GL_ARRAY_BUFFER, sizeof(GroundPos), GroundPos, GL_STATIC_DRAW);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT)*10000*18, GroundPos, GL_STATIC_DRAW);
     
-    
-    
     glGenBuffers(1, &GroundTextureBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT)*10000*12, GroundTex, GL_STATIC_DRAW);
@@ -322,8 +318,6 @@ void Application::initQuad()
     glGenBuffers(1, &GroundNormalBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, GroundNormalBufferObject);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GroundNorm), GroundNorm, GL_STATIC_DRAW);
-    
-    
     
     glGenBuffers(1, &GroundIndexBufferObject);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GroundIndexBufferObject);
@@ -629,6 +623,10 @@ void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
             glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.1735f, 0.1225f);
             glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.438f, 0.4048f, 0.428f);
             break;
+		case 7:
+			glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.17f, 0.01f, 0.01f);
+			glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.61f, 0.04f, 0.04f);
+			break;
     }
 }
 

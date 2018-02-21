@@ -25,7 +25,7 @@ State::State(const State &oldState) {
 	
 }
 
-State & State::operator= (const State &oldState) { //assignment operator
+State& State::operator= (const State &oldState) { //assignment operator
 	shared_ptr<GameObject> temporaryGameObject;
 	
 	unsigned int numberOfGameObjects = oldState.gameObjects.size();
@@ -76,7 +76,6 @@ State State::interpolate(State &previous, State &current, float alpha)
 
 void State::integrate(float t, double dt)
 {
-    //printf("NumObjects: %d\n", gameObjects.size());
     for(auto &gameObject : gameObjects) {
         gameObject->simulate(dt);
     }
