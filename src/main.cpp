@@ -76,7 +76,7 @@ int main(int argc, char **argv)
         
         float alpha = accumulator/dt;
         
-        //Interpolates automatically in Application.cpp
+        //Interpolates automatically in application
         application->render( t, alpha);
         
         // Swap front and back buffers.

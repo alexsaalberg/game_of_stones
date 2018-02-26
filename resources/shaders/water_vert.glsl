@@ -14,10 +14,10 @@ out vec2 fragTex;
 
 
 uniform sampler2D tex;
-const float amplitude = 1.0f;
+const float amplitude = 0.4f;
 const float phase = 0.6f;
 const float phi = 1.2f;
-vec3 wavePosition = vec3(0,0,10);
+vec3 wavePosition = vec3(20,0,10);
 void main()
 {
     

@@ -23,9 +23,9 @@ void Camera::setHelicopterViewMatrix(const std::shared_ptr<Program> prog) const 
     float y = sin(radians(cameraPhi));
     float z = cos(radians(cameraPhi))*sin(radians(cameraTheta));
     
-    x = 0.5f;
+    x = -2.0f;
     z = cameraDistance;
-    y = 7.0f;
+    y = 3.0f;
     vec3 identityVector = vec3(0.0f) - vec3(x, y, z); //from origin to xyz
     
     vec3 offsetVector = vec3(10.0f, 0.0f, 0.0f);

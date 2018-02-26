@@ -1,7 +1,7 @@
 #version 330 core
 uniform sampler2D Texture0;
 
-//in vec3 fragNor;
+in vec3 fragNor;
 in vec2 fragTex;
 in float dCo;
 out vec4 color;

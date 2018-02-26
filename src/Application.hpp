@@ -75,7 +75,7 @@ public:
 
     WindowManager * windowManager = nullptr;
     
-    //Shader Programs
+    // Our shader program
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> groundProgram;
 	std::shared_ptr<Program> sky;
