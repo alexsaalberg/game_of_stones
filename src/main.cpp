@@ -70,13 +70,13 @@ int main(int argc, char **argv)
         }
         
         if( application->gameOver == false ) {
-            printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
-            printf("Num Simulations: %d\n", numSimulationsThisFrame);
+            //printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
+            //printf("Num Simulations: %d\n", numSimulationsThisFrame);
         }
         
         float alpha = accumulator/dt;
         
-        //Interpolates automatically in application
+        //Interpolates automatically in Application.cpp
         application->render( t, alpha);
         
         // Swap front and back buffers.

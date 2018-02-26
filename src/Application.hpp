@@ -75,7 +75,7 @@ public:
 
     WindowManager * windowManager = nullptr;
     
-    // Our shader program
+    //Shader Programs
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> groundProgram;
 	std::shared_ptr<Program> sky;
@@ -125,16 +125,14 @@ public:
     
     void init(const std::string& resourceDirectory);
     
-    //code to set up the two shaders - a diffuse shader and texture mapping
     void initShaders(const std::string& resourceDirectory);
     
     void initMainProgram(const std::string& resourceDirectory);
     void initGroundProgram(const std::string& resourceDirectory);
     void initTextures(const std::string& resourceDirectory);
-
     
+	// Separate texture for water
     void initWaterTextures(const std::string& resourceDirectory);
-    
 
     void initGeom(const std::string& resourceDirectory);
     

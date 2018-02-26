@@ -96,7 +96,7 @@ void Application::init(const std::string& resourceDirectory) {
 				resourceDirectory + "/skybox");
 }
 
-//code to set up the two shaders - a diffuse shader and texture mapping
+
 void Application::initShaders(const std::string& resourceDirectory)
 {
     int width, height;
@@ -481,9 +481,8 @@ bool Application::loadCubeMapSide(GLuint texture, GLenum side_target,
 void Application::integrate(float t, float dt) {
 	previousState = make_shared<State>(*currentState);
     
-    //currentState.integrate(t, dt);
 	currentState->integrate(t, dt);
-	testCollisions();
+	//testCollisions();
 }
 
 void Application::render(float t, float alpha) {
@@ -503,8 +502,8 @@ void Application::render(float t, float alpha) {
 	printf("Cur %f %f %f\n", current.x, current.y, current.z);
 	printf("Prv %f %f %f\n", previous.x, current.y, current.z);
 
-	camera->player = state.gameObjects.at(0);
-    renderState(state);
+	camera->player = currentState->gameObjects.at(0);
+    renderState(*currentState.get());
 }
 
 void Application::renderState(State& state) {
