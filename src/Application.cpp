@@ -712,7 +712,7 @@ void Application::initGUI() {
 	
 	for (int i = 0; i < 3; i++) {
 		temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
-		temporaryGameObjectPointer->position = vec3(-15 + (i * 5), -25, 0);
+		temporaryGameObjectPointer->position = vec3(-12 + (i * 5), -20, 0);
 		temporaryGameObjectPointer->velocity = vec3(0, 0, 0);
 		temporaryGameObjectPointer->radius = 0;
 		temporaryGameObjectPointer->scale = 0.6f;
@@ -723,7 +723,7 @@ void Application::initGUI() {
 
 void Application::moveGUIElements() {
 	for (int i = 0; i < copterHealth; i++) {
-		copterHealthObjs[i]->position = vec3((player->position.x - 7) + (4 * i), player->position.y - 10 - (float)(i / 2.5), player->position.z);
+		copterHealthObjs[i]->position = vec3((player->position.x - 12) + (5 * i), player->position.y - 20 - (float)(i / 2.5), player->position.z);
 		copterHealthObjs[i]->scale = 0.6f;
 	}
 }
