@@ -42,6 +42,7 @@ public:
     float radius = 1.0f;
     float mass = 1.0f; //1 gram?
     float collisionCooldown = 0.0f;
+	bool enabled = true;
     
     int health = 30;
     

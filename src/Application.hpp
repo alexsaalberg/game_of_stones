@@ -71,11 +71,15 @@ public:
     double w = 0; //w is for sin wave frequency.
     
     bool mouseDown = false;
+	int copterHealth = 3;
+	int manHealth = 3;
+
     WindowManager * windowManager = nullptr;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> groundProgram;
+	std::shared_ptr<Program> sky;
     
     //Physics & Collisions
     //at global scope
@@ -88,6 +92,8 @@ public:
     std::shared_ptr<Camera> camera;
     
     std::shared_ptr<GameObject> player;
+	std::shared_ptr<GameObject> copterHealthObjs[3];
+	std::shared_ptr<PlayerInputComponent> playerInputComponent;
     std::shared_ptr<GameObject> temporaryGameObjectPointer;
     
     std::shared_ptr<Model> temporaryModel;
@@ -100,8 +106,6 @@ public:
     std::vector< std::shared_ptr<InputComponent> > inputComponents;
     std::vector< std::shared_ptr<PhysicsComponent> > physicsComponents;
     std::vector< std::shared_ptr<GraphicsComponent> > graphicsComponents;
-    
-    std::shared_ptr<PlayerInputComponent> playerInputComponent;
     
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
@@ -121,9 +125,11 @@ public:
     void initShaders(const std::string& resourceDirectory);
     void initMainProgram(const std::string& resourceDirectory);
     void initGroundProgram(const std::string& resourceDirectory);
-    
+
     void initTextures(const std::string& resourceDirectory);
-    
+	// Separate texture for water
+    void initWaterTextures(const std::string& resourceDirectory);
+
     void initGeom(const std::string& resourceDirectory);
     
     void initPlayer(std::shared_ptr<Model> model);
@@ -135,6 +141,17 @@ public:
     void initQuad();
     
     void renderGround();
+
+	//Skybox
+	GLuint vbo, vao, tex_cube;
+
+	void initSkybox(const std::string& resourceDirectory, 
+		const std::string& skyboxDirectory);
+	void createCubeMap(const std::string& front, const std::string& back,
+		const std::string& top, const std::string& bottom, const std::string& left,
+		const std::string& right, GLuint* tex_cube);
+	bool loadCubeMapSide(GLuint texture, GLenum side_target,
+		const std::string& filename);
     
     //Physics
     void integrate(float t, float dt);
@@ -150,11 +167,16 @@ public:
     float randomFloat();
     //[-1.0, 1.0]
     float randomFloatNegativePossible();
+
+	void initGUI();
+	void moveGUIElements();
     
     void testCollisions();
     bool isCollision(std::shared_ptr<GameObject> player, std::shared_ptr<GameObject> bird);
     void setCollisionCooldown(std::shared_ptr<GameObject> gameObject);
-    void decrementPlayerHealth();
+    
+	void changeCopterHealth(int i);
+	void changeManHealth(int i);
     void gameLost();
     
     //Control Callbacks
@@ -164,6 +186,5 @@ public:
     void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
     void resizeCallback(GLFWwindow *window, int width, int height);
 };
-
 
 #endif /* Application_hpp */

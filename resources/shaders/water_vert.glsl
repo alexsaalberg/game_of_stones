@@ -27,14 +27,15 @@ void main()
     //TODO: finetuning these sin/cos Amplitude values. Actually, look into gerstner waves.
     //tpos.y += 1*sin(tpos.x*1.2*w/25) + 1.2*cos(tpos.y*.5*w/25);
     vec2 direction = (wavePosition - tpos.xyz).xz;
-    //tpos.y = .1*sin(5*tpos.x + w/10) + .1*cos(3*tpos.y + w/10);
-    tpos.y += amplitude*sin(dot(direction, vec2(tpos.x, tpos.z))*phi + w*phase*15);
+    //tpos.z += .1*sin(tpos.x + w/50) + .1*cos(tpos.y + w/10);
+    tpos.z += .3*sin(.2*tpos.x + w/50) + .2*cos(.5*tpos.y + w/50);
+    //tpos.z += amplitude*sin(dot(direction, vec2(tpos.x, tpos.z))*phi + w*phase*10);
     //tpos.yz += offset;
     
     
     gl_Position = P * V * M * tpos;
     
-    fragNor = (M * vec4(vertNor, 0.0)).xyz;
+    //fragNor = (M * vec4(vertNor, 0.0)).xyz;
     fragTex = texcoord;
     
 }
