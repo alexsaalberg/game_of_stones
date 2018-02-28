@@ -21,9 +21,8 @@ void Application::init(const std::string& resourceDirectory) {
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
 	
-	initGUI();
 	initSkybox(resourceDirectory + "/shaders",
-		resourceDirectory + "/skybox");
+			    resourceDirectory + "/skybox");
 	initQuad();
 
 	initBox2DWorld();
@@ -149,6 +148,7 @@ void Application::initBox2DWorld() {
 void Application::initEntities() {
 	initPlayer(helicopterModel);
 	initCamera();
+	initGUI();
 	initBirds();
 }
 
