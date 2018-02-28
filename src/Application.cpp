@@ -13,73 +13,6 @@
 using namespace std;
 using namespace glm;
 
-void Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, GL_TRUE);
-    }
-    else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
-    {
-        moveForward(true);
-    }
-    else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
-    {
-        moveBackward(true);
-    }
-    else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
-    {
-        moveForward(false);
-    }
-    else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
-    {
-        moveBackward(false);
-    }
-    else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
-    {
-        moveUpward(true);
-    }
-    else if (key == GLFW_KEY_S && (action == GLFW_PRESS))
-    {
-        moveDownward(true);
-    }
-    else if (key == GLFW_KEY_W && (action == GLFW_RELEASE))
-    {
-        moveUpward(false);
-    }
-    else if (key == GLFW_KEY_S && (action == GLFW_RELEASE))
-    {
-        moveDownward(false);
-    }
-}
-
-void Application::moveForward(bool b) {
-	playerInputComponent->movingForward = b;
-}
-void Application::moveBackward(bool b) {
-	playerInputComponent->movingBackward = b;
-}
-void Application::moveUpward(bool b) {
-	playerInputComponent->movingUpward = b;
-}
-void Application::moveDownward(bool b) {
-	playerInputComponent->movingDownward = b;
-}
-
-//Todo: Remove these (Idk if they're being optimized out, but hopefully
-//                    they're not being called every time the mouse moves)
-void Application::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-{}
-void Application::mouseCallback(GLFWwindow *window, int button, int action, int mods)
-{}
-void Application::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-{}
-
-void Application::resizeCallback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
 void Application::init(const std::string& resourceDirectory) {
 	currentState = make_shared<State>();
 	previousState = make_shared<State>();
@@ -87,15 +20,15 @@ void Application::init(const std::string& resourceDirectory) {
 	initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
-    initPlayer(helicopterModel);
+	
 	initGUI();
-    initCamera();
-    initBirds();
-    initQuad();
-	initSkybox(resourceDirectory + "/shaders", 
-				resourceDirectory + "/skybox");
-}
+	initSkybox(resourceDirectory + "/shaders",
+		resourceDirectory + "/skybox");
+	initQuad();
 
+	initBox2DWorld();
+	initEntities();
+}
 
 void Application::initShaders(const std::string& resourceDirectory)
 {
@@ -208,6 +141,17 @@ void Application::initGeom(const std::string& resourceDirectory) {
     }
 }
 
+void Application::initBox2DWorld() {
+	b2Vec2 gravity(0.0f, 0.0f);
+	world = make_shared<b2World>(gravity);
+}
+
+void Application::initEntities() {
+	initPlayer(helicopterModel);
+	initCamera();
+	initBirds();
+}
+
 void Application::initPlayer(shared_ptr<Model> model) {
     shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
     inputComponents.push_back(input);
@@ -222,12 +166,108 @@ void Application::initPlayer(shared_ptr<Model> model) {
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
     
+	b2BodyDef playerBodyDefinition;
+	playerBodyDefinition.position.Set(0.0f, 5.0f);
+	playerBodyDefinition.type = b2_dynamicBody;
+	player->body = world->CreateBody(&playerBodyDefinition);
+
+	float width = 3.0f;
+	float height = 2.0f;
+	float mass = 100.0f; //kilogram
+	float area = width * height;
+	float density = mass / area;
+
+	b2PolygonShape playerBox;
+	//The extents are the half-widths of the box.
+	playerBox.SetAsBox(width / 2.0f, height / 2.0f);
+	//Create fixture directly from shape
+	player->body->CreateFixture(&playerBox, density); //0.5f = density
+
+	player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
+
     currentState->gameObjects.push_back(player);
 }
 
 void Application::initCamera() {
     camera = make_shared<Camera>();
     camera->player = player;
+}
+
+void Application::createBird(shared_ptr<Model> model, vec3 position) {
+	shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
+	inputComponents.push_back(input);
+
+	shared_ptr<BirdPhysicsComponent> physics = make_shared<BirdPhysicsComponent>();
+	physicsComponents.push_back(physics);
+
+
+	shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent>();
+	graphicsComponents.push_back(graphics);
+	graphics->models.push_back(model); //Give this graphics component model
+	graphics->material = 1;
+	//Todo: Give constructor to graphics for models.
+
+	temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
+	temporaryGameObjectPointer->position = position;
+	float randomVelocityX = randomFloat() * -1.0f;
+	temporaryGameObjectPointer->velocity += randomVelocityX;
+	temporaryGameObjectPointer->radius = 0.5f;
+
+	b2BodyDef birdBodyDefinition;
+	birdBodyDefinition.position.Set(position.x, position.y); //set position from param
+	birdBodyDefinition.type = b2_dynamicBody;
+	temporaryGameObjectPointer->body = world->CreateBody(&birdBodyDefinition);
+
+	b2PolygonShape birdBox;
+	//The extents are the half-widths of the box.
+
+	float width = 1.0f;
+	float height = 1.0f;
+	float mass = 0.1f; //kilogram
+	float area = width * height;
+	float density = mass / area;
+
+	birdBox.SetAsBox(width / 2.0f, height / 2.0f);
+	//Create fixture directly from shape
+	temporaryGameObjectPointer->body->CreateFixture(&birdBox, density); //0.0f = density
+
+	currentState->gameObjects.push_back(temporaryGameObjectPointer);
+}
+
+void Application::initBirds() {
+	/*
+	//birds
+	const float winDistance = 1000.0f;
+	const int numberOfBirds = 100;
+	const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
+	//vvv (1000-30*2) = 940; 940/100 = 9.4f
+	const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
+	*/
+	float currentX = bufferDistance;
+	glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
+
+
+	bool high = true; //switch high & low every other bird
+	for (int i = 0; i < numberOfBirds; i++) {
+
+		if (high == true) {
+			currentPosition.y = highBirdY;
+		}
+		else {
+			currentPosition.y = lowBirdY;
+		}
+		currentPosition.x = currentX;
+
+		float xOffset = randomFloatNegativePossible() * (distancePerBird / 0.4f);
+		currentPosition.x += xOffset;
+		float yOffset = randomFloatNegativePossible() * ((highBirdY - lowBirdY) / 4.0f);
+		currentPosition.y += yOffset;
+
+		createBird(birdModel, currentPosition);
+
+		currentX += distancePerBird; //Make next bird X meters to the right
+		high = !high; //flip high/low
+	}
 }
 
 /**** geometry set up for ground plane *****/
@@ -479,28 +519,17 @@ bool Application::loadCubeMapSide(GLuint texture, GLenum side_target,
 }
 
 void Application::integrate(float t, float dt) {
-	previousState = make_shared<State>(*currentState);
-    
+	//previousState = make_shared<State>( *currentState );    
+	int32 velocityIterations = 6;
+	int32 positionIterations = 2;
+
+	world->Step(dt, velocityIterations, positionIterations);
+
 	currentState->integrate(t, dt);
-	//testCollisions();
 }
 
 void Application::render(float t, float alpha) {
 	moveGUIElements();
-
-    State state = State::interpolate(*previousState, *currentState, alpha);
-    //state = currentState;
-	vec3 rendered = state.gameObjects.at(0).get()->position;
-	vec3 previous = vec3(0);
-
-	if (previousState->gameObjects.size() > 0) {
-		previous = previousState->gameObjects.at(0).get()->position;
-	}
-	vec3 current = currentState->gameObjects.at(0).get()->position;
-
-	printf("Ren %f %f %f\n", rendered.x, rendered.y, rendered.z);
-	printf("Cur %f %f %f\n", current.x, current.y, current.z);
-	printf("Prv %f %f %f\n", previous.x, current.y, current.z);
 
 	camera->player = currentState->gameObjects.at(0);
     renderState(*currentState.get());
@@ -529,6 +558,7 @@ void Application::renderState(State& state) {
         vec3 directionTowardsLight = -directionFromLight;
         CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     
+		/* PRIMARY RENDER LOOP */
         for(auto& gameObject : state.gameObjects) {
 			if (gameObject->enabled) {
 				SetMaterial(mainProgram, gameObject->graphics->material);
@@ -538,37 +568,33 @@ void Application::renderState(State& state) {
     
     mainProgram->unbind();
     
-    
     groundProgram->bind();
         camera->setModelIdentityMatrix(groundProgram);
         camera->setHelicopterViewMatrix(groundProgram);
         camera->setProjectionMatrix(groundProgram, aspect);
-    
 
-    //texture offset
-    glm::vec2 offset(player->position.x / 50.0f, 0.0f);
-    //glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
-    w = glfwGetTime()/10;
-    CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
-    CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
-    auto M = make_shared<MatrixStack>();
-    M->pushMatrix();
-        M->loadIdentity();
-        //M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
-        //M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
+		//texture offset
+		glm::vec2 offset(player->position.x / 50.0f, 0.0f);
+		//glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
+		w = glfwGetTime()/10;
+		CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
+		CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
+		auto M = make_shared<MatrixStack>();
+		M->pushMatrix();
+			M->loadIdentity();
+			//M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
+			//M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
     
-
-        M->translate(glm::vec3(player->position.x-40.0f, -10.0f, -20.0f));
-        M->scale(glm::vec3(1.0f, 1.0f, 1.0f));
-        M->rotate(1.5, glm::vec3(1.0f, 0.0f, 0.0f));
-        //M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
+			M->translate(glm::vec3(player->position.x-40.0f, -10.0f, -20.0f));
+			M->scale(glm::vec3(1.0f, 1.0f, 1.0f));
+			M->rotate(1.5, glm::vec3(1.0f, 0.0f, 0.0f));
+			//M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
     
-        CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
-    M->popMatrix();
-    /*draw the ground */
-    grassTexture->bind(groundProgram->getUniform("Texture0"));
-    renderGround();
-
+			CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+		M->popMatrix();
+		/*draw the ground */
+		grassTexture->bind(groundProgram->getUniform("Texture0"));
+		renderGround();
     groundProgram->unbind();
     
 	/*draw skybox*/
@@ -639,63 +665,6 @@ float Application::randomFloatNegativePossible() {
     return (randomFloat() * 2.0f) - 1.0f;
 }
 
-void Application::createBird(shared_ptr<Model> model, vec3 position) {
-    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent> ();
-    inputComponents.push_back(input);
-    
-    shared_ptr<BirdPhysicsComponent> physics = make_shared<BirdPhysicsComponent> ();
-    physicsComponents.push_back(physics);
-    
-    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
-    graphicsComponents.push_back(graphics);
-    graphics->models.push_back(model); //Give this graphics component model
-    graphics->material = 1;
-    //Todo: Give constructor to graphics for models.
-    
-    
-    temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
-    temporaryGameObjectPointer->position = position;
-    float randomVelocityX = randomFloat() * -1.0f;
-    temporaryGameObjectPointer->velocity += randomVelocityX;
-    temporaryGameObjectPointer->radius = 0.5f;
-    currentState->gameObjects.push_back(temporaryGameObjectPointer);
-}
-
-void Application::initBirds() {
-    /*
-     //birds
-     const float winDistance = 1000.0f;
-     const int numberOfBirds = 100;
-     const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
-     //vvv (1000-30*2) = 940; 940/100 = 9.4f
-     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
-    */
-    float currentX = bufferDistance;
-    glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
-    
-    
-    bool high = true; //switch high & low every other bird
-    for(int i = 0; i < numberOfBirds; i ++) {
-        
-        if(high == true) {
-            currentPosition.y = highBirdY;
-        } else {
-            currentPosition.y = lowBirdY;
-        }
-        currentPosition.x = currentX;
-        
-        float xOffset = randomFloatNegativePossible() * (distancePerBird/0.4f);
-        currentPosition.x += xOffset;
-        float yOffset = randomFloatNegativePossible() * ( (highBirdY - lowBirdY)/ 4.0f );
-        currentPosition.y += yOffset;
-        
-        createBird(birdModel, currentPosition);
-        
-        currentX += distancePerBird; //Make next bird X meters to the right
-        high = !high; //flip high/low
-    }
-}
-
 void Application::initGUI() {
 	shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
 	inputComponents.push_back(input);
@@ -715,6 +684,7 @@ void Application::initGUI() {
 		temporaryGameObjectPointer->velocity = vec3(0, 0, 0);
 		temporaryGameObjectPointer->radius = 0;
 		temporaryGameObjectPointer->scale = 0.6f;
+		temporaryGameObjectPointer->body = nullptr;
 		copterHealthObjs[i] = temporaryGameObjectPointer;
 		currentState->gameObjects.push_back(temporaryGameObjectPointer);
 	}
@@ -793,4 +763,58 @@ void Application::gameLost() {
     for(int i = 0; i < 10; i ++)
         printf("GAME OVER!\n");
     gameOver = true;
+}
+
+void Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	{
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
+	else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
+	{
+		playerInputComponent->movingForward = true;
+	}
+	else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
+	{
+		playerInputComponent->movingBackward = true;
+	}
+	else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
+	{
+		playerInputComponent->movingForward = false;
+	}
+	else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
+	{
+		playerInputComponent->movingBackward = false;
+	}
+	else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
+	{
+		playerInputComponent->movingUpward = true;
+	}
+	else if (key == GLFW_KEY_S && (action == GLFW_PRESS))
+	{
+		playerInputComponent->movingDownward = true;
+	}
+	else if (key == GLFW_KEY_W && (action == GLFW_RELEASE))
+	{
+		playerInputComponent->movingUpward = false;
+	}
+	else if (key == GLFW_KEY_S && (action == GLFW_RELEASE))
+	{
+		playerInputComponent->movingDownward = false;
+	}
+}
+
+//Todo: Remove these (Idk if they're being optimized out, but hopefully
+//                    they're not being called every time the mouse moves)
+void Application::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
+{}
+void Application::mouseCallback(GLFWwindow *window, int button, int action, int mods)
+{}
+void Application::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+{}
+
+void Application::resizeCallback(GLFWwindow *window, int width, int height)
+{
+	glViewport(0, 0, width, height);
 }

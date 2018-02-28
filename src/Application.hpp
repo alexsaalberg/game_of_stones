@@ -42,6 +42,8 @@
 
 #include "DDS_Loader.hpp"
 
+#include "Box2D/Box2D.h"
+
 class Application : public EventCallbacks
 {
 //const (private?)
@@ -58,12 +60,11 @@ class Application : public EventCallbacks
     //vvv (1000-30*2) = 940; 940/100 = 9.4f
     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
     const float birdInitialHorizontalVelocity = -10.0f;
-    const float highBirdY = 11.0f;
-    const float lowBirdY = 2.0f;
-    
+    const float highBirdY = 6.0f;
+    const float lowBirdY = 3.0f;
 public:
-    
 //Variables
+    
     bool gameOver = false;
     int playerHealth = 3;
     
@@ -75,12 +76,18 @@ public:
 
     WindowManager * windowManager = nullptr;
     
-    // Our shader program
+    //Shader Programs
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> groundProgram;
 	std::shared_ptr<Program> sky;
     
-	std::shared_ptr<State> currentState, previousState;
+    //Physics & Collisions
+    //at global scope
+    std::shared_ptr<b2World> world;
+    
+    //State
+    std::shared_ptr<State> currentState;
+    std::shared_ptr<State> previousState;
     
     std::shared_ptr<Camera> camera;
     
@@ -103,34 +110,23 @@ public:
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
     std::shared_ptr<Texture> waterTexture;
-//Functions
-
+    
     //ground plane info
     GLuint GroundBufferObject, GroundNormalBufferObject, GroundTextureBufferObject, GroundIndexBufferObject;
     int gGiboLen;
     
-    void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
-	void moveForward(bool b);
-	void moveBackward(bool b);
-	void moveUpward(bool b);
-	void moveDownward(bool b);
-    
-    void scrollCallback(GLFWwindow* window, double deltaX, double deltaY);
-    
-    void mouseCallback(GLFWwindow *window, int button, int action, int mods);
-    
-    void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
-    
-    void resizeCallback(GLFWwindow *window, int width, int height);
-    
+//Functions
+    /* Initilizations */
     void init(const std::string& resourceDirectory);
     
-    void initShaders(const std::string& resourceDirectory);
+    void initEntities();
+    void initBox2DWorld();
     
+    void initShaders(const std::string& resourceDirectory);
     void initMainProgram(const std::string& resourceDirectory);
     void initGroundProgram(const std::string& resourceDirectory);
+
     void initTextures(const std::string& resourceDirectory);
-    
 	// Separate texture for water
     void initWaterTextures(const std::string& resourceDirectory);
 
@@ -139,7 +135,9 @@ public:
     void initPlayer(std::shared_ptr<Model> model);
     void initCamera();
     
-    /**** geometry set up for ground plane *****/
+    void createBird(std::shared_ptr<Model> model, glm::vec3 position);
+    void initBirds();
+    
     void initQuad();
     
     void renderGround();
@@ -169,9 +167,6 @@ public:
     float randomFloat();
     //[-1.0, 1.0]
     float randomFloatNegativePossible();
-    
-    void createBird(std::shared_ptr<Model> model, glm::vec3 position);
-    void initBirds();
 
 	void initGUI();
 	void moveGUIElements();
@@ -183,7 +178,13 @@ public:
 	void changeCopterHealth(int i);
 	void changeManHealth(int i);
     void gameLost();
+    
+    //Control Callbacks
+    void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+    void scrollCallback(GLFWwindow* window, double deltaX, double deltaY);
+    void mouseCallback(GLFWwindow *window, int button, int action, int mods);
+    void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+    void resizeCallback(GLFWwindow *window, int width, int height);
 };
-
 
 #endif /* Application_hpp */

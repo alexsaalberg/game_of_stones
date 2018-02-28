@@ -11,7 +11,7 @@ file(GLOB_RECURSE BOX2D_SOURCES "ext/Box2D/*/*.cpp" "ext/Box2D/*/*.h")
 # nice to have them show up in IDEs.
 file(GLOB_RECURSE HEADERS "src/*.h" "src/*.hpp" "ext/glad/*/*.h")
 file(GLOB_RECURSE GLSL "resources/*.glsl")
-file(GLOB_RECURSE SRC_EXT "ext/*.cpp" "ext/*.c" "ext/.h")
+file(GLOB_RECURSE SRC_EXT "ext/*.cpp" "ext/*.c" "ext/.h") 
 
 include_directories("ext/glad/include")
 

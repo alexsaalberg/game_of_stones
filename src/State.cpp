@@ -13,31 +13,25 @@ State::State() { //Empty constructor
 
 }
 
-State::State(const State &oldState) {
+State::State(const State &oldState) { //copy constructor
 	shared_ptr<GameObject> temporaryGameObject;
 	unsigned int numberOfGameObjects = oldState.gameObjects.size();
+
 	for (int i = 0; i < numberOfGameObjects; i++) {
-		temporaryGameObject = make_shared<GameObject>(*oldState.gameObjects.at(i).get());
-		//temporaryGameObject = new GameObject( *oldState.gameObjects.at(i).get() );
+		temporaryGameObject = make_shared<GameObject>( *oldState.gameObjects.at(i).get() );
 		gameObjects.push_back(temporaryGameObject);
-		
 	}
-	
 }
 
 State& State::operator= (const State &oldState) { //assignment operator
 	shared_ptr<GameObject> temporaryGameObject;
-	
 	unsigned int numberOfGameObjects = oldState.gameObjects.size();
 	
 	for (int i = 0; i < numberOfGameObjects; i++) {
-		temporaryGameObject = make_shared<GameObject>(*oldState.gameObjects.at(i).get());
-		//temporaryGameObject = new GameObject( *oldState.gameObjects.at(i).get() );
+		temporaryGameObject = make_shared<GameObject>( *oldState.gameObjects.at(i).get() );
 		this->gameObjects.push_back(temporaryGameObject);
-		
 	}
 	return *this;
-	
 }
 
 State State::interpolate(State &previous, State &current, float alpha)
@@ -72,7 +66,6 @@ State State::interpolate(State &previous, State &current, float alpha)
 	}
     return state;
 }
-
 
 void State::integrate(float t, double dt)
 {

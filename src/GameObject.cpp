@@ -23,6 +23,7 @@ shared_ptr<GameObject> GameObject::interpolate(shared_ptr<GameObject> previous, 
     gameObject->position = current->position*alpha + previous->position*(1-alpha);
     gameObject->velocity = current->velocity*alpha + previous->velocity*(1-alpha);
     
+    
     return gameObject;
 }
 
@@ -43,14 +44,23 @@ GameObject::GameObject(std::shared_ptr<InputComponent> inputComponent, std::shar
 
 void GameObject::simulate(float dt)
 {
+    /*
     velocity.z = 0.0f; //don't want them moving zed
     position.z = 0.0f; //don't want them not being 0
+    */
     
     if(collisionCooldown > 0.0f) {
         collisionCooldown -= dt;
     } else if (collisionCooldown < 0.0f) {
         collisionCooldown = 0.0f;
     }
+    
+	if (body != nullptr) {
+		b2Vec2 position2D = body->GetPosition(); //Box2D vec2
+		glm::vec3 position3D = glm::vec3(position2D.x, position2D.y, 0.0f); //glm::vec3
+		position = position3D;
+	}
+    
     input->update(*this);
     physics->update(*this, dt);
 }
