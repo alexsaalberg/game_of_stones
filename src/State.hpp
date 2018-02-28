@@ -14,15 +14,15 @@
 
 class State {
 public:
-    //Variables
+	//Variables
     std::vector<std::shared_ptr<GameObject>> gameObjects;
     
-    //Contructors
-    State();
-    State(const State &oldState);
-    State& operator= (const State &oldState);
-    
-    //Other functions
+	//Constructors
+	State();
+	State(const State &oldState);
+	State& operator= (const State &oldState);
+
+	//Other functions
     static State interpolate(State &previous, State &current, float alpha);
     //float acceleration(const State &state, float t);
     void integrate(float t, double dt);

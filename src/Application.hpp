@@ -42,6 +42,8 @@
 
 #include "DDS_Loader.hpp"
 
+#include "Box2D/Box2D.h"
+
 class Application : public EventCallbacks
 {
 //const (private?)
@@ -58,31 +60,40 @@ class Application : public EventCallbacks
     //vvv (1000-30*2) = 940; 940/100 = 9.4f
     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
     const float birdInitialHorizontalVelocity = -10.0f;
-    const float highBirdY = 11.0f;
-    const float lowBirdY = 2.0f;
-    
+    const float highBirdY = 6.0f;
+    const float lowBirdY = 3.0f;
 public:
-    
 //Variables
+    
     bool gameOver = false;
     int playerHealth = 3;
     
     double w = 0; //w is for sin wave frequency.
     
     bool mouseDown = false;
+	int copterHealth = 3;
+	int manHealth = 3;
+
     WindowManager * windowManager = nullptr;
     
-    // Our shader program
+    //Shader Programs
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> groundProgram;
+	std::shared_ptr<Program> sky;
     
-    std::shared_ptr<State> currentState, previousState;
-    //State currentState;
-    //State previousState = currentState;
+    //Physics & Collisions
+    //at global scope
+    std::shared_ptr<b2World> world;
+    
+    //State
+    std::shared_ptr<State> currentState;
+    std::shared_ptr<State> previousState;
     
     std::shared_ptr<Camera> camera;
     
     std::shared_ptr<GameObject> player;
+	std::shared_ptr<GameObject> copterHealthObjs[3];
+	std::shared_ptr<PlayerInputComponent> playerInputComponent;
     std::shared_ptr<GameObject> temporaryGameObjectPointer;
     
     std::shared_ptr<Model> temporaryModel;
@@ -96,50 +107,51 @@ public:
     std::vector< std::shared_ptr<PhysicsComponent> > physicsComponents;
     std::vector< std::shared_ptr<GraphicsComponent> > graphicsComponents;
     
-    std::shared_ptr<PlayerInputComponent> playerInputComponent;
-    
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
     std::shared_ptr<Texture> waterTexture;
-//Functions
-
+    
     //ground plane info
     GLuint GroundBufferObject, GroundNormalBufferObject, GroundTextureBufferObject, GroundIndexBufferObject;
     int gGiboLen;
     
-    void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
-   
-    
-    void scrollCallback(GLFWwindow* window, double deltaX, double deltaY);
-    
-    void mouseCallback(GLFWwindow *window, int button, int action, int mods);
-    
-    void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
-    
-    void resizeCallback(GLFWwindow *window, int width, int height);
-    
+//Functions
+    /* Initilizations */
     void init(const std::string& resourceDirectory);
     
-    //code to set up the two shaders - a diffuse shader and texture mapping
-    void initShaders(const std::string& resourceDirectory);
+    void initEntities();
+    void initBox2DWorld();
     
+    void initShaders(const std::string& resourceDirectory);
     void initMainProgram(const std::string& resourceDirectory);
     void initGroundProgram(const std::string& resourceDirectory);
-    void initTextures(const std::string& resourceDirectory);
 
-    
+    void initTextures(const std::string& resourceDirectory);
+	// Separate texture for water
     void initWaterTextures(const std::string& resourceDirectory);
-    
 
     void initGeom(const std::string& resourceDirectory);
     
     void initPlayer(std::shared_ptr<Model> model);
     void initCamera();
     
-    /**** geometry set up for ground plane *****/
+    void createBird(std::shared_ptr<Model> model, glm::vec3 position);
+    void initBirds();
+    
     void initQuad();
     
     void renderGround();
+
+	//Skybox
+	GLuint vbo, vao, tex_cube;
+
+	void initSkybox(const std::string& resourceDirectory, 
+		const std::string& skyboxDirectory);
+	void createCubeMap(const std::string& front, const std::string& back,
+		const std::string& top, const std::string& bottom, const std::string& left,
+		const std::string& right, GLuint* tex_cube);
+	bool loadCubeMapSide(GLuint texture, GLenum side_target,
+		const std::string& filename);
     
     //Physics
     void integrate(float t, float dt);
@@ -155,16 +167,24 @@ public:
     float randomFloat();
     //[-1.0, 1.0]
     float randomFloatNegativePossible();
-    
-    void createBird(std::shared_ptr<Model> model, glm::vec3 position);
-    void initBirds();
+
+	void initGUI();
+	void moveGUIElements();
     
     void testCollisions();
     bool isCollision(std::shared_ptr<GameObject> player, std::shared_ptr<GameObject> bird);
     void setCollisionCooldown(std::shared_ptr<GameObject> gameObject);
-    void decrementPlayerHealth();
+    
+	void changeCopterHealth(int i);
+	void changeManHealth(int i);
     void gameLost();
+    
+    //Control Callbacks
+    void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+    void scrollCallback(GLFWwindow* window, double deltaX, double deltaY);
+    void mouseCallback(GLFWwindow *window, int button, int action, int mods);
+    void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+    void resizeCallback(GLFWwindow *window, int width, int height);
 };
-
 
 #endif /* Application_hpp */

@@ -5,17 +5,18 @@ project(Helico-opter)
 
 # Use glob to get the list of all source files.
 file(GLOB_RECURSE SOURCES "src/*.cpp" "ext/glad/src/*.c" "src/*.h") 
+file(GLOB_RECURSE BOX2D_SOURCES "ext/Box2D/*/*.cpp" "ext/Box2D/*/*.h")
 
 # We don't really need to include header and resource files to build, but it's
 # nice to have them show up in IDEs.
 file(GLOB_RECURSE HEADERS "src/*.h" "src/*.hpp" "ext/glad/*/*.h")
 file(GLOB_RECURSE GLSL "resources/*.glsl")
-file(GLOB_RECURSE SRC_EXT "ext/*.cpp" "ext/*.c" "ext/.h")
+file(GLOB_RECURSE SRC_EXT "ext/*.cpp" "ext/*.c" "ext/.h") 
 
 include_directories("ext/glad/include")
 
 # Set the executable.
-add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
+add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${BOX2D_SOURCES} ${GLSL})
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "ext")
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "ext/glad/include")
 
@@ -77,7 +78,8 @@ else()
 	message(STATUS "GLM environment variable `GLM_INCLUDE_DIR` not found, GLM must be installed with the system")
 endif()
 
-
+message(STATUS "=====> END GLFW <=====")
+message(STATUS "")
 
 # OS specific options and libraries
 if(WIN32)

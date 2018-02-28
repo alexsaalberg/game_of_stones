@@ -15,15 +15,8 @@
 
 class PlayerPhysicsComponent : public PhysicsComponent
 {
-    const float maxHorizontalSpeed = 20.0f;
-    
 public:
     virtual void update(GameObject& gameObject, float dt);
-    void integrate(GameObject& gameObject, float dt);
-    
-    float calculateGroundHeight();
-    
-    glm::vec3 calculateAcceleration(GameObject& gameObject, float dt);
 };
 
 

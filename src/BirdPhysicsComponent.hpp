@@ -17,11 +17,6 @@ class BirdPhysicsComponent : public PhysicsComponent
 {
 public:
     virtual void update(GameObject& gameObject, float dt);
-    void integrate(GameObject& gameObject, float dt);
-    
-    float calculateGroundHeight();
-    
-    glm::vec3 calculateAcceleration(GameObject& gameObject, float dt);
 };
 
 #endif /* BirdPhysicsComponent_hpp */

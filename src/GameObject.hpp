@@ -16,6 +16,8 @@
 #include "Program.h"
 #include "Component.hpp"
 
+#include "Box2D/Box2D.h"
+
 class InputComponent;
 class PhysicsComponent;
 class GraphicsComponent;
@@ -26,6 +28,8 @@ public:
     const glm::vec3 forwardDirection = glm::vec3(1.0f, 0.0f, 0.0f);
     
     //Variables
+    b2Body *body;
+    
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 velocity = glm::vec3(0.0f);
     
@@ -38,6 +42,9 @@ public:
     float radius = 1.0f;
     float mass = 1.0f; //1 gram?
     float collisionCooldown = 0.0f;
+	bool enabled = true;
+    
+    int health = 30;
     
     //Functions
     static std::shared_ptr<GameObject> interpolate(std::shared_ptr<GameObject> previous, std::shared_ptr<GameObject> current, float alpha);
