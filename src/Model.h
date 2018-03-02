@@ -36,8 +36,8 @@ public:
     void rotate(glm::vec3 deltaRotation);
     void draw(const std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack> M) const;
     
-private:
     glm::vec3 gMin, gMax;
+private:
     
     std::vector<std::shared_ptr<Shape>> shapes;
 };

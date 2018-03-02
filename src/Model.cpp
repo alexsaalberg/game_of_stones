@@ -36,7 +36,7 @@ void Model::createModel(shared_ptr<Shape> shape) {
     gMax.y = fmax(shapes[i]->max.y, gMax.y);
     gMax.z = fmax(shapes[i]->max.z, gMax.z);
     
-    translation = gMin + 0.5f*(gMax - gMin);
+    translation = 0.5f*(gMax + gMin);
     
     if (gMax.x > gMax.y && gMax.x > gMax.z)
     {
@@ -85,7 +85,7 @@ void Model::createModel(vector<shape_t> inShapes, vector<material_t> inMaterials
         // based on the results of calling measure on each peice
     }
     
-    translation = 0.5f*(gMax-gMin);
+    translation = 0.5f*(gMax+gMin);
     //mTranslate = gMin + 0.5f*(gMax - gMin);
     if (gMax.x > gMax.y && gMax.x > gMax.z)
     {

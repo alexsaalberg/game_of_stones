@@ -167,21 +167,37 @@ void Application::initPlayer(shared_ptr<Model> model) {
     player = make_shared<GameObject>(input, physics, graphics);
     
 	b2BodyDef playerBodyDefinition;
-	playerBodyDefinition.position.Set(0.0f, 5.0f);
+	playerBodyDefinition.position.Set(0.0f, 0.0f);
 	playerBodyDefinition.type = b2_dynamicBody;
 	player->body = world->CreateBody(&playerBodyDefinition);
 
+    /*
 	float width = 3.0f;
 	float height = 2.0f;
 	float mass = 100.0f; //kilogram
 	float area = width * height;
 	float density = mass / area;
-
+     */
+     
 	b2PolygonShape playerBox;
-	//The extents are the half-widths of the box.
-	playerBox.SetAsBox(width / 2.0f, height / 2.0f);
+	//The extents are the half-widths of the box. (distance from center to edge)
+	//playerBox.SetAsBox(width / 2.0f, height / 2.0f);
+    float width = (model->gMax.x - model->gMin.x) * model->scale;
+    float height = (model->gMax.y - model->gMin.y) * model->scale;
+    float mass = 1000.0f; //kilogram
+    float area = width * height;
+    float density = mass / area;
+    
+    float xOffset = model->translation.x * model->scale;
+    float yOffset = model->translation.y * model->scale;
+    
+    playerBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(xOffset, yOffset), 0);
+    
+    
+    //playerBox.SetAsBox( (model->gMax.x-model->gMin.x) / 2.0f, (model->gMax.y-model->gMin.y) / 2.0f, b2Vec2(model->translation.x, model->translation.y), 0);
+    
 	//Create fixture directly from shape
-	player->body->CreateFixture(&playerBox, density); //0.5f = density
+	player->body->CreateFixture(&playerBox, density);
 
 	player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
 
