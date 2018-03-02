@@ -920,6 +920,10 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
 	{
 		playerInputComponent->movingDownward = false;
 	}
+    else if (key == GLFW_KEY_SPACE && (action == GLFW_RELEASE))
+    {
+        camera->gameStarted = true;
+    }
 }
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully
