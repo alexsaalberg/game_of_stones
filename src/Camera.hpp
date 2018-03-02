@@ -36,6 +36,7 @@ public:
     
     //Functions
     void setModelIdentityMatrix(const std::shared_ptr<Program> prog) const;
+    void setHelicopterSkyViewMatrix(const std::shared_ptr<Program> prog);
     void setHelicopterViewMatrix(const std::shared_ptr<Program> prog);
     void setViewMatrix(const std::shared_ptr<Program> prog) const;
     void setProjectionMatrix(const std::shared_ptr<Program> prog, float aspect) const;

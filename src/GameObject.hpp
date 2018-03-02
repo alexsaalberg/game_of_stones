@@ -42,6 +42,7 @@ public:
     float collisionCooldown = 0.0f;
     
     int health = 5;
+    int score = 0;
     
 	bool enabled = true;
     

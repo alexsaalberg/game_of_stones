@@ -53,9 +53,9 @@ class Application : public EventCallbacks
     const float gridHeight = -1.5f;
     
     //birds
-    const float winDistance = 1000.0f;
-    const int numberOfBirds = 150;
-    const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
+    const float winDistance = 2000.0f;
+    const int numberOfBirds = 300;
+    const float bufferDistance = 150.0f; //don't want birds X meters from start or finish
     //vvv (1000-30*2) = 940; 940/100 = 9.4f
     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
     const float birdInitialHorizontalVelocity = -10.0f;

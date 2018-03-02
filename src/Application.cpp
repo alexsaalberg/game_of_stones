@@ -633,20 +633,6 @@ void Application::integrate(float t, float dt) {
 
     world->Step(dt, velocityIterations, positionIterations);
     
-    for (b2Contact* c = world->GetContactList(); c; c = c->GetNext())
-    {
-        // A positive manifold count ensures that the shapes are actually touching.
-        if (c->GetManifold())
-        {
-            b2Body *body1 = c->GetFixtureA()->GetBody();
-            b2Body *body2 = c->GetFixtureB()->GetBody();
-            
-            
-            //body1.userData.dispatchEvent( new b2ContactEvent(body2,c) );
-            //body2.userData.dispatchEvent( new b2ContactEvent(body1,c) );
-        }
-    }
-    
     if(player->health <= 0) {
         gameLost();
     }
@@ -676,6 +662,7 @@ void Application::renderState(State& state) {
     glViewport(0, 0, windowWidth, windowHeight);
     
     float aspect = windowWidth/(float)windowHeight;
+    shared_ptr<MatrixStack> M;
     
     CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
     CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
@@ -700,6 +687,19 @@ void Application::renderState(State& state) {
 				gameObject->render(mainProgram);
 			}
         }
+        M = make_shared<MatrixStack>();
+        M->pushMatrix();
+        M->loadIdentity();
+            vec3 first_bird_position = vec3((player->position.x) - 8.0f, -6.0f, 1.0f);
+            M->translate(first_bird_position);
+            for(int i = 0 ; i < player->score; i++) {
+                M->pushMatrix();
+                    M->translate( glm::vec3(0.5f * i, 0.0f, 0.0f) );
+                    //CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+                    birdModel->draw(mainProgram, M);
+                M->popMatrix();
+            }
+        M->popMatrix();
     
     mainProgram->unbind();
     
@@ -714,7 +714,7 @@ void Application::renderState(State& state) {
 		w = glfwGetTime()/10;
 		CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
 		CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
-		auto M = make_shared<MatrixStack>();
+        M = make_shared<MatrixStack>();
 		M->pushMatrix();
 			M->loadIdentity();
 			//M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -735,7 +735,7 @@ void Application::renderState(State& state) {
 	/*draw skybox*/
 	glDepthMask(GL_FALSE);
 	sky->bind();
-		camera->setViewMatrix(sky);
+		camera->setHelicopterSkyViewMatrix(sky);
 		camera->setProjectionMatrix(sky, aspect);
 		CHECKED_GL_CALL(glUniform1i(sky->getUniform("cube_texture"), 0));
 
