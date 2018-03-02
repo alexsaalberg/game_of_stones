@@ -197,9 +197,8 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
 	shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
 	inputComponents.push_back(input);
 
-	shared_ptr<BirdPhysicsComponent> physics = make_shared<BirdPhysicsComponent>();
+	shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent>();
 	physicsComponents.push_back(physics);
-
 
 	shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent>();
 	graphicsComponents.push_back(graphics);

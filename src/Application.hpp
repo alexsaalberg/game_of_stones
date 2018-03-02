@@ -34,8 +34,6 @@
 #include "PlayerInputComponent.hpp"
 #include "PlayerPhysicsComponent.hpp"
 
-#include "BirdPhysicsComponent.hpp"
-
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
