@@ -138,6 +138,29 @@ void Application::initGeom(const std::string& resourceDirectory) {
         helicopterModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
         helicopterModel->scale *= 2.0f;
     }
+    
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/blimp/Blimp.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        blimpModel = make_shared<Model>();
+        blimpModel->createModel(TOshapes, objMaterials);
+        blimpModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
+        blimpModel->scale *= 4.0f;
+    }
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/cloud/cloud_02.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        cloudModel = make_shared<Model>();
+        cloudModel->createModel(TOshapes, objMaterials);
+        cloudModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
+        cloudModel->scale *= 2.0f;
+    }
 }
 
 void Application::initBox2DWorld() {
@@ -149,7 +172,8 @@ void Application::initEntities() {
 	initPlayer(helicopterModel);
 	initCamera();
 	initGUI();
-	initBirds();
+    initBirds();
+    initBlimps();
 }
 
 void Application::initPlayer(shared_ptr<Model> model) {
@@ -197,6 +221,87 @@ void Application::initCamera() {
     camera->player = player;
 }
 
+void Application::createBlimp(shared_ptr<Model> model, vec3 position) {
+    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
+    inputComponents.push_back(input);
+    
+    shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent>();
+    physicsComponents.push_back(physics);
+    
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent>();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model); //Give this graphics component model
+    graphics->material = 2;
+    //Todo: Give constructor to graphics for models.
+    
+    temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
+    temporaryGameObjectPointer->position = position;
+    float randomVelocityX = randomFloat() * -1.0f;
+    temporaryGameObjectPointer->velocity += randomVelocityX;
+    
+    b2BodyDef blimpBodyDefinition;
+    blimpBodyDefinition.position.Set(position.x, position.y); //set position from param
+    blimpBodyDefinition.type = b2_dynamicBody;
+    blimpBodyDefinition.userData = (void *) "blimp";
+    temporaryGameObjectPointer->body = world->CreateBody(&blimpBodyDefinition);
+    
+    b2PolygonShape blimpBox;
+    //The extents are the half-widths of the box. (distance from center to edge)
+    //playerBox.SetAsBox(width / 2.0f, height / 2.0f);
+    float width = (model->gMax.x - model->gMin.x) * model->scale;
+    float height = (model->gMax.y - model->gMin.y) * model->scale;
+    float mass = 50.0f; //kilogram
+    float area = width * height;
+    float density = mass / area;
+    
+    float xOffset = model->translation.x * model->scale;
+    float yOffset = model->translation.y * model->scale;
+    
+    blimpBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(-xOffset, yOffset), 0);
+    //Create fixture directly from shape
+    temporaryGameObjectPointer->body->CreateFixture(&blimpBox, density); //0.0f = density
+    
+    currentState->gameObjects.push_back(temporaryGameObjectPointer);
+}
+
+void Application::initBlimps() {
+    /*
+     //birds
+     const float winDistance = 1000.0f;
+     const int numberOfBirds = 100;
+     const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
+     //vvv (1000-30*2) = 940; 940/100 = 9.4f
+     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
+     */
+    float currentX = bufferDistance;
+    glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
+    
+    int numberOfBlimps = 50;
+    float distancePerBlimp = (winDistance - bufferDistance * 2.0f) / numberOfBlimps;
+    
+    bool high = true; //switch high & low every other bird
+    for (int i = 0; i < numberOfBlimps; i++) {
+        
+        if (high == true) {
+            currentPosition.y = highBirdY;
+        }
+        else {
+            currentPosition.y = lowBirdY;
+        }
+        currentPosition.x = currentX;
+        
+        float xOffset = randomFloatNegativePossible() * (distancePerBird / 0.4f);
+        currentPosition.x += xOffset;
+        float yOffset = randomFloatNegativePossible() * ((highBirdY - lowBirdY) / 4.0f);
+        currentPosition.y += yOffset;
+        
+        createBlimp(blimpModel, currentPosition);
+        
+        currentX += distancePerBlimp; //Make next bird X meters to the right
+        high = !high; //flip high/low
+    }
+}
+
 void Application::createBird(shared_ptr<Model> model, vec3 position) {
 	shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
 	inputComponents.push_back(input);
@@ -214,11 +319,11 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
 	temporaryGameObjectPointer->position = position;
 	float randomVelocityX = randomFloat() * -1.0f;
 	temporaryGameObjectPointer->velocity += randomVelocityX;
-	temporaryGameObjectPointer->radius = 0.5f;
 
 	b2BodyDef birdBodyDefinition;
 	birdBodyDefinition.position.Set(position.x, position.y); //set position from param
 	birdBodyDefinition.type = b2_dynamicBody;
+    birdBodyDefinition.userData = (void *) "bird";
 	temporaryGameObjectPointer->body = world->CreateBody(&birdBodyDefinition);
 
 	b2PolygonShape birdBox;
@@ -226,7 +331,7 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
 
 	float width = 1.0f;
 	float height = 1.0f;
-	float mass = 0.1f; //kilogram
+	float mass = 0.05f; //kilogram
 	float area = width * height;
 	float density = mass / area;
 
@@ -526,12 +631,39 @@ void Application::integrate(float t, float dt) {
 	int32 velocityIterations = 6;
 	int32 positionIterations = 2;
 
-	world->Step(dt, velocityIterations, positionIterations);
+    world->Step(dt, velocityIterations, positionIterations);
+    
+    for (b2Contact* c = world->GetContactList(); c; c = c->GetNext())
+    {
+        // A positive manifold count ensures that the shapes are actually touching.
+        if (c->GetManifold())
+        {
+            b2Body *body1 = c->GetFixtureA()->GetBody();
+            b2Body *body2 = c->GetFixtureB()->GetBody();
+            
+            
+            //body1.userData.dispatchEvent( new b2ContactEvent(body2,c) );
+            //body2.userData.dispatchEvent( new b2ContactEvent(body1,c) );
+        }
+    }
+    
+    if(player->health <= 0) {
+        gameLost();
+    }
+    
+    if(gameOver) {
+        if(player->scale > 0.21f * dt) {
+            player->scale -= 0.2f * dt;
+        } else {
+            player->scale = 0.0f;
+        }
+    }
 
 	currentState->integrate(t, dt);
 }
 
 void Application::render(float t, float alpha) {
+    player = currentState->gameObjects.at(0);
 	moveGUIElements();
 
 	camera->player = currentState->gameObjects.at(0);
@@ -681,12 +813,10 @@ void Application::initGUI() {
 	graphics->material = 7;
 	//Todo: Give constructor to graphics for models.
 	
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 5; i++) {
 		temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
 		temporaryGameObjectPointer->position = vec3(-12 + (i * 5), -20, 0);
-		temporaryGameObjectPointer->velocity = vec3(0, 0, 0);
-		temporaryGameObjectPointer->radius = 0;
-		temporaryGameObjectPointer->scale = 0.6f;
+		temporaryGameObjectPointer->scale = 0.3f;
 		temporaryGameObjectPointer->body = nullptr;
 		copterHealthObjs[i] = temporaryGameObjectPointer;
 		currentState->gameObjects.push_back(temporaryGameObjectPointer);
@@ -694,32 +824,16 @@ void Application::initGUI() {
 }
 
 void Application::moveGUIElements() {
-	for (int i = 0; i < copterHealth; i++) {
-		copterHealthObjs[i]->position = vec3((player->position.x - 12) + (5 * i), player->position.y - 20 - (float)(i / 2.5), player->position.z);
-		copterHealthObjs[i]->scale = 0.6f;
-	}
-}
-
-void Application::testCollisions() {
-    if(gameOver) {
-        return;
-    }
-    
-    for(auto &gameObject : currentState->gameObjects) {
-        if(gameObject != player && player->collisionCooldown <= 0.0f && gameObject->collisionCooldown <= 0.0f) {
-            if( isCollision(player, gameObject) ) {
-                setCollisionCooldown(player);
-                setCollisionCooldown(gameObject);
-				changeCopterHealth(-1);
-            }
+	for (int i = 0; i < player->health; i++) {
+        if(i == player->health - 1) {
+            copterHealthObjs[i]->scale = 0.5f;
+            copterHealthObjs[i]->rotation.y += 1.0f;
         }
-    }
-}
-
-bool Application::isCollision(shared_ptr<GameObject> player, shared_ptr<GameObject> bird) {
-    float distance = length( (player->position - bird->position) );
-    float maxDistanceWithoutCollision = player->radius * player->scale + bird->radius * bird->scale;
-    return distance < maxDistanceWithoutCollision; //true if collision
+        
+        copterHealthObjs[i]->position = vec3((player->position.x) - 1 + (3 * i), -4.0f, player->position.z+8);
+		//copterHealthObjs[i]->position = vec3((player->position.x - 12) + (5 * i), player->position.y - 20 - (float)(i / 2.5), player->position.z);
+		//copterHealthObjs[i]->scale = 0.6f;
+	}
 }
 
 void Application::setCollisionCooldown(shared_ptr<GameObject> gameObject) {

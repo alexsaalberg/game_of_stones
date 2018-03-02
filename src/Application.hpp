@@ -91,7 +91,7 @@ public:
     std::shared_ptr<Camera> camera;
     
     std::shared_ptr<GameObject> player;
-	std::shared_ptr<GameObject> copterHealthObjs[3];
+	std::shared_ptr<GameObject> copterHealthObjs[5];
 	std::shared_ptr<PlayerInputComponent> playerInputComponent;
     std::shared_ptr<GameObject> temporaryGameObjectPointer;
     
@@ -99,6 +99,8 @@ public:
     std::shared_ptr<Model> sphereModel;
     std::shared_ptr<Model> birdModel;
     std::shared_ptr<Model> helicopterModel;
+    std::shared_ptr<Model> blimpModel;
+    std::shared_ptr<Model> cloudModel;
     
     std::vector< std::shared_ptr<Model> > models;
     
@@ -133,6 +135,9 @@ public:
     
     void initPlayer(std::shared_ptr<Model> model);
     void initCamera();
+    
+    void createBlimp(std::shared_ptr<Model> model, glm::vec3 position);
+    void initBlimps();
     
     void createBird(std::shared_ptr<Model> model, glm::vec3 position);
     void initBirds();
@@ -170,8 +175,6 @@ public:
 	void initGUI();
 	void moveGUIElements();
     
-    void testCollisions();
-    bool isCollision(std::shared_ptr<GameObject> player, std::shared_ptr<GameObject> bird);
     void setCollisionCooldown(std::shared_ptr<GameObject> gameObject);
     
 	void changeCopterHealth(int i);
