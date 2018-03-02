@@ -156,12 +156,12 @@ void Application::initPlayer(shared_ptr<Model> model) {
     shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
     inputComponents.push_back(input);
     
-    shared_ptr<PlayerPhysicsComponent> physics = make_shared<PlayerPhysicsComponent> ();
-    physicsComponents.push_back(physics);
-    
-    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    shared_ptr<PlayerGraphicsComponent> graphics = make_shared<PlayerGraphicsComponent> ();
     graphicsComponents.push_back(graphics);
     graphics->models.push_back(model);
+        
+    shared_ptr<PlayerPhysicsComponent> physics = make_shared<PlayerPhysicsComponent> ();
+    physicsComponents.push_back(physics);
     
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
@@ -171,14 +171,6 @@ void Application::initPlayer(shared_ptr<Model> model) {
 	playerBodyDefinition.type = b2_dynamicBody;
 	player->body = world->CreateBody(&playerBodyDefinition);
 
-    /*
-	float width = 3.0f;
-	float height = 2.0f;
-	float mass = 100.0f; //kilogram
-	float area = width * height;
-	float density = mass / area;
-     */
-     
 	b2PolygonShape playerBox;
 	//The extents are the half-widths of the box. (distance from center to edge)
 	//playerBox.SetAsBox(width / 2.0f, height / 2.0f);
@@ -193,14 +185,10 @@ void Application::initPlayer(shared_ptr<Model> model) {
     
     playerBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(xOffset, yOffset), 0);
     
-    
-    //playerBox.SetAsBox( (model->gMax.x-model->gMin.x) / 2.0f, (model->gMax.y-model->gMin.y) / 2.0f, b2Vec2(model->translation.x, model->translation.y), 0);
-    
 	//Create fixture directly from shape
 	player->body->CreateFixture(&playerBox, density);
-
 	player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
-
+    
     currentState->gameObjects.push_back(player);
 }
 

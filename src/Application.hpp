@@ -33,6 +33,7 @@
 
 #include "PlayerInputComponent.hpp"
 #include "PlayerPhysicsComponent.hpp"
+#include "PlayerGraphicsComponent.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -159,7 +160,7 @@ public:
     void simulate(float dt);
     
     // helper function to set materials for shading
-    void SetMaterial(const std::shared_ptr<Program> prog, int i);
+    static void SetMaterial(const std::shared_ptr<Program> prog, int i);
     
     //[0,1.0]
     float randomFloat();
