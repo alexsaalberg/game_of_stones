@@ -27,17 +27,21 @@ public:
     //Variables
     float cameraTheta = 0; //around Y axis (turn head left & right)
     float cameraPhi = 0; // around Z axis (nod up & down)
-    float cameraDistance = 20.0f; //Distance from view to character (think 2.5d view)
+    float cameraDistance = 5.0f; //Distance from view to character (think 2.5d view)
+    float cameraRot = 0.6f;
+    bool gameStarted = false;
     
     
     std::shared_ptr<GameObject> player; //GameObject to center camera around (almost always player)
     
     //Functions
     void setModelIdentityMatrix(const std::shared_ptr<Program> prog) const;
-    void setHelicopterViewMatrix(const std::shared_ptr<Program> prog) const;
+    void setHelicopterSkyViewMatrix(const std::shared_ptr<Program> prog);
+    void setHelicopterViewMatrix(const std::shared_ptr<Program> prog);
     void setViewMatrix(const std::shared_ptr<Program> prog) const;
     void setProjectionMatrix(const std::shared_ptr<Program> prog, float aspect) const;
     void setEyePosition(const std::shared_ptr<Program> prog) const;
+    void changeRot();
 };
 
 #endif /* Camera_hpp */

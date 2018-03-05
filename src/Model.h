@@ -35,11 +35,12 @@ public:
     void createModel(std::vector<tinyobj::shape_t> TOshapes, std::vector<tinyobj::material_t> objMaterials);
     void rotate(glm::vec3 deltaRotation);
     void draw(const std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack> M) const;
+    void draw(const std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack> M, int shape_num) const;
     
-private:
     glm::vec3 gMin, gMax;
-    
     std::vector<std::shared_ptr<Shape>> shapes;
+private:
+    
 };
 
 

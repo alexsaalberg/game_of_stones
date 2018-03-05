@@ -36,7 +36,7 @@ void Model::createModel(shared_ptr<Shape> shape) {
     gMax.y = fmax(shapes[i]->max.y, gMax.y);
     gMax.z = fmax(shapes[i]->max.z, gMax.z);
     
-    translation = gMin + 0.5f*(gMax - gMin);
+    translation = 0.5f*(gMax + gMin);
     
     if (gMax.x > gMax.y && gMax.x > gMax.z)
     {
@@ -85,7 +85,7 @@ void Model::createModel(vector<shape_t> inShapes, vector<material_t> inMaterials
         // based on the results of calling measure on each peice
     }
     
-    translation = 0.5f*(gMax-gMin);
+    translation = 0.5f*(gMax+gMin);
     //mTranslate = gMin + 0.5f*(gMax - gMin);
     if (gMax.x > gMax.y && gMax.x > gMax.z)
     {
@@ -116,6 +116,7 @@ void Model::draw(const std::shared_ptr<Program> prog, shared_ptr<MatrixStack> M)
     
     //mat4 normMatrix = glm::transpose(glm::inverse(M->topMatrix()));
     //glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(normMatrix));
+    
     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
     M->popMatrix();
     
@@ -124,4 +125,23 @@ void Model::draw(const std::shared_ptr<Program> prog, shared_ptr<MatrixStack> M)
         shape->draw(prog);
     }
 }
+
+void Model::draw(const std::shared_ptr<Program> prog, shared_ptr<MatrixStack> M, int shape_num) const {
+    
+    M->pushMatrix();
+    M->scale(scale);
+    M->rotate(radians(rotation.x), vec3(1, 0, 0));
+    M->rotate(radians(rotation.y), vec3(0, 1, 0));
+    M->rotate(radians(rotation.z), vec3(0, 0, 1));
+    M->translate(-translation); //Negative translation
+    
+    //mat4 normMatrix = glm::transpose(glm::inverse(M->topMatrix()));
+    //glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(normMatrix));
+    
+    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
+    M->popMatrix();
+    
+    shapes.at(shape_num)->draw(prog);
+}
+
 

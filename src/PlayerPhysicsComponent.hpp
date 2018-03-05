@@ -12,6 +12,7 @@
 
 #include "Component.hpp"
 #include "glm/glm.hpp"
+#include <string.h>
 
 class PlayerPhysicsComponent : public PhysicsComponent
 {
@@ -20,4 +21,4 @@ public:
 };
 
 
-#endif /* PlayerPhysicsComponent_hpp */
+#endif /* PlayerPhysicsComponent_hpp */ 

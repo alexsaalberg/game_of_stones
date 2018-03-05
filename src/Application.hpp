@@ -33,8 +33,7 @@
 
 #include "PlayerInputComponent.hpp"
 #include "PlayerPhysicsComponent.hpp"
-
-#include "BirdPhysicsComponent.hpp"
+#include "PlayerGraphicsComponent.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -54,9 +53,9 @@ class Application : public EventCallbacks
     const float gridHeight = -1.5f;
     
     //birds
-    const float winDistance = 1000.0f;
-    const int numberOfBirds = 150;
-    const float bufferDistance = 30.0f; //don't want birds X meters from start or finish
+    const float winDistance = 2000.0f;
+    const int numberOfBirds = 300;
+    const float bufferDistance = 150.0f; //don't want birds X meters from start or finish
     //vvv (1000-30*2) = 940; 940/100 = 9.4f
     const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
     const float birdInitialHorizontalVelocity = -10.0f;
@@ -92,7 +91,7 @@ public:
     std::shared_ptr<Camera> camera;
     
     std::shared_ptr<GameObject> player;
-	std::shared_ptr<GameObject> copterHealthObjs[3];
+	std::shared_ptr<GameObject> copterHealthObjs[5];
 	std::shared_ptr<PlayerInputComponent> playerInputComponent;
     std::shared_ptr<GameObject> temporaryGameObjectPointer;
     
@@ -100,6 +99,8 @@ public:
     std::shared_ptr<Model> sphereModel;
     std::shared_ptr<Model> birdModel;
     std::shared_ptr<Model> helicopterModel;
+    std::shared_ptr<Model> blimpModel;
+    std::shared_ptr<Model> cloudModel;
     
     std::vector< std::shared_ptr<Model> > models;
     
@@ -135,6 +136,9 @@ public:
     void initPlayer(std::shared_ptr<Model> model);
     void initCamera();
     
+    void createBlimp(std::shared_ptr<Model> model, glm::vec3 position);
+    void initBlimps();
+    
     void createBird(std::shared_ptr<Model> model, glm::vec3 position);
     void initBirds();
     
@@ -161,7 +165,7 @@ public:
     void simulate(float dt);
     
     // helper function to set materials for shading
-    void SetMaterial(const std::shared_ptr<Program> prog, int i);
+    static void SetMaterial(const std::shared_ptr<Program> prog, int i);
     
     //[0,1.0]
     float randomFloat();
@@ -171,8 +175,6 @@ public:
 	void initGUI();
 	void moveGUIElements();
     
-    void testCollisions();
-    bool isCollision(std::shared_ptr<GameObject> player, std::shared_ptr<GameObject> bird);
     void setCollisionCooldown(std::shared_ptr<GameObject> gameObject);
     
 	void changeCopterHealth(int i);

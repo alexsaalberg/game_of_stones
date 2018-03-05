@@ -44,10 +44,9 @@ GameObject::GameObject(std::shared_ptr<InputComponent> inputComponent, std::shar
 
 void GameObject::simulate(float dt)
 {
-    /*
     velocity.z = 0.0f; //don't want them moving zed
-    position.z = 0.0f; //don't want them not being 0
-    */
+    //position.z = 0.0f; //don't want them not being 0
+    
     
     if(collisionCooldown > 0.0f) {
         collisionCooldown -= dt;
