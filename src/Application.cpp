@@ -199,6 +199,48 @@ void Application::initEntities() {
     initBlimps();
 }
 
+b2Body* Application::createBodyFromModel(shared_ptr<Model> model, float mass, vec2 position, char const* name) {
+    
+    //If the model is rotated, we also need to rotate the bounds
+    vec3 rotation = model->rotation;
+    
+    MatrixStack R;
+    R.pushMatrix();
+        R.loadIdentity();
+        R.rotate(radians(rotation.x), vec3(1, 0, 0));
+        R.rotate(radians(rotation.y), vec3(0, 1, 0));
+        R.rotate(radians(rotation.z), vec3(0, 0, 1));
+    
+    //gMax here is NOT the same as model->gMax
+    vec4 gMax = (R.topMatrix()) * vec4(model->gMax, 1.0f);
+    vec4 gMin = (R.topMatrix()) * vec4(model->gMin, 1.0f);
+    
+    float width = (gMax.x - gMin.x) * model->scale;
+    float height = (gMax.y - gMin.y) * model->scale;
+    
+    //rotations can cause gMax.x < gMin.x, thus negative width
+    width = abs(width);
+    height = abs(height);
+    
+    
+    float area = width * height;
+    float density = mass / area;
+    
+    b2PolygonShape boxShape;
+    //SetAsBox requires half the edge length. (distance from center to edge)
+    boxShape.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(0.0f, 0.0f), 0);
+    
+    b2BodyDef bodyDefinition;
+    bodyDefinition.position.Set(position.x, position.y);
+    bodyDefinition.type = b2_dynamicBody;
+    bodyDefinition.userData = (void *) name;
+    
+    b2Body *returnBody = world->CreateBody(&bodyDefinition);
+    returnBody->CreateFixture(&boxShape, density);
+    
+    return returnBody;
+}
+
 void Application::initPlayer(shared_ptr<Model> model) {
     shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
     inputComponents.push_back(input);
@@ -213,32 +255,17 @@ void Application::initPlayer(shared_ptr<Model> model) {
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
     
-	b2BodyDef playerBodyDefinition;
-	playerBodyDefinition.position.Set(0.0f, 0.0f);
-	playerBodyDefinition.type = b2_dynamicBody;
-	player->body = world->CreateBody(&playerBodyDefinition);
-
-	b2PolygonShape playerBox;
-	//The extents are the half-widths of the box. (distance from center to edge)
-	//playerBox.SetAsBox(width / 2.0f, height / 2.0f);
-    float width = (model->gMax.x - model->gMin.x) * model->scale;
-    float height = (model->gMax.y - model->gMin.y) * model->scale;
-    float mass = 1000.0f; //kilogram
-    float area = width * height;
-    float density = mass / area;
-    
-    float xOffset = model->translation.x * model->scale;
-    float yOffset = model->translation.y * model->scale;
-    xOffset *= 0.5f;
-    yOffset *= 0.5f;
-    
-    playerBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(0.0f, 0.0f), 0);
-    
-	//Create fixture directly from shape
-	player->body->CreateFixture(&playerBox, density);
+    player->body = createBodyFromModel(model, 1000.0f, vec2(0.0f, 0.0f), "helicopter");
 	player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
+    player->body->SetFixedRotation(true);
     
     currentState->gameObjects.push_back(player);
+}
+
+void Application::initLadderMan(shared_ptr<Model> model) {
+    b2RopeJointDef jointDef;
+    jointDef.bodyA = player->body;
+    b2RopeJoint *joint = (b2RopeJoint*) world->CreateJoint( &jointDef);
 }
 
 void Application::initCamera() {
@@ -246,7 +273,7 @@ void Application::initCamera() {
     camera->player = player;
 }
 
-void Application::createBlimp(shared_ptr<Model> model, vec3 position) {
+void Application::createBlimp(shared_ptr<Model> model, vec2 position) {
     shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
     inputComponents.push_back(input);
     
@@ -257,31 +284,12 @@ void Application::createBlimp(shared_ptr<Model> model, vec3 position) {
     graphicsComponents.push_back(graphics);
     graphics->models.push_back(model); //Give this graphics component model
     graphics->material = 2;
-    //Todo: Give constructor to graphics for models.
     
     temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
-    temporaryGameObjectPointer->position = position;
     float randomVelocityX = randomFloat() * -1.0f;
-    temporaryGameObjectPointer->velocity += randomVelocityX;
     
-    b2BodyDef blimpBodyDefinition;
-    blimpBodyDefinition.position.Set(position.x, position.y); //set position from param
-    blimpBodyDefinition.type = b2_dynamicBody;
-    blimpBodyDefinition.userData = (void *) "blimp";
-    temporaryGameObjectPointer->body = world->CreateBody(&blimpBodyDefinition);
-    
-    b2PolygonShape blimpBox;
-    //The extents are the half-widths of the box. (distance from center to edge)
-    //playerBox.SetAsBox(width / 2.0f, height / 2.0f);
-    float width = (model->gMax.x - model->gMin.x) * model->scale;
-    float height = (model->gMax.y - model->gMin.y) * model->scale;
-    float mass = 50.0f; //kilogram
-    float area = width * height;
-    float density = mass / area;
-    
-    blimpBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(0.0f, 0.0f), 0);
-    //Create fixture directly from shape
-    temporaryGameObjectPointer->body->CreateFixture(&blimpBox, density); //0.0f = density
+    temporaryGameObjectPointer->body = createBodyFromModel(model, 50.0f, position, "blimp");
+    temporaryGameObjectPointer->body->SetLinearVelocity(b2Vec2(randomVelocityX, 0.0f));
     
     currentState->gameObjects.push_back(temporaryGameObjectPointer);
 }
@@ -296,14 +304,13 @@ void Application::initBlimps() {
      const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
      */
     float currentX = bufferDistance;
-    glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
+    glm::vec2 currentPosition = vec2(bufferDistance, 0.0f);
     
     int numberOfBlimps = 50;
     float distancePerBlimp = (winDistance - bufferDistance * 2.0f) / numberOfBlimps;
     
     bool high = true; //switch high & low every other bird
     for (int i = 0; i < numberOfBlimps; i++) {
-        
         if (high == true) {
             currentPosition.y = highBirdY;
         }
@@ -324,7 +331,7 @@ void Application::initBlimps() {
     }
 }
 
-void Application::createBird(shared_ptr<Model> model, vec3 position) {
+void Application::createBird(shared_ptr<Model> model, vec2 position) {
 	shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
 	inputComponents.push_back(input);
 
@@ -338,10 +345,9 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
 	//Todo: Give constructor to graphics for models.
 
 	temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
-	temporaryGameObjectPointer->position = position;
 	float randomVelocityX = randomFloat() * -1.0f;
 	temporaryGameObjectPointer->velocity += randomVelocityX;
-
+    /*
 	b2BodyDef birdBodyDefinition;
 	birdBodyDefinition.position.Set(position.x, position.y); //set position from param
 	birdBodyDefinition.type = b2_dynamicBody;
@@ -360,6 +366,8 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
 	birdBox.SetAsBox(width / 2.0f, height / 2.0f);
 	//Create fixture directly from shape
 	temporaryGameObjectPointer->body->CreateFixture(&birdBox, density); //0.0f = density
+     */
+    temporaryGameObjectPointer->body = createBodyFromModel(model, 0.05f, position, "bird");
 
 	currentState->gameObjects.push_back(temporaryGameObjectPointer);
 }
@@ -374,7 +382,7 @@ void Application::initBirds() {
 	const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
 	*/
 	float currentX = bufferDistance;
-	glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
+	glm::vec2 currentPosition = vec2(bufferDistance, 0.0f);
 
 
 	bool high = true; //switch high & low every other bird

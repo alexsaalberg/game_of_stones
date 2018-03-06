@@ -137,13 +137,15 @@ public:
 
     void initGeom(const std::string& resourceDirectory);
     
+    b2Body* createBodyFromModel(std::shared_ptr<Model> model, float mass, glm::vec2 position, char const* name);
     void initPlayer(std::shared_ptr<Model> model);
+    void initLadderMan(std::shared_ptr<Model> model);
     void initCamera();
     
-    void createBlimp(std::shared_ptr<Model> model, glm::vec3 position);
+    void createBlimp(std::shared_ptr<Model> model, glm::vec2 position);
     void initBlimps();
     
-    void createBird(std::shared_ptr<Model> model, glm::vec3 position);
+    void createBird(std::shared_ptr<Model> model, glm::vec2 position);
     void initBirds();
     
     void initQuad();
