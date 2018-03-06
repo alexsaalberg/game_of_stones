@@ -21,9 +21,9 @@ void DefaultGraphicsComponent::draw(GameObject& gameObject, const std::shared_pt
     M->loadIdentity();
         M->translate(gameObject.position);
         M->scale(gameObject.scale);
-        M->rotate(radians(gameObject.rotation.x), vec3(1, 0, 0));
-        M->rotate(radians(gameObject.rotation.y), vec3(0, 1, 0));
-        M->rotate(radians(gameObject.rotation.z), vec3(0, 0, 1));
+        M->rotate(gameObject.rotation.x, vec3(1, 0, 0));
+        M->rotate(gameObject.rotation.y, vec3(0, 1, 0));
+        M->rotate(gameObject.rotation.z, vec3(0, 0, 1));
     
     for (auto &model : models) // access by reference to avoid copying
     {

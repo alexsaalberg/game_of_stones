@@ -9,6 +9,7 @@
 #include "stb_image.h"
 
 #define PI 3.1415
+#define B2DRAW 1
 
 using namespace std;
 using namespace glm;
@@ -16,7 +17,7 @@ using namespace glm;
 void Application::init(const std::string& resourceDirectory) {
 	currentState = make_shared<State>();
 	previousState = make_shared<State>();
-	
+    
 	initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
@@ -38,6 +39,7 @@ void Application::initShaders(const std::string& resourceDirectory)
     glEnable(GL_DEPTH_TEST); // Enable z-buffer test.
     
     initMainProgram(resourceDirectory);
+    initSimpleProgram(resourceDirectory);
     initGroundProgram(resourceDirectory);
 }
 
@@ -66,6 +68,23 @@ void Application::initMainProgram(const std::string& resourceDirectory) {
     mainProgram->addAttribute("vNormal");
     mainProgram->addAttribute("vTextureCoordinates");
 }
+
+
+void Application::initSimpleProgram(const std::string& resourceDirectory) {
+    // Initialize the GLSL program.
+    simpleProgram = make_shared<Program>();
+    simpleProgram->setVerbose(true);
+    simpleProgram->setShaderNames(resourceDirectory + "/simple_vert.glsl",
+                                resourceDirectory + "/simple_frag.glsl");
+    
+    if (! simpleProgram->init()) {
+        std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+        exit(1);
+    }
+    simpleProgram->addUniform("P");
+    simpleProgram->addUniform("V");
+}
+
 
 void Application::initGroundProgram(const std::string& resourceDirectory) {
     groundProgram = make_shared<Program>();
@@ -166,6 +185,10 @@ void Application::initGeom(const std::string& resourceDirectory) {
 void Application::initBox2DWorld() {
 	b2Vec2 gravity(0.0f, 0.0f);
 	world = make_shared<b2World>(gravity);
+    
+    debugDraw = make_shared<B2Draw_OpenGL>();
+    
+    world->SetDebugDraw( (b2Draw *) debugDraw.get() );
 }
 
 void Application::initEntities() {
@@ -206,8 +229,10 @@ void Application::initPlayer(shared_ptr<Model> model) {
     
     float xOffset = model->translation.x * model->scale;
     float yOffset = model->translation.y * model->scale;
+    xOffset *= 0.5f;
+    yOffset *= 0.5f;
     
-    playerBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(xOffset, yOffset), 0);
+    playerBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(0.0f, 0.0f), 0);
     
 	//Create fixture directly from shape
 	player->body->CreateFixture(&playerBox, density);
@@ -254,10 +279,7 @@ void Application::createBlimp(shared_ptr<Model> model, vec3 position) {
     float area = width * height;
     float density = mass / area;
     
-    float xOffset = model->translation.x * model->scale;
-    float yOffset = model->translation.y * model->scale;
-    
-    blimpBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(-xOffset, yOffset), 0);
+    blimpBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(0.0f, 0.0f), 0);
     //Create fixture directly from shape
     temporaryGameObjectPointer->body->CreateFixture(&blimpBox, density); //0.0f = density
     
@@ -700,7 +722,6 @@ void Application::renderState(State& state) {
                 M->popMatrix();
             }
         M->popMatrix();
-    
     mainProgram->unbind();
     
     groundProgram->bind();
@@ -732,6 +753,21 @@ void Application::renderState(State& state) {
 		renderGround();
     groundProgram->unbind();
     
+    if(B2DRAW) {
+        /*Draw Box2D Debug*/
+        simpleProgram->bind();
+            camera->setHelicopterViewMatrix(simpleProgram);
+            camera->setProjectionMatrix(simpleProgram, aspect);
+                vec2 xBounds = camera->getXBounds(aspect);
+                debugDraw->minX = xBounds[0];
+                debugDraw->maxX = xBounds[1];
+        
+                ((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_shapeBit );
+                world->DrawDebugData();
+        simpleProgram->unbind();
+        /*END DRAWING SECTION */
+    }
+        
 	/*draw skybox*/
 	glDepthMask(GL_FALSE);
 	sky->bind();
@@ -745,6 +781,7 @@ void Application::renderState(State& state) {
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	sky->unbind();
 	glDepthMask(GL_TRUE);
+    
 }
 
 // helper function to set materials for shading
@@ -827,7 +864,7 @@ void Application::moveGUIElements() {
 	for (int i = 0; i < player->health; i++) {
         if(i == player->health - 1) {
             copterHealthObjs[i]->scale = 0.5f;
-            copterHealthObjs[i]->rotation.y += 1.0f;
+            copterHealthObjs[i]->rotation.y += radians(1.0f);
         }
         
         copterHealthObjs[i]->position = vec3((player->position.x) - 1 + (3 * i), -4.0f, player->position.z+8);

@@ -42,6 +42,7 @@
 #include "DDS_Loader.hpp"
 
 #include "Box2D/Box2D.h"
+#include "B2Draw_OpenGL.hpp"
 
 class Application : public EventCallbacks
 {
@@ -77,12 +78,14 @@ public:
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;
+    std::shared_ptr<Program> simpleProgram;
     std::shared_ptr<Program> groundProgram;
 	std::shared_ptr<Program> sky;
     
     //Physics & Collisions
     //at global scope
     std::shared_ptr<b2World> world;
+    std::shared_ptr<B2Draw_OpenGL> debugDraw;
     
     //State
     std::shared_ptr<State> currentState;
@@ -125,6 +128,7 @@ public:
     
     void initShaders(const std::string& resourceDirectory);
     void initMainProgram(const std::string& resourceDirectory);
+    void initSimpleProgram(const std::string& resourceDirectory);
     void initGroundProgram(const std::string& resourceDirectory);
 
     void initTextures(const std::string& resourceDirectory);

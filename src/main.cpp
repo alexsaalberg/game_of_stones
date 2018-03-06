@@ -10,7 +10,7 @@ const int windowHeight = 420;
 int main(int argc, char **argv)
 {
     // Where the resources are loaded from
-    std::string resourceDir = "../resources";
+    std::string resourceDir = "../../resources";
     
     if (argc >= 2)
     {
