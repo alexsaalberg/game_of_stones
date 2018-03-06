@@ -169,6 +169,7 @@ void Application::initGeom(const std::string& resourceDirectory) {
         blimpModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
         blimpModel->scale *= 4.0f;
     }
+    
     rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
                           (resourceDirectory + "/cloud/cloud_02.obj").c_str());
     if (!rc)
@@ -180,10 +181,22 @@ void Application::initGeom(const std::string& resourceDirectory) {
         cloudModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
         cloudModel->scale *= 2.0f;
     }
+    
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/pirate/pirate_01.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        pirateModel = make_shared<Model>();
+        pirateModel->createModel(TOshapes, objMaterials);
+        //pirateModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
+        //pirateModel->scale *= 2.0f;
+    }
 }
 
 void Application::initBox2DWorld() {
-	b2Vec2 gravity(0.0f, 0.0f);
+	b2Vec2 gravity(0.0f, -10.0f);
 	world = make_shared<b2World>(gravity);
     
     debugDraw = make_shared<B2Draw_OpenGL>();
@@ -193,6 +206,8 @@ void Application::initBox2DWorld() {
 
 void Application::initEntities() {
 	initPlayer(helicopterModel);
+    initLadderMan(pirateModel);
+    initRope();
 	initCamera();
 	initGUI();
     initBirds();
@@ -217,6 +232,14 @@ b2Body* Application::createBodyFromModel(shared_ptr<Model> model, float mass, ve
     
     float width = (gMax.x - gMin.x) * model->scale;
     float height = (gMax.y - gMin.y) * model->scale;
+    
+    if(strcmp(name, "helicopter") == 0) {
+        ropeAnchorPlayer = b2Vec2(0.0f, height / -2.0f);
+    }
+    if(strcmp(name, "pirate") == 0) {
+        ropeAnchorPirate = b2Vec2(0.0f, height / 2.0f);
+    }
+    
     
     //rotations can cause gMax.x < gMin.x, thus negative width
     width = abs(width);
@@ -258,14 +281,63 @@ void Application::initPlayer(shared_ptr<Model> model) {
     player->body = createBodyFromModel(model, 1000.0f, vec2(0.0f, 0.0f), "helicopter");
 	player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
     player->body->SetFixedRotation(true);
+    player->body->SetGravityScale(0.0f);
     
     currentState->gameObjects.push_back(player);
 }
 
 void Application::initLadderMan(shared_ptr<Model> model) {
-    b2RopeJointDef jointDef;
-    jointDef.bodyA = player->body;
-    b2RopeJoint *joint = (b2RopeJoint*) world->CreateJoint( &jointDef);
+    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
+    inputComponents.push_back(input);
+    
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model);
+    
+    shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent> ();
+    physicsComponents.push_back(physics);
+    
+    ladderMan = make_shared<GameObject>(input, physics, graphics);
+    
+    ladderMan->body = createBodyFromModel(model, 100.0f, vec2(0.0f, 0.0f), "pirate");
+    
+    b2MassData data;
+    ladderMan->body->GetMassData(&data); //get the mass data from you body
+    data.center.Set(0.0f, ropeAnchorPirate.y / -3.0f);
+    
+    ladderMan->body->SetMassData( &data);
+    
+    currentState->gameObjects.push_back(ladderMan);
+    
+}
+
+void Application::initRope() {
+    b2DistanceJointDef distanceJointDef;
+    distanceJointDef.bodyA = player->body;
+    distanceJointDef.bodyB = ladderMan->body;
+    distanceJointDef.collideConnected = true;
+    
+    distanceJointDef.localAnchorA = ropeAnchorPlayer;
+    distanceJointDef.localAnchorB = ropeAnchorPirate;
+    
+    b2DistanceJoint *distanceJoint = (b2DistanceJoint*) world->CreateJoint( &distanceJointDef);
+    distanceJoint->SetLength(4.0f);
+    distanceJoint->SetFrequency(0.1f);
+    distanceJoint->SetDampingRatio(0.0f);
+    
+    //joint->SetMaxLength(5.0f);
+    
+    b2RopeJointDef ropeJointDef;
+    ropeJointDef.bodyA = player->body;
+    ropeJointDef.bodyB = ladderMan->body;
+    ropeJointDef.collideConnected = true;
+    
+    ropeJointDef.localAnchorA = ropeAnchorPlayer;
+    ropeJointDef.localAnchorB = ropeAnchorPirate;
+    
+    b2RopeJoint *ropeJoint = (b2RopeJoint *) world->CreateJoint( &ropeJointDef);
+    ropeJoint->SetMaxLength(5.0f);
+    
 }
 
 void Application::initCamera() {
@@ -288,8 +360,9 @@ void Application::createBlimp(shared_ptr<Model> model, vec2 position) {
     temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
     float randomVelocityX = randomFloat() * -1.0f;
     
-    temporaryGameObjectPointer->body = createBodyFromModel(model, 50.0f, position, "blimp");
+    temporaryGameObjectPointer->body = createBodyFromModel(model, 100.0f, position, "blimp");
     temporaryGameObjectPointer->body->SetLinearVelocity(b2Vec2(randomVelocityX, 0.0f));
+    temporaryGameObjectPointer->body->SetGravityScale(0.0f);
     
     currentState->gameObjects.push_back(temporaryGameObjectPointer);
 }
@@ -347,27 +420,9 @@ void Application::createBird(shared_ptr<Model> model, vec2 position) {
 	temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
 	float randomVelocityX = randomFloat() * -1.0f;
 	temporaryGameObjectPointer->velocity += randomVelocityX;
-    /*
-	b2BodyDef birdBodyDefinition;
-	birdBodyDefinition.position.Set(position.x, position.y); //set position from param
-	birdBodyDefinition.type = b2_dynamicBody;
-    birdBodyDefinition.userData = (void *) "bird";
-	temporaryGameObjectPointer->body = world->CreateBody(&birdBodyDefinition);
-
-	b2PolygonShape birdBox;
-	//The extents are the half-widths of the box.
-
-	float width = 1.0f;
-	float height = 1.0f;
-	float mass = 0.05f; //kilogram
-	float area = width * height;
-	float density = mass / area;
-
-	birdBox.SetAsBox(width / 2.0f, height / 2.0f);
-	//Create fixture directly from shape
-	temporaryGameObjectPointer->body->CreateFixture(&birdBox, density); //0.0f = density
-     */
+    
     temporaryGameObjectPointer->body = createBodyFromModel(model, 0.05f, position, "bird");
+    temporaryGameObjectPointer->body->SetGravityScale(0.0f);
 
 	currentState->gameObjects.push_back(temporaryGameObjectPointer);
 }
@@ -660,7 +715,11 @@ void Application::integrate(float t, float dt) {
 	//previousState = make_shared<State>( *currentState );    
 	int32 velocityIterations = 6;
 	int32 positionIterations = 2;
+    
+    player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
 
+    currentState->integrate(t, dt);
+    
     world->Step(dt, velocityIterations, positionIterations);
     
     if(player->health <= 0) {
@@ -675,7 +734,6 @@ void Application::integrate(float t, float dt) {
         }
     }
 
-	currentState->integrate(t, dt);
 }
 
 void Application::render(float t, float alpha) {
@@ -771,6 +829,8 @@ void Application::renderState(State& state) {
                 debugDraw->maxX = xBounds[1];
         
                 ((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_shapeBit );
+                world->DrawDebugData();
+                ((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_jointBit );
                 world->DrawDebugData();
         simpleProgram->unbind();
         /*END DRAWING SECTION */

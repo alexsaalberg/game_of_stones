@@ -94,6 +94,10 @@ public:
     std::shared_ptr<Camera> camera;
     
     std::shared_ptr<GameObject> player;
+    std::shared_ptr<GameObject> ladderMan;
+    b2Vec2 ropeAnchorPlayer;
+    b2Vec2 ropeAnchorPirate;
+    
 	std::shared_ptr<GameObject> copterHealthObjs[5];
 	std::shared_ptr<PlayerInputComponent> playerInputComponent;
     std::shared_ptr<GameObject> temporaryGameObjectPointer;
@@ -104,6 +108,7 @@ public:
     std::shared_ptr<Model> helicopterModel;
     std::shared_ptr<Model> blimpModel;
     std::shared_ptr<Model> cloudModel;
+    std::shared_ptr<Model> pirateModel;
     
     std::vector< std::shared_ptr<Model> > models;
     
@@ -139,6 +144,7 @@ public:
     
     b2Body* createBodyFromModel(std::shared_ptr<Model> model, float mass, glm::vec2 position, char const* name);
     void initPlayer(std::shared_ptr<Model> model);
+    void initRope();
     void initLadderMan(std::shared_ptr<Model> model);
     void initCamera();
     

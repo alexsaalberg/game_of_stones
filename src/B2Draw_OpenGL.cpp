@@ -19,8 +19,6 @@ void B2Draw_OpenGL::DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const
 }
 
 void B2Draw_OpenGL::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) {
-    
-    
     //set up vertex array
     GLfloat glverts[8]; //allow for polygons up to 4 vertices
     int floatCount = vertexCount * 2;
@@ -95,11 +93,37 @@ void B2Draw_OpenGL::DrawSolidCircle(const b2Vec2& center, float32 radius, const 
 }
 
 void B2Draw_OpenGL::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) {
-    glColor4f(color.r, color.g, color.b, 1);
-    glBegin(GL_LINES);
-    glVertex2f(p1.x, p1.y);
-    glVertex2f(p2.x, p2.y);
-    glEnd();
+    //set up vertex array
+    int floatCount = 4;
+    GLfloat glverts[4]; //allow for polygons up to 4 vertices
+    
+    glverts[0] = p1.x;
+    glverts[1] = p1.y;
+    glverts[2] = p2.x;
+    glverts[3] = p2.y;
+    
+    /* POSITIONS */
+    GLuint DrawBufferObject;
+    CHECKED_GL_CALL( glGenBuffers(1, &DrawBufferObject) );
+    glBindBuffer(GL_ARRAY_BUFFER, DrawBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT)*floatCount, glverts, GL_STATIC_DRAW);
+    
+    /* INDICES */
+    unsigned short idx[] = {0, 1};
+    GLuint IndexBufferObject;
+    CHECKED_GL_CALL( glGenBuffers(1, &IndexBufferObject) );
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferObject);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+    
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    
+    // draw!
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferObject);
+    //glDrawElements(GL_TRIANGLES, gGiboLen, GL_UNSIGNED_SHORT, 0);
+    glDrawArrays(GL_LINE_LOOP, 0, 2);
+    
+    CHECKED_GL_CALL( glDisableVertexAttribArray(0) );
 }
 
 void B2Draw_OpenGL::DrawPoint(const b2Vec2& p, float32 size, const b2Color& color) {
