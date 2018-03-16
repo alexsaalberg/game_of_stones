@@ -36,7 +36,7 @@ class GraphicsComponent
 public:
     int material = 2;
     virtual ~GraphicsComponent() {}
-    virtual void update(GameObject& gameObject, std::shared_ptr<Program> prog) = 0;
+    virtual void update(GameObject& gameObject, float t, std::shared_ptr<Program> prog) = 0;
 };
 
 #endif /* Component_hpp */

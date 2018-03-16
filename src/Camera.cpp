@@ -76,7 +76,7 @@ void Camera::changeRot() {
         if(cameraRot > 0) {
             cameraRot -= 0.0015f;
         }
-        if(cameraDistance < 20.0f) {
+        if(cameraDistance < 25.0f) {
             cameraDistance += 0.03f;
         }
     }

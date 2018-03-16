@@ -56,7 +56,7 @@ public:
     void interpolate(float t, float alpha);
     
     void simulate(float dt);
-    void render(std::shared_ptr<Program> prog);
+    void render(float t, std::shared_ptr<Program> prog);
     
     std::shared_ptr<InputComponent> input;
     std::shared_ptr<PhysicsComponent> physics;

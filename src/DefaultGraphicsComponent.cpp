@@ -10,11 +10,11 @@
 using namespace std;
 using namespace glm;
 
-void DefaultGraphicsComponent::update(GameObject& gameObject, std::shared_ptr<Program> prog) {
-    draw(gameObject, prog);
+void DefaultGraphicsComponent::update(GameObject& gameObject, float t, std::shared_ptr<Program> prog) {
+    draw(gameObject, t, prog);
 }
 
-void DefaultGraphicsComponent::draw(GameObject& gameObject, const std::shared_ptr<Program> prog) {
+void DefaultGraphicsComponent::draw(GameObject& gameObject, float t, const std::shared_ptr<Program> prog) {
     auto M = make_shared<MatrixStack>();
     
     M->pushMatrix();

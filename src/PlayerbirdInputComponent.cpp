@@ -5,21 +5,24 @@
 //  Created by Alex Saalberg on 1/28/18.
 //
 
-#include "PlayerInputComponent.hpp"
+#include "PlayerbirdInputComponent.hpp"
 
 using namespace glm;
 
-void PlayerInputComponent::update(GameObject& gameObject, float dt) {
-    //if(!movingUpward && !movingDownward && !movingLeftward && !movingRightward)
-        //return;
+void PlayerbirdInputComponent::update(GameObject& gameObject, float dt) {
+    if(timeToLive <= 0.0f) {
+        timeToLive = 0.0f;
+        return;
+    }
+    timeToLive -= dt;
     
-    b2Vec2 worldVelocity = b2Vec2(20.0f, 2.0f);
+    b2Vec2 worldVelocity = b2Vec2(0.0f, 0.0f);
     //Max velocity is relative to world ^^^
     
     b2Vec2 currentVelocity = gameObject.body->GetLinearVelocity();
-    b2Vec2 inputVelocity = b2Vec2(10.0f, 18.0f);
-    b2Vec2 desiredVelocity = worldVelocity;
-    float timeToFullSpeed = 0.05f;
+    b2Vec2 inputVelocity = b2Vec2(10.0f, 10.0f);
+    b2Vec2 desiredVelocity = currentVelocity;
+    float timeToFullSpeed = 0.01f;
     
     //       (time of this step)*         (speed for 1s acceleration)
     //b2Vec2 inputVelocity =  dt * (1.0f / timeToFullSpeed) * maxVelocity;
@@ -39,5 +42,10 @@ void PlayerInputComponent::update(GameObject& gameObject, float dt) {
     b2Vec2 deltaAcceleration = (dt / timeToFullSpeed) * (desiredVelocity - currentVelocity);
     b2Vec2 appliedForce = gameObject.body->GetMass() * deltaAcceleration;
     
+    
     gameObject.body->ApplyForceToCenter(appliedForce, true);
+    float angle = atan(desiredVelocity.y / desiredVelocity.x);
+    printf("Angle %f\n", angle);
+    gameObject.body->SetTransform(gameObject.body->GetPosition(), angle);
 }
+

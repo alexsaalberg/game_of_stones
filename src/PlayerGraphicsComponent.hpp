@@ -31,8 +31,8 @@ public:
     int windshield_material = 7;
     
     //Functions
-    virtual void update(GameObject& gameObject, std::shared_ptr<Program> prog);
-    void draw(GameObject& gameObject, std::shared_ptr<Program> prog);
+    virtual void update(GameObject& gameObject, float t, std::shared_ptr<Program> prog);
+    void draw(GameObject& gameObject, float t, std::shared_ptr<Program> prog);
 };
 
 #endif /* PlayerGraphicsComponent_hpp */

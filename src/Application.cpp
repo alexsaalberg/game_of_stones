@@ -145,9 +145,20 @@ void Application::initGeom(const std::string& resourceDirectory) {
         birdModel->createModel(TOshapes, objMaterials);
         birdModel->rotate( vec3(90.0f, 180.0f, 0.0f) );
     }
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/Bird_01.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        playerbirdModel = make_shared<Model>();
+        playerbirdModel->createModel(TOshapes, objMaterials);
+        playerbirdModel->rotate( vec3(-90.0f, 0.0f, 0.0f) );
+        playerbirdModel->scale *= 1.5f;
+    }
     
     rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-                          (resourceDirectory + "/Helicopter2.obj").c_str());
+                          (resourceDirectory + "/final_heli.obj").c_str());
     if (!rc)
     {
         cerr << errStr << endl;
@@ -155,7 +166,18 @@ void Application::initGeom(const std::string& resourceDirectory) {
         helicopterModel = make_shared<Model>();
         helicopterModel->createModel(TOshapes, objMaterials);
         helicopterModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
-        helicopterModel->scale *= 2.0f;
+        helicopterModel->scale *= 1.0f;
+    }
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/final_prop.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        propellerModel = make_shared<Model>();
+        propellerModel->createModel(TOshapes, objMaterials);
+        propellerModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
+        propellerModel->scale *= 1.5f;
     }
     
     rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
@@ -203,7 +225,7 @@ void Application::initGeom(const std::string& resourceDirectory) {
         birdcageModel = make_shared<Model>();
         birdcageModel->createModel(TOshapes, objMaterials);
         birdcageModel->rotate( vec3(0.0f, 90.0f, 0.0f) );
-        birdcageModel->scale *= 0.8f;
+        birdcageModel->scale *= 0.5f;
     }
 }
 
@@ -217,8 +239,9 @@ void Application::initBox2DWorld() {
 }
 
 void Application::initEntities() {
-	initPlayer(helicopterModel);
-    initLadderMan(birdcageModel);
+	initPlayer(helicopterModel, propellerModel);
+    initCage(birdcageModel);
+    initPlayerbird(playerbirdModel);
     initRope();
 	initCamera();
 	initGUI();
@@ -248,8 +271,8 @@ b2Body* Application::createBodyFromModel(shared_ptr<Model> model, float mass, ve
     if(strcmp(name, "helicopter") == 0) {
         ropeAnchorPlayer = b2Vec2(0.0f, height / -2.0f); //record where to place rope anchor on helicopter
     }
-    if(strcmp(name, "pirate") == 0) {
-        ropeAnchorPirate = b2Vec2(0.0f, height / 2.0f); //record where to place rope anchor on pirate
+    if(strcmp(name, "cage") == 0) {
+        ropeAnchorCage = b2Vec2(0.0f, height / 2.0f); //record where to place rope anchor on cage
     }
     
     
@@ -276,13 +299,14 @@ b2Body* Application::createBodyFromModel(shared_ptr<Model> model, float mass, ve
     return returnBody;
 }
 
-void Application::initPlayer(shared_ptr<Model> model) {
+void Application::initPlayer(shared_ptr<Model> model, shared_ptr<Model> propModel) {
     shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
     inputComponents.push_back(input);
     
     shared_ptr<PlayerGraphicsComponent> graphics = make_shared<PlayerGraphicsComponent> ();
     graphicsComponents.push_back(graphics);
     graphics->models.push_back(model);
+    graphics->models.push_back(propModel);
         
     shared_ptr<PlayerPhysicsComponent> physics = make_shared<PlayerPhysicsComponent> ();
     physicsComponents.push_back(physics);
@@ -290,7 +314,7 @@ void Application::initPlayer(shared_ptr<Model> model) {
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
     
-    player->body = createBodyFromModel(model, 1000.0f, vec2(0.0f, 0.0f), "helicopter");
+    player->body = createBodyFromModel(model, 2000.0f, vec2(0.0f, 0.0f), "helicopter");
 	player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
     player->body->SetFixedRotation(true);
     player->body->SetGravityScale(0.0f);
@@ -298,10 +322,9 @@ void Application::initPlayer(shared_ptr<Model> model) {
     currentState->gameObjects.push_back(player);
 }
 
-void Application::initLadderMan(shared_ptr<Model> model) {
-    shared_ptr<LaddermanInputComponent> input = make_shared<LaddermanInputComponent>();
+void Application::initCage(shared_ptr<Model> model) {
+    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
     inputComponents.push_back(input);
-    laddermanInputComponent = input;
     
     shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
     graphicsComponents.push_back(graphics);
@@ -310,28 +333,47 @@ void Application::initLadderMan(shared_ptr<Model> model) {
     shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent> ();
     physicsComponents.push_back(physics);
     
-    ladderMan = make_shared<GameObject>(input, physics, graphics);
+    cage = make_shared<GameObject>(input, physics, graphics);
     
-    ladderMan->body = createBodyFromModel(model, 100.0f, vec2(0.0f, 0.0f), "pirate");
+    cage->body = createBodyFromModel(model, 100.0f, vec2(0.0f, 0.0f), "cage");
     
     b2MassData data;
-    ladderMan->body->GetMassData(&data); //get the mass data from you body
-    data.center.Set(0.0f, ropeAnchorPirate.y / -3.0f);
+    cage->body->GetMassData(&data); //get the mass data from you body
+    data.center.Set(0.0f, ropeAnchorCage.y / -3.0f);
     
-    ladderMan->body->SetMassData( &data);
+    cage->body->SetMassData(&data);
     
-    currentState->gameObjects.push_back(ladderMan);
+    currentState->gameObjects.push_back(cage);
+}
+
+void Application::initPlayerbird(shared_ptr<Model> model) {
+    shared_ptr<PlayerbirdInputComponent> input = make_shared<PlayerbirdInputComponent>();
+    inputComponents.push_back(input);
+    playerbirdInputComponent = input;
     
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model);
+    
+    shared_ptr<PlayerbirdPhysicsComponent> physics = make_shared<PlayerbirdPhysicsComponent> ();
+    physicsComponents.push_back(physics);
+    
+    playerbird = make_shared<GameObject>(input, physics, graphics);
+    
+    playerbird->body = createBodyFromModel(model, 2000.0f, vec2(0.0f, 0.0f), "playerbird");
+    playerbird->body->SetGravityScale(0.0f);
+    
+    currentState->gameObjects.push_back(playerbird);
 }
 
 void Application::initRope() {
     b2DistanceJointDef distanceJointDef;
     distanceJointDef.bodyA = player->body;
-    distanceJointDef.bodyB = ladderMan->body;
+    distanceJointDef.bodyB = cage->body;
     distanceJointDef.collideConnected = true;
     
     distanceJointDef.localAnchorA = ropeAnchorPlayer;
-    distanceJointDef.localAnchorB = ropeAnchorPirate;
+    distanceJointDef.localAnchorB = ropeAnchorCage;
     
     distanceJoint = (b2DistanceJoint*) world->CreateJoint( &distanceJointDef);
     distanceJoint->SetLength(4.0f);
@@ -342,11 +384,11 @@ void Application::initRope() {
     
     b2RopeJointDef ropeJointDef;
     ropeJointDef.bodyA = player->body;
-    ropeJointDef.bodyB = ladderMan->body;
-    ropeJointDef.collideConnected = true;
+    ropeJointDef.bodyB = cage->body;
+    ropeJointDef.collideConnected = false;
     
     ropeJointDef.localAnchorA = ropeAnchorPlayer;
-    ropeJointDef.localAnchorB = ropeAnchorPirate;
+    ropeJointDef.localAnchorB = ropeAnchorCage;
     
     ropeJoint = (b2RopeJoint *) world->CreateJoint( &ropeJointDef);
     ropeJoint->SetMaxLength(5.0f);
@@ -754,10 +796,10 @@ void Application::render(float t, float alpha) {
 	moveGUIElements();
 
 	camera->player = currentState->gameObjects.at(0);
-    renderState(*currentState.get());
+    renderState(*currentState.get(), t);
 }
 
-void Application::renderState(State& state) {
+void Application::renderState(State& state, float t) {
     int windowWidth, windowHeight;
     glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
@@ -785,7 +827,7 @@ void Application::renderState(State& state) {
         for(auto& gameObject : state.gameObjects) {
 			if (gameObject->enabled) {
 				SetMaterial(mainProgram, gameObject->graphics->material);
-				gameObject->render(mainProgram);
+				gameObject->render(t, mainProgram);
 			}
         }
         M = make_shared<MatrixStack>();
@@ -841,8 +883,8 @@ void Application::renderState(State& state) {
                 debugDraw->minX = xBounds[0];
                 debugDraw->maxX = xBounds[1];
         
-                ((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_shapeBit );
-                world->DrawDebugData();
+                //((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_shapeBit );
+                //world->DrawDebugData();
                 ((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_jointBit );
                 world->DrawDebugData();
         simpleProgram->unbind();
@@ -1001,20 +1043,53 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     
     else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS))
     {
-        laddermanInputComponent->movingLeftward = true;
+        if(playerbirdInputComponent->timeToLive <= 0.0f)
+            createPlayerBird(b2Vec2(-1.0f, 0.0f));
+        
+        playerbirdInputComponent->movingLeftward = true;
     }
     else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS))
     {
-        laddermanInputComponent->movingRightward = true;
+        if(playerbirdInputComponent->timeToLive <= 0.0f)
+            createPlayerBird(b2Vec2(1.0f, 0.0f));
+        
+        playerbirdInputComponent->movingRightward = true;
     }
     else if (key == GLFW_KEY_LEFT && (action == GLFW_RELEASE))
     {
-        laddermanInputComponent->movingLeftward = false;
+        playerbirdInputComponent->movingLeftward = false;
     }
     else if (key == GLFW_KEY_RIGHT && (action == GLFW_RELEASE))
     {
-        laddermanInputComponent->movingRightward = false;
+        playerbirdInputComponent->movingRightward = false;
     }
+    else if (key == GLFW_KEY_UP && (action == GLFW_PRESS))
+    {
+        if(playerbirdInputComponent->timeToLive <= 0.0f)
+            createPlayerBird(b2Vec2(0.0f, 1.0f));
+        
+        playerbirdInputComponent->movingUpward = true;
+    }
+    else if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS))
+    {
+        if(playerbirdInputComponent->timeToLive <= 0.0f)
+            createPlayerBird(b2Vec2(0.0f, -1.0f));
+        
+        playerbirdInputComponent->movingDownward = true;
+    }
+    else if (key == GLFW_KEY_UP && (action == GLFW_RELEASE))
+    {
+        playerbirdInputComponent->movingUpward = false;
+    }
+    else if (key == GLFW_KEY_DOWN && (action == GLFW_RELEASE))
+    {
+        playerbirdInputComponent->movingDownward = false;
+    }
+    else if (key == GLFW_KEY_M && (action == GLFW_PRESS))
+    {
+        createPlayerBird(b2Vec2(1.0f, 0.0f));
+    }
+    
     
     else if (key == GLFW_KEY_SPACE && (action == GLFW_RELEASE))
     {
@@ -1022,7 +1097,22 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
 }
 
-void Application::accelerateLadderman(float acceleration) {
+void Application::createPlayerBird(b2Vec2 direction) {
+    if(player->score < 1)
+        return;
+    
+    player->score -= 1;
+    
+    playerbirdInputComponent->timeToLive = 5.0f; //5 seconds
+    playerBirdIsFlying = true;
+    float angle = tan(direction.y / direction.x);
+    playerbird->body->SetTransform(cage->body->GetPosition() + direction, angle);
+
+    b2Vec2 initialVelocity = cage->body->GetLinearVelocity();
+    initialVelocity += 2.0f * direction;
+    //initialVelocity *= playerbird->body->GetMass();
+    
+    playerbird->body->SetLinearVelocity(initialVelocity);
 }
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully

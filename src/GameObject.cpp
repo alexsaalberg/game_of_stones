@@ -66,6 +66,6 @@ void GameObject::simulate(float dt)
     physics->update(*this, dt);
 }
 
-void GameObject::render(std::shared_ptr<Program> prog) {
-    graphics->update(*this, prog);
+void GameObject::render(float t, std::shared_ptr<Program> prog) {
+    graphics->update(*this, t, prog);
 }

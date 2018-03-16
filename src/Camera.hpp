@@ -31,7 +31,6 @@ public:
     float cameraRot = 0.6f;
     bool gameStarted = false;
     
-    
     std::shared_ptr<GameObject> player; //GameObject to center camera around (almost always player)
     
     //Functions

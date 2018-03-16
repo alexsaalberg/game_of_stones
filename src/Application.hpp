@@ -32,10 +32,11 @@
 #include "DefaultGraphicsComponent.hpp"
 
 #include "PlayerInputComponent.hpp"
-#include "PlayerPhysicsComponent.hpp"
 #include "PlayerGraphicsComponent.hpp"
+#include "PlayerPhysicsComponent.hpp"
 
-#include "LaddermanInputComponent.hpp"
+#include "PlayerbirdPhysicsComponent.hpp"
+#include "PlayerbirdInputComponent.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -95,16 +96,18 @@ public:
     
     std::shared_ptr<Camera> camera;
     
+    bool playerBirdIsFlying = false;
     std::shared_ptr<GameObject> player;
-    std::shared_ptr<GameObject> ladderMan;
+    std::shared_ptr<GameObject> cage;
+    std::shared_ptr<GameObject> playerbird;
     b2Vec2 ropeAnchorPlayer;
-    b2Vec2 ropeAnchorPirate;
-    b2DistanceJoint *distanceJoint; //A = helicopter, B = pirate
-    b2RopeJoint *ropeJoint; //A = helicopter, B = pirate
+    b2Vec2 ropeAnchorCage;
+    b2DistanceJoint *distanceJoint; //A = helicopter, B = cage
+    b2RopeJoint *ropeJoint; //A = helicopter, B = cage
     
 	std::shared_ptr<GameObject> copterHealthObjs[5];
 	std::shared_ptr<PlayerInputComponent> playerInputComponent;
-    std::shared_ptr<LaddermanInputComponent> laddermanInputComponent;
+    std::shared_ptr<PlayerbirdInputComponent> playerbirdInputComponent;
     std::shared_ptr<GameObject> temporaryGameObjectPointer;
     float ropeLength = 1.0f;
     
@@ -112,10 +115,12 @@ public:
     std::shared_ptr<Model> sphereModel;
     std::shared_ptr<Model> birdModel;
     std::shared_ptr<Model> helicopterModel;
+    std::shared_ptr<Model> propellerModel;
     std::shared_ptr<Model> blimpModel;
     std::shared_ptr<Model> cloudModel;
     std::shared_ptr<Model> pirateModel;
     std::shared_ptr<Model> birdcageModel;
+    std::shared_ptr<Model> playerbirdModel;
     
     std::vector< std::shared_ptr<Model> > models;
     
@@ -126,6 +131,7 @@ public:
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
     std::shared_ptr<Texture> waterTexture;
+    
     
     //ground plane info
     GLuint GroundBufferObject, GroundNormalBufferObject, GroundTextureBufferObject, GroundIndexBufferObject;
@@ -150,9 +156,10 @@ public:
     void initGeom(const std::string& resourceDirectory);
     
     b2Body* createBodyFromModel(std::shared_ptr<Model> model, float mass, glm::vec2 position, char const* name);
-    void initPlayer(std::shared_ptr<Model> model);
+    void initPlayer(std::shared_ptr<Model> model, std::shared_ptr<Model> propModel);
     void initRope();
-    void initLadderMan(std::shared_ptr<Model> model);
+    void initCage(std::shared_ptr<Model> model);
+    void initPlayerbird(std::shared_ptr<Model> model);
     void initCamera();
     
     void createBlimp(std::shared_ptr<Model> model, glm::vec2 position);
@@ -179,7 +186,7 @@ public:
     //Physics
     void integrate(float t, float dt);
     void render(float t,  float alpha);
-    void renderState(State& state);
+    void renderState(State& state, float t);
     
     void simulate(float dt);
     
@@ -197,6 +204,7 @@ public:
     void gameLost();
     
     void accelerateLadderman(float acceleration);
+    void createPlayerBird(b2Vec2 direction);
     
     //Control Callbacks
     void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
