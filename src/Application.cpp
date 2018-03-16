@@ -193,6 +193,18 @@ void Application::initGeom(const std::string& resourceDirectory) {
         //pirateModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
         //pirateModel->scale *= 2.0f;
     }
+    
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/birdcage/bird_cage.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        birdcageModel = make_shared<Model>();
+        birdcageModel->createModel(TOshapes, objMaterials);
+        birdcageModel->rotate( vec3(0.0f, 90.0f, 0.0f) );
+        birdcageModel->scale *= 0.8f;
+    }
 }
 
 void Application::initBox2DWorld() {
@@ -206,7 +218,7 @@ void Application::initBox2DWorld() {
 
 void Application::initEntities() {
 	initPlayer(helicopterModel);
-    initLadderMan(pirateModel);
+    initLadderMan(birdcageModel);
     initRope();
 	initCamera();
 	initGUI();
@@ -287,8 +299,9 @@ void Application::initPlayer(shared_ptr<Model> model) {
 }
 
 void Application::initLadderMan(shared_ptr<Model> model) {
-    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
+    shared_ptr<LaddermanInputComponent> input = make_shared<LaddermanInputComponent>();
     inputComponents.push_back(input);
+    laddermanInputComponent = input;
     
     shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
     graphicsComponents.push_back(graphics);
@@ -320,7 +333,7 @@ void Application::initRope() {
     distanceJointDef.localAnchorA = ropeAnchorPlayer;
     distanceJointDef.localAnchorB = ropeAnchorPirate;
     
-    b2DistanceJoint *distanceJoint = (b2DistanceJoint*) world->CreateJoint( &distanceJointDef);
+    distanceJoint = (b2DistanceJoint*) world->CreateJoint( &distanceJointDef);
     distanceJoint->SetLength(4.0f);
     distanceJoint->SetFrequency(0.1f);
     distanceJoint->SetDampingRatio(0.0f);
@@ -335,7 +348,7 @@ void Application::initRope() {
     ropeJointDef.localAnchorA = ropeAnchorPlayer;
     ropeJointDef.localAnchorB = ropeAnchorPirate;
     
-    b2RopeJoint *ropeJoint = (b2RopeJoint *) world->CreateJoint( &ropeJointDef);
+    ropeJoint = (b2RopeJoint *) world->CreateJoint( &ropeJointDef);
     ropeJoint->SetMaxLength(5.0f);
     
 }
@@ -716,7 +729,7 @@ void Application::integrate(float t, float dt) {
 	int32 velocityIterations = 6;
 	int32 positionIterations = 2;
     
-    player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
+    //player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
 
     currentState->integrate(t, dt);
     
@@ -953,21 +966,21 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
 	{
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
-	else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS))
+	else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
 	{
-		playerInputComponent->movingForward = true;
+		playerInputComponent->movingLeftward = true;
 	}
-	else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS))
+	else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
 	{
-		playerInputComponent->movingBackward = true;
+		playerInputComponent->movingRightward = true;
 	}
-	else if (key == GLFW_KEY_LEFT && (action == GLFW_RELEASE))
+	else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
 	{
-		playerInputComponent->movingForward = false;
+		playerInputComponent->movingLeftward = false;
 	}
-	else if (key == GLFW_KEY_RIGHT && (action == GLFW_RELEASE))
+	else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
 	{
-		playerInputComponent->movingBackward = false;
+		playerInputComponent->movingRightward = false;
 	}
 	else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
 	{
@@ -985,10 +998,31 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
 	{
 		playerInputComponent->movingDownward = false;
 	}
+    
+    else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS))
+    {
+        laddermanInputComponent->movingLeftward = true;
+    }
+    else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS))
+    {
+        laddermanInputComponent->movingRightward = true;
+    }
+    else if (key == GLFW_KEY_LEFT && (action == GLFW_RELEASE))
+    {
+        laddermanInputComponent->movingLeftward = false;
+    }
+    else if (key == GLFW_KEY_RIGHT && (action == GLFW_RELEASE))
+    {
+        laddermanInputComponent->movingRightward = false;
+    }
+    
     else if (key == GLFW_KEY_SPACE && (action == GLFW_RELEASE))
     {
         camera->gameStarted = true;
     }
+}
+
+void Application::accelerateLadderman(float acceleration) {
 }
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully

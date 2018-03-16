@@ -7,6 +7,6 @@
 
 #include "DefaultInputComponent.hpp"
 
-void DefaultInputComponent::update(GameObject& gameObject) {
+void DefaultInputComponent::update(GameObject& gameObject, float dt) {
     
 }

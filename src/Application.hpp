@@ -35,6 +35,8 @@
 #include "PlayerPhysicsComponent.hpp"
 #include "PlayerGraphicsComponent.hpp"
 
+#include "LaddermanInputComponent.hpp"
+
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -97,10 +99,14 @@ public:
     std::shared_ptr<GameObject> ladderMan;
     b2Vec2 ropeAnchorPlayer;
     b2Vec2 ropeAnchorPirate;
+    b2DistanceJoint *distanceJoint; //A = helicopter, B = pirate
+    b2RopeJoint *ropeJoint; //A = helicopter, B = pirate
     
 	std::shared_ptr<GameObject> copterHealthObjs[5];
 	std::shared_ptr<PlayerInputComponent> playerInputComponent;
+    std::shared_ptr<LaddermanInputComponent> laddermanInputComponent;
     std::shared_ptr<GameObject> temporaryGameObjectPointer;
+    float ropeLength = 1.0f;
     
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
@@ -109,6 +115,7 @@ public:
     std::shared_ptr<Model> blimpModel;
     std::shared_ptr<Model> cloudModel;
     std::shared_ptr<Model> pirateModel;
+    std::shared_ptr<Model> birdcageModel;
     
     std::vector< std::shared_ptr<Model> > models;
     
@@ -188,6 +195,8 @@ public:
 	void moveGUIElements();
     
     void gameLost();
+    
+    void accelerateLadderman(float acceleration);
     
     //Control Callbacks
     void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);

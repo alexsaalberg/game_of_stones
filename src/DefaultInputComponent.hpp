@@ -19,7 +19,7 @@ public:
     //Variables
     
     //Functions
-    virtual void update(GameObject& gameObject);
+    virtual void update(GameObject& gameObject, float dt);
 };
 
 #endif /* DefaultInputComponent_hpp */

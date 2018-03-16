@@ -1,22 +1,20 @@
 //
-//  PlayerInputComponent.hpp
+//  LaddermanInputComponent.hpp
 //  Helico-opter
 //
-//  Created by Alex Saalberg on 1/28/18.
+//  Created by Alex Saalberg on 3/15/18.
 //
 
-#ifndef PlayerInputComponent_hpp
-#define PlayerInputComponent_hpp
+#ifndef LaddermanInputComponent_hpp
+#define LaddermanInputComponent_hpp
 
 #include <stdio.h>
-
 #include "Component.hpp"
 #include "glm/glm.hpp"
 
-class PlayerInputComponent : public InputComponent
+class LaddermanInputComponent : public InputComponent
 {
 public:
-    
     //Variables
     bool movingRightward = false;
     bool movingLeftward = false;
@@ -27,4 +25,4 @@ public:
     virtual void update(GameObject& gameObject, float dt);
 };
 
-#endif /* PlayerInputComponent_hpp */
+#endif /* LaddermanInputComponent_hpp */

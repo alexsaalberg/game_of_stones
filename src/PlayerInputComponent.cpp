@@ -9,29 +9,35 @@
 
 using namespace glm;
 
-void PlayerInputComponent::update(GameObject& gameObject) {
-    /*
-    if (movingForward) {
-        gameObject.impulse += gameObject.forwardDirection * -1.0f;
-    } else if (movingBackward) {
-        gameObject.impulse += gameObject.forwardDirection * +1.0f;
-    }
-    if (jumping) {
-        gameObject.impulse.y += 2.0f;
-        jumping = false;
-    }*/
+void PlayerInputComponent::update(GameObject& gameObject, float dt) {
+    //if(!movingUpward && !movingDownward && !movingLeftward && !movingRightward)
+        //return;
     
-    const float moveSpeed = 10.0f;
+    b2Vec2 worldVelocity = b2Vec2(20.0f, 3.0f);
+    //Max velocity is relative to world ^^^
     
-    b2Vec2 desiredVelocity = b2Vec2(0.0f, 0.0f);
+    b2Vec2 currentVelocity = gameObject.body->GetLinearVelocity();
+    b2Vec2 inputVelocity = b2Vec2(10.0f, 18.0f);
+    b2Vec2 desiredVelocity = worldVelocity;
+    float timeToFullSpeed = 0.05f;
+    
+    //       (time of this step)*         (speed for 1s acceleration)
+    //b2Vec2 inputVelocity =  dt * (1.0f / timeToFullSpeed) * maxVelocity;
     
     if (movingUpward) {
-        desiredVelocity.y = 1.0f * moveSpeed;
+        desiredVelocity.y += 1.0f * inputVelocity.y;
     } else if (movingDownward) {
-        desiredVelocity.y = -1.0f * moveSpeed;
+        desiredVelocity.y += -1.0f * inputVelocity.y;
     }
-    b2Vec2 velocityChange = desiredVelocity - gameObject.body->GetLinearVelocity();
-    b2Vec2 desiredImpulse = gameObject.body->GetMass() * velocityChange;
-    desiredImpulse.x = 0.0f;
-    gameObject.body->ApplyLinearImpulseToCenter(desiredImpulse, true);
+    
+    if (movingRightward) {
+        desiredVelocity.x += 1.0f * inputVelocity.x;
+    } else if (movingLeftward) {
+        desiredVelocity.x += -1.0f * inputVelocity.x;
+    }
+    
+    b2Vec2 deltaAcceleration = (dt / timeToFullSpeed) * (desiredVelocity - currentVelocity);
+    b2Vec2 appliedForce = gameObject.body->GetMass() * deltaAcceleration;
+    
+    gameObject.body->ApplyForceToCenter(appliedForce, true);
 }

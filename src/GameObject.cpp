@@ -62,7 +62,7 @@ void GameObject::simulate(float dt)
         rotation = glm::vec3(0.0f, 0.0f, body->GetAngle());
 	}
     
-    input->update(*this);
+    input->update(*this, dt);
     physics->update(*this, dt);
 }
 
