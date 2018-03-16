@@ -187,10 +187,6 @@ public:
 	void initGUI();
 	void moveGUIElements();
     
-    void setCollisionCooldown(std::shared_ptr<GameObject> gameObject);
-    
-	void changeCopterHealth(int i);
-	void changeManHealth(int i);
     void gameLost();
     
     //Control Callbacks

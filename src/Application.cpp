@@ -941,46 +941,6 @@ void Application::moveGUIElements() {
 	}
 }
 
-void Application::setCollisionCooldown(shared_ptr<GameObject> gameObject) {
-    gameObject->collisionCooldown = 3.0f; //3 seconds
-}
-
-void Application::changeCopterHealth(int i) {
-	copterHealth += i;
-
-	switch (copterHealth) {
-	case 2:
-		player->graphics->material = 0;
-		break;
-	case 1:
-		copterHealthObjs[1]->enabled = false;
-		player->graphics->material = 6;
-		break;
-	case 0:
-		copterHealthObjs[0]->enabled = false;
-		player->graphics->material = 5;
-		gameLost();
-		break;
-	}
-}
-
-void Application::changeManHealth(int i) {
-	manHealth += i;
-
-	switch (manHealth) {
-	case 2:
-		player->graphics->material = 0;
-		break;
-	case 1:
-		player->graphics->material = 6;
-		break;
-	case 0:
-		player->graphics->material = 5;
-		gameLost();
-		break;
-	}
-}
-
 void Application::gameLost() {
     for(int i = 0; i < 10; i ++)
         printf("GAME OVER!\n");
