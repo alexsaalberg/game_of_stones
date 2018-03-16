@@ -234,10 +234,10 @@ b2Body* Application::createBodyFromModel(shared_ptr<Model> model, float mass, ve
     float height = (gMax.y - gMin.y) * model->scale;
     
     if(strcmp(name, "helicopter") == 0) {
-        ropeAnchorPlayer = b2Vec2(0.0f, height / -2.0f);
+        ropeAnchorPlayer = b2Vec2(0.0f, height / -2.0f); //record where to place rope anchor on helicopter
     }
     if(strcmp(name, "pirate") == 0) {
-        ropeAnchorPirate = b2Vec2(0.0f, height / 2.0f);
+        ropeAnchorPirate = b2Vec2(0.0f, height / 2.0f); //record where to place rope anchor on pirate
     }
     
     
@@ -953,19 +953,19 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
 	{
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
-	else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
+	else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS))
 	{
 		playerInputComponent->movingForward = true;
 	}
-	else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
+	else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS))
 	{
 		playerInputComponent->movingBackward = true;
 	}
-	else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
+	else if (key == GLFW_KEY_LEFT && (action == GLFW_RELEASE))
 	{
 		playerInputComponent->movingForward = false;
 	}
-	else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
+	else if (key == GLFW_KEY_RIGHT && (action == GLFW_RELEASE))
 	{
 		playerInputComponent->movingBackward = false;
 	}
