@@ -18,13 +18,6 @@ void PlayerPhysicsComponent::update(GameObject& gameObject, float dt) {
             void *userData = other->GetUserData();
             if(userData) {
                 char *cString = (char *) userData;
-                if(strcmp(cString, "bird") == 0) {
-                    //printf("bird collision\n");
-                    if(gameObject.health > 0) {
-                        gameObject.score += 1;
-                    }
-                    other->SetUserData((void *) "hit");
-                }
                 if(strcmp(cString, "blimp") == 0) {
                     //printf("blimp\n");
                     gameObject.collisionCooldown = 3.0f;

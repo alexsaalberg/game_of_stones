@@ -143,3 +143,16 @@ vec2 Camera::getXBounds(float aspect) {
     
     return vec2(leftXBound, rightXBound);
 }
+
+bool Camera::isGameObjectOnScreen(std::shared_ptr<GameObject> object) {
+    vec2 xBounds = vec2(player->position.x - 20.0f, player->position.x + 50.0f);
+    vec2 yBounds = vec2(-10.0f, 30.0f);
+    
+    vec3 pos = object->position;
+    if(pos.x < xBounds.x || pos.x > xBounds.y)
+        return false;
+    if(pos.y < yBounds.x || pos.y > yBounds.y)
+        return false;
+    return true;
+    
+    }

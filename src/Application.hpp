@@ -35,6 +35,8 @@
 #include "PlayerGraphicsComponent.hpp"
 #include "PlayerPhysicsComponent.hpp"
 
+#include "CagePhysicsComponent.hpp"
+
 #include "PlayerbirdPhysicsComponent.hpp"
 #include "PlayerbirdInputComponent.hpp"
 

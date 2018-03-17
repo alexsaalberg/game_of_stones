@@ -45,7 +45,6 @@ void PlayerbirdInputComponent::update(GameObject& gameObject, float dt) {
     
     gameObject.body->ApplyForceToCenter(appliedForce, true);
     float angle = atan(desiredVelocity.y / desiredVelocity.x);
-    printf("Angle %f\n", angle);
     gameObject.body->SetTransform(gameObject.body->GetPosition(), angle);
 }
 

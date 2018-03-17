@@ -330,7 +330,7 @@ void Application::initCage(shared_ptr<Model> model) {
     graphicsComponents.push_back(graphics);
     graphics->models.push_back(model);
     
-    shared_ptr<DefaultPhysicsComponent> physics = make_shared<DefaultPhysicsComponent> ();
+    shared_ptr<CagePhysicsComponent> physics = make_shared<CagePhysicsComponent> ();
     physicsComponents.push_back(physics);
     
     cage = make_shared<GameObject>(input, physics, graphics);
@@ -343,6 +343,7 @@ void Application::initCage(shared_ptr<Model> model) {
     
     cage->body->SetMassData(&data);
     
+    cage->score = 1;
     currentState->gameObjects.push_back(cage);
 }
 
@@ -778,7 +779,8 @@ void Application::integrate(float t, float dt) {
     world->Step(dt, velocityIterations, positionIterations);
     
     if(player->health <= 0) {
-        gameLost();
+        if(!gameOver)
+            gameLost();
     }
     
     if(gameOver) {
@@ -835,13 +837,26 @@ void Application::renderState(State& state, float t) {
         M->loadIdentity();
             vec3 first_bird_position = vec3((player->position.x) - 8.0f, -6.0f, 1.0f);
             M->translate(first_bird_position);
-            for(int i = 0 ; i < player->score; i++) {
+            for(int i = 0 ; i < cage->score; i++) {
                 M->pushMatrix();
                     M->translate( glm::vec3(0.5f * i, 0.0f, 0.0f) );
                     //CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
                     birdModel->draw(mainProgram, M);
                 M->popMatrix();
             }
+        M->popMatrix();
+        M->pushMatrix();
+        M->loadIdentity();
+        vec3 first_blimp_position = vec3((player->position.x) - 8.0f, -4.0f, 1.0f);
+        M->translate(first_blimp_position);
+        for(int i = 0 ; i < playerbird->score; i++) {
+            M->pushMatrix();
+            M->translate( glm::vec3(2.2f * i, 0.0f, 0.0f) );
+            M->scale(0.3f);
+            //CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+            blimpModel->draw(mainProgram, M);
+            M->popMatrix();
+        }
         M->popMatrix();
     mainProgram->unbind();
     
@@ -997,9 +1012,10 @@ void Application::moveGUIElements() {
 }
 
 void Application::gameLost() {
-    for(int i = 0; i < 10; i ++)
+    for(int i = 0; i < 3; i ++)
         printf("GAME OVER!\n");
     gameOver = true;
+    printf("Score %d", playerbird->score);
 }
 
 void Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -1043,14 +1059,14 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     
     else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS))
     {
-        if(playerbirdInputComponent->timeToLive <= 0.0f)
+        if(!camera->isGameObjectOnScreen(playerbird))
             createPlayerBird(b2Vec2(-1.0f, 0.0f));
         
         playerbirdInputComponent->movingLeftward = true;
     }
     else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS))
     {
-        if(playerbirdInputComponent->timeToLive <= 0.0f)
+        if(!camera->isGameObjectOnScreen(playerbird))
             createPlayerBird(b2Vec2(1.0f, 0.0f));
         
         playerbirdInputComponent->movingRightward = true;
@@ -1065,14 +1081,14 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
     else if (key == GLFW_KEY_UP && (action == GLFW_PRESS))
     {
-        if(playerbirdInputComponent->timeToLive <= 0.0f)
+        if(!camera->isGameObjectOnScreen(playerbird))
             createPlayerBird(b2Vec2(0.0f, 1.0f));
         
         playerbirdInputComponent->movingUpward = true;
     }
     else if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS))
     {
-        if(playerbirdInputComponent->timeToLive <= 0.0f)
+        if(!camera->isGameObjectOnScreen(playerbird))
             createPlayerBird(b2Vec2(0.0f, -1.0f));
         
         playerbirdInputComponent->movingDownward = true;
@@ -1098,12 +1114,12 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
 }
 
 void Application::createPlayerBird(b2Vec2 direction) {
-    if(player->score < 1)
+    if(cage->score < 1)
         return;
     
-    player->score -= 1;
+    cage->score -= 1;
     
-    playerbirdInputComponent->timeToLive = 5.0f; //5 seconds
+    playerbirdInputComponent->timeToLive = 120.0f; //5 seconds
     playerBirdIsFlying = true;
     float angle = tan(direction.y / direction.x);
     playerbird->body->SetTransform(cage->body->GetPosition() + direction, angle);

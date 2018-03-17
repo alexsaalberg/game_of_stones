@@ -47,6 +47,7 @@ public:
     void changeRot();
     
     glm::vec2 getXBounds(float aspect);
+    bool isGameObjectOnScreen(std::shared_ptr<GameObject> object);
 };
 
 #endif /* Camera_hpp */

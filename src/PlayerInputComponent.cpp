@@ -17,7 +17,7 @@ void PlayerInputComponent::update(GameObject& gameObject, float dt) {
     //Max velocity is relative to world ^^^
     
     b2Vec2 currentVelocity = gameObject.body->GetLinearVelocity();
-    b2Vec2 inputVelocity = b2Vec2(10.0f, 18.0f);
+    b2Vec2 inputVelocity = b2Vec2(15.0f, 38.0f);
     b2Vec2 desiredVelocity = worldVelocity;
     float timeToFullSpeed = 0.05f;
     

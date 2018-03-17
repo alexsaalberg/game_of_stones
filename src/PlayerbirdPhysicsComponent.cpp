@@ -24,6 +24,11 @@ void PlayerbirdPhysicsComponent::update(GameObject& gameObject, float dt) {
                 }
                 if(strcmp(cString, "blimp") == 0) {
                     //other->SetActive(false);
+                    gameObject.score += 1;
+                    other->ApplyForceToCenter(gameObject.body->GetLinearVelocity(), true);
+                    other->SetTransform(b2Vec2(-10.0, 0.0), 0.0);
+                    other->SetUserData((void *) "hit");
+                    gameObject.body->SetTransform(b2Vec2(-30.0f, 0.0), 0.0f);
                 }
             }
         }
