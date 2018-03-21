@@ -214,6 +214,22 @@ public:
     void mouseCallback(GLFWwindow *window, int button, int action, int mods);
     void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
     void resizeCallback(GLFWwindow *window, int width, int height);
+
+	//Menu
+	int menuOption = 1;
+	int gSiboLen;
+	bool on = true;
+	bool instructions = false;
+
+	GLuint StBuffObj, StNorBuffObj, StTexBuffObj, StIndxBuffObj;
+
+	std::shared_ptr<Program> menuProgram;
+	std::shared_ptr<Texture> menuStartTex;
+
+	void initMenuProgram(const std::string& resourceDirectory);
+	void initMenu();
+	void renderMenu();
+
 };
 
 #endif /* Application_hpp */

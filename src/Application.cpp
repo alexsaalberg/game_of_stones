@@ -25,6 +25,7 @@ void Application::init(const std::string& resourceDirectory) {
 	initSkybox(resourceDirectory + "/shaders",
 			    resourceDirectory + "/skybox");
 	initQuad();
+	initMenu();
 
 	initBox2DWorld();
 	initEntities();
@@ -41,6 +42,7 @@ void Application::initShaders(const std::string& resourceDirectory)
     initMainProgram(resourceDirectory);
     initSimpleProgram(resourceDirectory);
     initGroundProgram(resourceDirectory);
+	initMenuProgram(resourceDirectory);
 }
 
 void Application::initMainProgram(const std::string& resourceDirectory) {
@@ -718,6 +720,110 @@ void Application::initSkybox(const std::string& resourceDirectory,
 
 }
 
+
+//Menu functions
+void Application::initMenu() {
+	float g_StSizeX = 2.15f;
+	float g_StSizeZ = 0;
+	float g_StY = 1.2f;
+
+	float StPos[] = {
+		-g_StSizeX, -g_StY, g_StSizeZ,
+		-g_StSizeX, g_StY,  g_StSizeZ,
+		g_StSizeX, g_StY,  g_StSizeZ,
+		g_StSizeX, -g_StY, g_StSizeZ
+	};
+
+	float StNorm[] = {
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1
+	};
+
+	float StTex[] = {
+		0, 0, // back
+		0, 1,
+		1, 1,
+		1, 0
+	};
+
+	unsigned short idx[] = { 0, 1, 2, 0, 2, 3 };
+
+	GLuint VertexArrayID;
+	//generate the VAO
+	glGenVertexArrays(1, &VertexArrayID);
+	glBindVertexArray(VertexArrayID);
+
+	gSiboLen = 6;
+	glGenBuffers(1, &StBuffObj);
+	glBindBuffer(GL_ARRAY_BUFFER, StBuffObj);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(StPos), StPos, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &StNorBuffObj);
+	glBindBuffer(GL_ARRAY_BUFFER, StNorBuffObj);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(StNorm), StNorm, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &StTexBuffObj);
+	glBindBuffer(GL_ARRAY_BUFFER, StTexBuffObj);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(StTex), StTex, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &StIndxBuffObj);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, StIndxBuffObj);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+}
+
+void Application::renderMenu()
+{
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, StBuffObj);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, StNorBuffObj);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, StTexBuffObj);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// draw!
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, StIndxBuffObj);
+	glDrawElements(GL_TRIANGLES, gSiboLen, GL_UNSIGNED_SHORT, 0);
+
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+}
+
+void Application::initMenuProgram(const std::string& resourceDirectory) {
+
+	menuProgram = make_shared<Program>();
+	menuProgram->setVerbose(true);
+	menuProgram->setShaderNames(
+		resourceDirectory + "/tex_vert.glsl",
+		resourceDirectory + "/tex_frag0.glsl");
+	if (!menuProgram->init())
+	{
+		std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+		exit(1);
+	}
+	menuProgram->addUniform("P");
+	menuProgram->addUniform("V");
+	menuProgram->addUniform("M");
+	menuProgram->addUniform("offset");
+	menuProgram->addUniform("w");
+	menuProgram->addAttribute("vertPos");
+	menuProgram->addAttribute("vertNor");
+	menuProgram->addAttribute("vertTex");
+	menuProgram->addUniform("Texture0");
+
+}
+
+
+
 void Application::createCubeMap(const std::string& front, const std::string& back,
 	const std::string& top, const std::string& bottom, const std::string& left,
 	const std::string& right, GLuint* tex_cube) {
@@ -774,22 +880,25 @@ void Application::integrate(float t, float dt) {
     
     //player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
 
-    currentState->integrate(t, dt);
-    
-    world->Step(dt, velocityIterations, positionIterations);
-    
-    if(player->health <= 0) {
-        if(!gameOver)
-            gameLost();
-    }
-    
-    if(gameOver) {
-        if(player->scale > 0.21f * dt) {
-            player->scale -= 0.2f * dt;
-        } else {
-            player->scale = 0.0f;
-        }
-    }
+	if (camera->gameStarted) {
+		currentState->integrate(t, dt);
+
+		world->Step(dt, velocityIterations, positionIterations);
+
+		if (player->health <= 0) {
+			if (!gameOver)
+				gameLost();
+		}
+
+		if (gameOver) {
+			if (player->scale > 0.21f * dt) {
+				player->scale -= 0.2f * dt;
+			}
+			else {
+				player->scale = 0.0f;
+			}
+		}
+	}
 
 }
 
@@ -813,112 +922,144 @@ void Application::renderState(State& state, float t) {
     CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
     
-    mainProgram->bind();
-    
-        camera->setModelIdentityMatrix(mainProgram);
-        camera->setHelicopterViewMatrix(mainProgram);
-        camera->setProjectionMatrix(mainProgram, aspect);
-    
-        camera->setEyePosition(mainProgram);
-    
-        vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 20.0f, 10.0f); //from X to origin
-        vec3 directionTowardsLight = -directionFromLight;
-        CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
-    
-		/* PRIMARY RENDER LOOP */
-        for(auto& gameObject : state.gameObjects) {
-			if (gameObject->enabled) {
-				SetMaterial(mainProgram, gameObject->graphics->material);
-				gameObject->render(t, mainProgram);
-			}
-        }
-        M = make_shared<MatrixStack>();
-        M->pushMatrix();
-        M->loadIdentity();
-            vec3 first_bird_position = vec3((player->position.x) - 8.0f, -6.0f, 1.0f);
-            M->translate(first_bird_position);
-            for(int i = 0 ; i < cage->score; i++) {
-                M->pushMatrix();
-                    M->translate( glm::vec3(0.5f * i, 0.0f, 0.0f) );
-                    //CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
-                    birdModel->draw(mainProgram, M);
-                M->popMatrix();
-            }
-        M->popMatrix();
-        M->pushMatrix();
-        M->loadIdentity();
-        vec3 first_blimp_position = vec3((player->position.x) - 8.0f, -4.0f, 1.0f);
-        M->translate(first_blimp_position);
-        for(int i = 0 ; i < playerbird->score; i++) {
-            M->pushMatrix();
-            M->translate( glm::vec3(2.2f * i, 0.0f, 0.0f) );
-            M->scale(0.3f);
-            //CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
-            blimpModel->draw(mainProgram, M);
-            M->popMatrix();
-        }
-        M->popMatrix();
-    mainProgram->unbind();
-    
-    groundProgram->bind();
-        camera->setModelIdentityMatrix(groundProgram);
-        camera->setHelicopterViewMatrix(groundProgram);
-        camera->setProjectionMatrix(groundProgram, aspect);
+	if (!camera->gameStarted) {
+		menuStartTex = make_shared<Texture>();
+		if (instructions)
+			menuStartTex->setFilename("../resources/models/Instructions.jpg");
+		else if (on)
+			menuStartTex->setFilename("../resources/models/StartMenu1.jpg");
+		else
+			menuStartTex->setFilename("../resources/models/StartMenu2.jpg");
+		menuStartTex->init();
+		menuStartTex->setUnit(0);
+		menuStartTex->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+		menuProgram->bind();
+		camera->setModelIdentityMatrix(menuProgram);
+		camera->setHelicopterViewMatrix(menuProgram);
+		camera->setProjectionMatrix(menuProgram, aspect);
 
-		//texture offset
-		glm::vec2 offset(player->position.x / 50.0f, 0.0f);
-		//glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
-		w = glfwGetTime()/10;
-		CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
-		CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
-        M = make_shared<MatrixStack>();
+
+		M = make_shared<MatrixStack>();
 		M->pushMatrix();
-			M->loadIdentity();
-			//M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
-			//M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
-    
-			M->translate(glm::vec3(player->position.x-40.0f, -10.0f, -20.0f));
-			M->scale(glm::vec3(1.0f, 1.0f, 1.0f));
-			M->rotate(1.5, glm::vec3(1.0f, 0.0f, 0.0f));
-			//M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
-    
-			CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+		M->loadIdentity();
+		glUniformMatrix4fv(menuProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
 		M->popMatrix();
-		/*draw the ground */
-		grassTexture->bind(groundProgram->getUniform("Texture0"));
-		renderGround();
-    groundProgram->unbind();
-    
-    if(B2DRAW) {
-        /*Draw Box2D Debug*/
-        simpleProgram->bind();
-            camera->setHelicopterViewMatrix(simpleProgram);
-            camera->setProjectionMatrix(simpleProgram, aspect);
-                vec2 xBounds = camera->getXBounds(aspect);
-                debugDraw->minX = xBounds[0];
-                debugDraw->maxX = xBounds[1];
-        
-                //((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_shapeBit );
-                //world->DrawDebugData();
-                ((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_jointBit );
-                world->DrawDebugData();
-        simpleProgram->unbind();
-        /*END DRAWING SECTION */
-    }
-        
-	/*draw skybox*/
-	glDepthMask(GL_FALSE);
-	sky->bind();
-		camera->setHelicopterSkyViewMatrix(sky);
-		camera->setProjectionMatrix(sky, aspect);
-		CHECKED_GL_CALL(glUniform1i(sky->getUniform("cube_texture"), 0));
+		menuStartTex->bind(menuProgram->getUniform("Texture0"));
+		renderMenu();
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, tex_cube);
-		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-	sky->unbind();
-	glDepthMask(GL_TRUE);
+		menuProgram->unbind();
+		menuOption++;
+		if (menuOption % 10 == 0)
+			on = !on;
+	}
+	else {
+		mainProgram->bind();
+    
+			camera->setModelIdentityMatrix(mainProgram);
+			camera->setHelicopterViewMatrix(mainProgram);
+			camera->setProjectionMatrix(mainProgram, aspect);
+    
+			camera->setEyePosition(mainProgram);
+    
+			vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 20.0f, 10.0f); //from X to origin
+			vec3 directionTowardsLight = -directionFromLight;
+			CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
+    
+			/* PRIMARY RENDER LOOP */
+			for(auto& gameObject : state.gameObjects) {
+				if (gameObject->enabled) {
+					SetMaterial(mainProgram, gameObject->graphics->material);
+					gameObject->render(t, mainProgram);
+				}
+			}
+			M = make_shared<MatrixStack>();
+			M->pushMatrix();
+			M->loadIdentity();
+				vec3 first_bird_position = vec3((player->position.x) - 8.0f, -6.0f, 1.0f);
+				M->translate(first_bird_position);
+				for(int i = 0 ; i < cage->score; i++) {
+					M->pushMatrix();
+						M->translate( glm::vec3(0.5f * i, 0.0f, 0.0f) );
+						//CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+						birdModel->draw(mainProgram, M);
+					M->popMatrix();
+				}
+			M->popMatrix();
+			M->pushMatrix();
+			M->loadIdentity();
+			vec3 first_blimp_position = vec3((player->position.x) - 8.0f, -4.0f, 1.0f);
+			M->translate(first_blimp_position);
+			for(int i = 0 ; i < playerbird->score; i++) {
+				M->pushMatrix();
+				M->translate( glm::vec3(2.2f * i, 0.0f, 0.0f) );
+				M->scale(0.3f);
+				//CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+				blimpModel->draw(mainProgram, M);
+				M->popMatrix();
+			}
+			M->popMatrix();
+		mainProgram->unbind();
+    
+		groundProgram->bind();
+			camera->setModelIdentityMatrix(groundProgram);
+			camera->setHelicopterViewMatrix(groundProgram);
+			camera->setProjectionMatrix(groundProgram, aspect);
+
+			//texture offset
+			glm::vec2 offset(player->position.x / 50.0f, 0.0f);
+			//glm::vec2 offset(floor(-player->position.y), floor(player->position.z));
+			w = glfwGetTime()/10;
+			CHECKED_GL_CALL(glUniform2fv(groundProgram->getUniform("offset"), 1, &offset[0]));
+			CHECKED_GL_CALL(glUniform1f(groundProgram->getUniform("w"), w));
+			M = make_shared<MatrixStack>();
+			M->pushMatrix();
+				M->loadIdentity();
+				//M->translate(glm::vec3(0.0f, 0.0f, 0.0f));
+				//M->translate(glm::vec3(player->position.x+20.0f, 0.0f, 0.0f));
+    
+				M->translate(glm::vec3(player->position.x-40.0f, -10.0f, -20.0f));
+				M->scale(glm::vec3(1.0f, 1.0f, 1.0f));
+				M->rotate(1.5, glm::vec3(1.0f, 0.0f, 0.0f));
+				//M->scale(glm::vec3(15.0f, 15.0f, 15.0f));
+    
+				CHECKED_GL_CALL(glUniformMatrix4fv(groundProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+			M->popMatrix();
+			/*draw the ground */
+			grassTexture->bind(groundProgram->getUniform("Texture0"));
+			renderGround();
+		groundProgram->unbind();
+    
+		if(B2DRAW) {
+			/*Draw Box2D Debug*/
+			simpleProgram->bind();
+				camera->setHelicopterViewMatrix(simpleProgram);
+				camera->setProjectionMatrix(simpleProgram, aspect);
+					vec2 xBounds = camera->getXBounds(aspect);
+					debugDraw->minX = xBounds[0];
+					debugDraw->maxX = xBounds[1];
+        
+					//((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_shapeBit );
+					//world->DrawDebugData();
+					((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_jointBit );
+					world->DrawDebugData();
+			simpleProgram->unbind();
+			/*END DRAWING SECTION */
+		}
+        
+		/*draw skybox*/
+		glDepthMask(GL_FALSE);
+		sky->bind();
+			camera->setHelicopterSkyViewMatrix(sky);
+			camera->setProjectionMatrix(sky, aspect);
+			CHECKED_GL_CALL(glUniform1i(sky->getUniform("cube_texture"), 0));
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, tex_cube);
+			glBindVertexArray(vao);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		sky->unbind();
+		glDepthMask(GL_TRUE);
+	}
     
 }
 
@@ -1059,17 +1200,23 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     
     else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS))
     {
-        if(!camera->isGameObjectOnScreen(playerbird))
-            createPlayerBird(b2Vec2(-1.0f, 0.0f));
-        
-        playerbirdInputComponent->movingLeftward = true;
+		if (camera->gameStarted)
+		{
+			if (!camera->isGameObjectOnScreen(playerbird))
+				createPlayerBird(b2Vec2(-1.0f, 0.0f));
+
+			playerbirdInputComponent->movingLeftward = true;
+		}
     }
     else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS))
     {
-        if(!camera->isGameObjectOnScreen(playerbird))
-            createPlayerBird(b2Vec2(1.0f, 0.0f));
-        
-        playerbirdInputComponent->movingRightward = true;
+		if (camera->gameStarted) 
+		{
+			if (!camera->isGameObjectOnScreen(playerbird))
+				createPlayerBird(b2Vec2(1.0f, 0.0f));
+
+			playerbirdInputComponent->movingRightward = true;
+		}
     }
     else if (key == GLFW_KEY_LEFT && (action == GLFW_RELEASE))
     {
@@ -1077,21 +1224,28 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
     else if (key == GLFW_KEY_RIGHT && (action == GLFW_RELEASE))
     {
+
         playerbirdInputComponent->movingRightward = false;
     }
     else if (key == GLFW_KEY_UP && (action == GLFW_PRESS))
     {
-        if(!camera->isGameObjectOnScreen(playerbird))
-            createPlayerBird(b2Vec2(0.0f, 1.0f));
-        
-        playerbirdInputComponent->movingUpward = true;
+		if (camera->gameStarted)
+		{
+			if (!camera->isGameObjectOnScreen(playerbird))
+				createPlayerBird(b2Vec2(0.0f, 1.0f));
+
+			playerbirdInputComponent->movingUpward = true;
+		}
     }
     else if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS))
     {
-        if(!camera->isGameObjectOnScreen(playerbird))
-            createPlayerBird(b2Vec2(0.0f, -1.0f));
-        
-        playerbirdInputComponent->movingDownward = true;
+		if (camera->gameStarted)
+		{
+			if (!camera->isGameObjectOnScreen(playerbird))
+				createPlayerBird(b2Vec2(0.0f, -1.0f));
+
+			playerbirdInputComponent->movingDownward = true;
+		}
     }
     else if (key == GLFW_KEY_UP && (action == GLFW_RELEASE))
     {
@@ -1105,11 +1259,12 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     {
         createPlayerBird(b2Vec2(1.0f, 0.0f));
     }
-    
-    
     else if (key == GLFW_KEY_SPACE && (action == GLFW_RELEASE))
     {
-        camera->gameStarted = true;
+		if (!instructions)
+			instructions = true;
+		else
+			camera->gameStarted = true;
     }
 }
 
