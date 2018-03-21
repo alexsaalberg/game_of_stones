@@ -924,12 +924,16 @@ void Application::renderState(State& state, float t) {
     
 	if (!camera->gameStarted) {
 		menuStartTex = make_shared<Texture>();
+        std::string resourceDir = "../resources";
+        #ifdef __APPLE__
+        resourceDir = "../../resources";
+        #endif
 		if (instructions)
-			menuStartTex->setFilename("../resources/models/Instructions.jpg");
+			menuStartTex->setFilename(resourceDir + "/models/Instructions.jpg");
 		else if (on)
-			menuStartTex->setFilename("../resources/models/StartMenu1.jpg");
+			menuStartTex->setFilename(resourceDir + "/models/StartMenu1.jpg");
 		else
-			menuStartTex->setFilename("../resources/models/StartMenu2.jpg");
+			menuStartTex->setFilename(resourceDir + "/models/StartMenu2.jpg");
 		menuStartTex->init();
 		menuStartTex->setUnit(0);
 		menuStartTex->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
