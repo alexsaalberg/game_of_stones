@@ -24,8 +24,8 @@ public:
     std::vector<std::shared_ptr<Model>> models;
     
     //Functions
-    virtual void update(GameObject& gameObject, std::shared_ptr<Program> prog);
-    void draw(GameObject& gameObject, std::shared_ptr<Program> prog);
+    virtual void update(GameObject& gameObject, float t, std::shared_ptr<Program> prog);
+    void draw(GameObject& gameObject, float t, std::shared_ptr<Program> prog);
 };
 
 #endif /* DefaultGraphicsComponent_hpp */

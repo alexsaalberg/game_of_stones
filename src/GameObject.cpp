@@ -58,12 +58,14 @@ void GameObject::simulate(float dt)
 		b2Vec2 position2D = body->GetPosition(); //Box2D vec2
 		glm::vec3 position3D = glm::vec3(position2D.x, position2D.y, 0.0f); //glm::vec3
 		position = position3D;
+        
+        rotation = glm::vec3(0.0f, 0.0f, body->GetAngle());
 	}
     
-    input->update(*this);
+    input->update(*this, dt);
     physics->update(*this, dt);
 }
 
-void GameObject::render(std::shared_ptr<Program> prog) {
-    graphics->update(*this, prog);
+void GameObject::render(float t, std::shared_ptr<Program> prog) {
+    graphics->update(*this, t, prog);
 }

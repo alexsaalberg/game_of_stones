@@ -32,8 +32,13 @@
 #include "DefaultGraphicsComponent.hpp"
 
 #include "PlayerInputComponent.hpp"
-#include "PlayerPhysicsComponent.hpp"
 #include "PlayerGraphicsComponent.hpp"
+#include "PlayerPhysicsComponent.hpp"
+
+#include "CagePhysicsComponent.hpp"
+
+#include "PlayerbirdPhysicsComponent.hpp"
+#include "PlayerbirdInputComponent.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -42,6 +47,7 @@
 #include "DDS_Loader.hpp"
 
 #include "Box2D/Box2D.h"
+#include "B2Draw_OpenGL.hpp"
 
 class Application : public EventCallbacks
 {
@@ -77,12 +83,14 @@ public:
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;
+    std::shared_ptr<Program> simpleProgram;
     std::shared_ptr<Program> groundProgram;
 	std::shared_ptr<Program> sky;
     
     //Physics & Collisions
     //at global scope
     std::shared_ptr<b2World> world;
+    std::shared_ptr<B2Draw_OpenGL> debugDraw;
     
     //State
     std::shared_ptr<State> currentState;
@@ -90,17 +98,31 @@ public:
     
     std::shared_ptr<Camera> camera;
     
+    bool playerBirdIsFlying = false;
     std::shared_ptr<GameObject> player;
+    std::shared_ptr<GameObject> cage;
+    std::shared_ptr<GameObject> playerbird;
+    b2Vec2 ropeAnchorPlayer;
+    b2Vec2 ropeAnchorCage;
+    b2DistanceJoint *distanceJoint; //A = helicopter, B = cage
+    b2RopeJoint *ropeJoint; //A = helicopter, B = cage
+    
 	std::shared_ptr<GameObject> copterHealthObjs[5];
 	std::shared_ptr<PlayerInputComponent> playerInputComponent;
+    std::shared_ptr<PlayerbirdInputComponent> playerbirdInputComponent;
     std::shared_ptr<GameObject> temporaryGameObjectPointer;
+    float ropeLength = 1.0f;
     
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
     std::shared_ptr<Model> birdModel;
     std::shared_ptr<Model> helicopterModel;
+    std::shared_ptr<Model> propellerModel;
     std::shared_ptr<Model> blimpModel;
     std::shared_ptr<Model> cloudModel;
+    std::shared_ptr<Model> pirateModel;
+    std::shared_ptr<Model> birdcageModel;
+    std::shared_ptr<Model> playerbirdModel;
     
     std::vector< std::shared_ptr<Model> > models;
     
@@ -111,6 +133,7 @@ public:
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
     std::shared_ptr<Texture> waterTexture;
+    
     
     //ground plane info
     GLuint GroundBufferObject, GroundNormalBufferObject, GroundTextureBufferObject, GroundIndexBufferObject;
@@ -125,6 +148,7 @@ public:
     
     void initShaders(const std::string& resourceDirectory);
     void initMainProgram(const std::string& resourceDirectory);
+    void initSimpleProgram(const std::string& resourceDirectory);
     void initGroundProgram(const std::string& resourceDirectory);
 
     void initTextures(const std::string& resourceDirectory);
@@ -133,13 +157,17 @@ public:
 
     void initGeom(const std::string& resourceDirectory);
     
-    void initPlayer(std::shared_ptr<Model> model);
+    b2Body* createBodyFromModel(std::shared_ptr<Model> model, float mass, glm::vec2 position, char const* name);
+    void initPlayer(std::shared_ptr<Model> model, std::shared_ptr<Model> propModel);
+    void initRope();
+    void initCage(std::shared_ptr<Model> model);
+    void initPlayerbird(std::shared_ptr<Model> model);
     void initCamera();
     
-    void createBlimp(std::shared_ptr<Model> model, glm::vec3 position);
+    void createBlimp(std::shared_ptr<Model> model, glm::vec2 position);
     void initBlimps();
     
-    void createBird(std::shared_ptr<Model> model, glm::vec3 position);
+    void createBird(std::shared_ptr<Model> model, glm::vec2 position);
     void initBirds();
     
     void initQuad();
@@ -160,7 +188,7 @@ public:
     //Physics
     void integrate(float t, float dt);
     void render(float t,  float alpha);
-    void renderState(State& state);
+    void renderState(State& state, float t);
     
     void simulate(float dt);
     
@@ -175,11 +203,10 @@ public:
 	void initGUI();
 	void moveGUIElements();
     
-    void setCollisionCooldown(std::shared_ptr<GameObject> gameObject);
-    
-	void changeCopterHealth(int i);
-	void changeManHealth(int i);
     void gameLost();
+    
+    void accelerateLadderman(float acceleration);
+    void createPlayerBird(b2Vec2 direction);
     
     //Control Callbacks
     void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);

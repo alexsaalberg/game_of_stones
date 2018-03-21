@@ -31,17 +31,23 @@ public:
     float cameraRot = 0.6f;
     bool gameStarted = false;
     
-    
     std::shared_ptr<GameObject> player; //GameObject to center camera around (almost always player)
     
     //Functions
     void setModelIdentityMatrix(const std::shared_ptr<Program> prog) const;
     void setHelicopterSkyViewMatrix(const std::shared_ptr<Program> prog);
+    
+    std::shared_ptr<MatrixStack> getHelicopterViewMatrix();
     void setHelicopterViewMatrix(const std::shared_ptr<Program> prog);
     void setViewMatrix(const std::shared_ptr<Program> prog) const;
+    
+    std::shared_ptr<MatrixStack> getProjectionMatrix(float aspect);
     void setProjectionMatrix(const std::shared_ptr<Program> prog, float aspect) const;
     void setEyePosition(const std::shared_ptr<Program> prog) const;
     void changeRot();
+    
+    glm::vec2 getXBounds(float aspect);
+    bool isGameObjectOnScreen(std::shared_ptr<GameObject> object);
 };
 
 #endif /* Camera_hpp */

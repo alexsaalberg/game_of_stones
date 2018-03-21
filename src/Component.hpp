@@ -21,7 +21,7 @@ class InputComponent
 {
 public:
     virtual ~InputComponent() {}
-    virtual void update(GameObject& gameObject) = 0;
+    virtual void update(GameObject& gameObject, float dt) = 0;
 };
 
 class PhysicsComponent
@@ -36,7 +36,7 @@ class GraphicsComponent
 public:
     int material = 2;
     virtual ~GraphicsComponent() {}
-    virtual void update(GameObject& gameObject, std::shared_ptr<Program> prog) = 0;
+    virtual void update(GameObject& gameObject, float t, std::shared_ptr<Program> prog) = 0;
 };
 
 #endif /* Component_hpp */

@@ -9,6 +9,7 @@
 #include "stb_image.h"
 
 #define PI 3.1415
+#define B2DRAW 1
 
 using namespace std;
 using namespace glm;
@@ -16,7 +17,7 @@ using namespace glm;
 void Application::init(const std::string& resourceDirectory) {
 	currentState = make_shared<State>();
 	previousState = make_shared<State>();
-	
+    
 	initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
@@ -38,6 +39,7 @@ void Application::initShaders(const std::string& resourceDirectory)
     glEnable(GL_DEPTH_TEST); // Enable z-buffer test.
     
     initMainProgram(resourceDirectory);
+    initSimpleProgram(resourceDirectory);
     initGroundProgram(resourceDirectory);
 }
 
@@ -66,6 +68,23 @@ void Application::initMainProgram(const std::string& resourceDirectory) {
     mainProgram->addAttribute("vNormal");
     mainProgram->addAttribute("vTextureCoordinates");
 }
+
+
+void Application::initSimpleProgram(const std::string& resourceDirectory) {
+    // Initialize the GLSL program.
+    simpleProgram = make_shared<Program>();
+    simpleProgram->setVerbose(true);
+    simpleProgram->setShaderNames(resourceDirectory + "/simple_vert.glsl",
+                                resourceDirectory + "/simple_frag.glsl");
+    
+    if (! simpleProgram->init()) {
+        std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+        exit(1);
+    }
+    simpleProgram->addUniform("P");
+    simpleProgram->addUniform("V");
+}
+
 
 void Application::initGroundProgram(const std::string& resourceDirectory) {
     groundProgram = make_shared<Program>();
@@ -126,9 +145,20 @@ void Application::initGeom(const std::string& resourceDirectory) {
         birdModel->createModel(TOshapes, objMaterials);
         birdModel->rotate( vec3(90.0f, 180.0f, 0.0f) );
     }
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/Bird_01.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        playerbirdModel = make_shared<Model>();
+        playerbirdModel->createModel(TOshapes, objMaterials);
+        playerbirdModel->rotate( vec3(-90.0f, 0.0f, 0.0f) );
+        playerbirdModel->scale *= 1.5f;
+    }
     
     rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-                          (resourceDirectory + "/Helicopter2.obj").c_str());
+                          (resourceDirectory + "/final_heli.obj").c_str());
     if (!rc)
     {
         cerr << errStr << endl;
@@ -136,7 +166,18 @@ void Application::initGeom(const std::string& resourceDirectory) {
         helicopterModel = make_shared<Model>();
         helicopterModel->createModel(TOshapes, objMaterials);
         helicopterModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
-        helicopterModel->scale *= 2.0f;
+        helicopterModel->scale *= 1.0f;
+    }
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/final_prop.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        propellerModel = make_shared<Model>();
+        propellerModel->createModel(TOshapes, objMaterials);
+        propellerModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
+        propellerModel->scale *= 1.5f;
     }
     
     rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
@@ -150,6 +191,7 @@ void Application::initGeom(const std::string& resourceDirectory) {
         blimpModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
         blimpModel->scale *= 4.0f;
     }
+    
     rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
                           (resourceDirectory + "/cloud/cloud_02.obj").c_str());
     if (!rc)
@@ -161,28 +203,110 @@ void Application::initGeom(const std::string& resourceDirectory) {
         cloudModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
         cloudModel->scale *= 2.0f;
     }
+    
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/pirate/pirate_01.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        pirateModel = make_shared<Model>();
+        pirateModel->createModel(TOshapes, objMaterials);
+        //pirateModel->rotate( vec3(0.0f, 180.0f, 0.0f) );
+        //pirateModel->scale *= 2.0f;
+    }
+    
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/birdcage/bird_cage.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        birdcageModel = make_shared<Model>();
+        birdcageModel->createModel(TOshapes, objMaterials);
+        birdcageModel->rotate( vec3(0.0f, 90.0f, 0.0f) );
+        birdcageModel->scale *= 0.5f;
+    }
 }
 
 void Application::initBox2DWorld() {
-	b2Vec2 gravity(0.0f, 0.0f);
+	b2Vec2 gravity(0.0f, -10.0f);
 	world = make_shared<b2World>(gravity);
+    
+    debugDraw = make_shared<B2Draw_OpenGL>();
+    
+    world->SetDebugDraw( (b2Draw *) debugDraw.get() );
 }
 
 void Application::initEntities() {
-	initPlayer(helicopterModel);
+	initPlayer(helicopterModel, propellerModel);
+    initCage(birdcageModel);
+    initPlayerbird(playerbirdModel);
+    initRope();
 	initCamera();
 	initGUI();
     initBirds();
     initBlimps();
 }
 
-void Application::initPlayer(shared_ptr<Model> model) {
+b2Body* Application::createBodyFromModel(shared_ptr<Model> model, float mass, vec2 position, char const* name) {
+    
+    //If the model is rotated, we also need to rotate the bounds
+    vec3 rotation = model->rotation;
+    
+    MatrixStack R;
+    R.pushMatrix();
+        R.loadIdentity();
+        R.rotate(radians(rotation.x), vec3(1, 0, 0));
+        R.rotate(radians(rotation.y), vec3(0, 1, 0));
+        R.rotate(radians(rotation.z), vec3(0, 0, 1));
+    
+    //gMax here is NOT the same as model->gMax
+    vec4 gMax = (R.topMatrix()) * vec4(model->gMax, 1.0f);
+    vec4 gMin = (R.topMatrix()) * vec4(model->gMin, 1.0f);
+    
+    float width = (gMax.x - gMin.x) * model->scale;
+    float height = (gMax.y - gMin.y) * model->scale;
+    
+    if(strcmp(name, "helicopter") == 0) {
+        ropeAnchorPlayer = b2Vec2(0.0f, height / -2.0f); //record where to place rope anchor on helicopter
+    }
+    if(strcmp(name, "cage") == 0) {
+        ropeAnchorCage = b2Vec2(0.0f, height / 2.0f); //record where to place rope anchor on cage
+    }
+    
+    
+    //rotations can cause gMax.x < gMin.x, thus negative width
+    width = abs(width);
+    height = abs(height);
+    
+    
+    float area = width * height;
+    float density = mass / area;
+    
+    b2PolygonShape boxShape;
+    //SetAsBox requires half the edge length. (distance from center to edge)
+    boxShape.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(0.0f, 0.0f), 0);
+    
+    b2BodyDef bodyDefinition;
+    bodyDefinition.position.Set(position.x, position.y);
+    bodyDefinition.type = b2_dynamicBody;
+    bodyDefinition.userData = (void *) name;
+    
+    b2Body *returnBody = world->CreateBody(&bodyDefinition);
+    returnBody->CreateFixture(&boxShape, density);
+    
+    return returnBody;
+}
+
+void Application::initPlayer(shared_ptr<Model> model, shared_ptr<Model> propModel) {
     shared_ptr<PlayerInputComponent> input = make_shared<PlayerInputComponent> ();
     inputComponents.push_back(input);
     
     shared_ptr<PlayerGraphicsComponent> graphics = make_shared<PlayerGraphicsComponent> ();
     graphicsComponents.push_back(graphics);
     graphics->models.push_back(model);
+    graphics->models.push_back(propModel);
         
     shared_ptr<PlayerPhysicsComponent> physics = make_shared<PlayerPhysicsComponent> ();
     physicsComponents.push_back(physics);
@@ -190,30 +314,86 @@ void Application::initPlayer(shared_ptr<Model> model) {
     playerInputComponent = input;
     player = make_shared<GameObject>(input, physics, graphics);
     
-	b2BodyDef playerBodyDefinition;
-	playerBodyDefinition.position.Set(0.0f, 0.0f);
-	playerBodyDefinition.type = b2_dynamicBody;
-	player->body = world->CreateBody(&playerBodyDefinition);
-
-	b2PolygonShape playerBox;
-	//The extents are the half-widths of the box. (distance from center to edge)
-	//playerBox.SetAsBox(width / 2.0f, height / 2.0f);
-    float width = (model->gMax.x - model->gMin.x) * model->scale;
-    float height = (model->gMax.y - model->gMin.y) * model->scale;
-    float mass = 1000.0f; //kilogram
-    float area = width * height;
-    float density = mass / area;
-    
-    float xOffset = model->translation.x * model->scale;
-    float yOffset = model->translation.y * model->scale;
-    
-    playerBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(xOffset, yOffset), 0);
-    
-	//Create fixture directly from shape
-	player->body->CreateFixture(&playerBox, density);
+    player->body = createBodyFromModel(model, 2000.0f, vec2(0.0f, 0.0f), "helicopter");
 	player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
+    player->body->SetFixedRotation(true);
+    player->body->SetGravityScale(0.0f);
     
     currentState->gameObjects.push_back(player);
+}
+
+void Application::initCage(shared_ptr<Model> model) {
+    shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
+    inputComponents.push_back(input);
+    
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model);
+    
+    shared_ptr<CagePhysicsComponent> physics = make_shared<CagePhysicsComponent> ();
+    physicsComponents.push_back(physics);
+    
+    cage = make_shared<GameObject>(input, physics, graphics);
+    
+    cage->body = createBodyFromModel(model, 100.0f, vec2(0.0f, 0.0f), "cage");
+    
+    b2MassData data;
+    cage->body->GetMassData(&data); //get the mass data from you body
+    data.center.Set(0.0f, ropeAnchorCage.y / -3.0f);
+    
+    cage->body->SetMassData(&data);
+    
+    cage->score = 1;
+    currentState->gameObjects.push_back(cage);
+}
+
+void Application::initPlayerbird(shared_ptr<Model> model) {
+    shared_ptr<PlayerbirdInputComponent> input = make_shared<PlayerbirdInputComponent>();
+    inputComponents.push_back(input);
+    playerbirdInputComponent = input;
+    
+    shared_ptr<DefaultGraphicsComponent> graphics = make_shared<DefaultGraphicsComponent> ();
+    graphicsComponents.push_back(graphics);
+    graphics->models.push_back(model);
+    
+    shared_ptr<PlayerbirdPhysicsComponent> physics = make_shared<PlayerbirdPhysicsComponent> ();
+    physicsComponents.push_back(physics);
+    
+    playerbird = make_shared<GameObject>(input, physics, graphics);
+    
+    playerbird->body = createBodyFromModel(model, 2000.0f, vec2(0.0f, 0.0f), "playerbird");
+    playerbird->body->SetGravityScale(0.0f);
+    
+    currentState->gameObjects.push_back(playerbird);
+}
+
+void Application::initRope() {
+    b2DistanceJointDef distanceJointDef;
+    distanceJointDef.bodyA = player->body;
+    distanceJointDef.bodyB = cage->body;
+    distanceJointDef.collideConnected = true;
+    
+    distanceJointDef.localAnchorA = ropeAnchorPlayer;
+    distanceJointDef.localAnchorB = ropeAnchorCage;
+    
+    distanceJoint = (b2DistanceJoint*) world->CreateJoint( &distanceJointDef);
+    distanceJoint->SetLength(4.0f);
+    distanceJoint->SetFrequency(0.1f);
+    distanceJoint->SetDampingRatio(0.0f);
+    
+    //joint->SetMaxLength(5.0f);
+    
+    b2RopeJointDef ropeJointDef;
+    ropeJointDef.bodyA = player->body;
+    ropeJointDef.bodyB = cage->body;
+    ropeJointDef.collideConnected = false;
+    
+    ropeJointDef.localAnchorA = ropeAnchorPlayer;
+    ropeJointDef.localAnchorB = ropeAnchorCage;
+    
+    ropeJoint = (b2RopeJoint *) world->CreateJoint( &ropeJointDef);
+    ropeJoint->SetMaxLength(5.0f);
+    
 }
 
 void Application::initCamera() {
@@ -221,7 +401,7 @@ void Application::initCamera() {
     camera->player = player;
 }
 
-void Application::createBlimp(shared_ptr<Model> model, vec3 position) {
+void Application::createBlimp(shared_ptr<Model> model, vec2 position) {
     shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
     inputComponents.push_back(input);
     
@@ -232,34 +412,13 @@ void Application::createBlimp(shared_ptr<Model> model, vec3 position) {
     graphicsComponents.push_back(graphics);
     graphics->models.push_back(model); //Give this graphics component model
     graphics->material = 2;
-    //Todo: Give constructor to graphics for models.
     
     temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
-    temporaryGameObjectPointer->position = position;
     float randomVelocityX = randomFloat() * -1.0f;
-    temporaryGameObjectPointer->velocity += randomVelocityX;
     
-    b2BodyDef blimpBodyDefinition;
-    blimpBodyDefinition.position.Set(position.x, position.y); //set position from param
-    blimpBodyDefinition.type = b2_dynamicBody;
-    blimpBodyDefinition.userData = (void *) "blimp";
-    temporaryGameObjectPointer->body = world->CreateBody(&blimpBodyDefinition);
-    
-    b2PolygonShape blimpBox;
-    //The extents are the half-widths of the box. (distance from center to edge)
-    //playerBox.SetAsBox(width / 2.0f, height / 2.0f);
-    float width = (model->gMax.x - model->gMin.x) * model->scale;
-    float height = (model->gMax.y - model->gMin.y) * model->scale;
-    float mass = 50.0f; //kilogram
-    float area = width * height;
-    float density = mass / area;
-    
-    float xOffset = model->translation.x * model->scale;
-    float yOffset = model->translation.y * model->scale;
-    
-    blimpBox.SetAsBox(width / 2.0f, height / 2.0f, b2Vec2(-xOffset, yOffset), 0);
-    //Create fixture directly from shape
-    temporaryGameObjectPointer->body->CreateFixture(&blimpBox, density); //0.0f = density
+    temporaryGameObjectPointer->body = createBodyFromModel(model, 100.0f, position, "blimp");
+    temporaryGameObjectPointer->body->SetLinearVelocity(b2Vec2(randomVelocityX, 0.0f));
+    temporaryGameObjectPointer->body->SetGravityScale(0.0f);
     
     currentState->gameObjects.push_back(temporaryGameObjectPointer);
 }
@@ -274,14 +433,13 @@ void Application::initBlimps() {
      const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
      */
     float currentX = bufferDistance;
-    glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
+    glm::vec2 currentPosition = vec2(bufferDistance, 0.0f);
     
     int numberOfBlimps = 50;
     float distancePerBlimp = (winDistance - bufferDistance * 2.0f) / numberOfBlimps;
     
     bool high = true; //switch high & low every other bird
     for (int i = 0; i < numberOfBlimps; i++) {
-        
         if (high == true) {
             currentPosition.y = highBirdY;
         }
@@ -302,7 +460,7 @@ void Application::initBlimps() {
     }
 }
 
-void Application::createBird(shared_ptr<Model> model, vec3 position) {
+void Application::createBird(shared_ptr<Model> model, vec2 position) {
 	shared_ptr<DefaultInputComponent> input = make_shared<DefaultInputComponent>();
 	inputComponents.push_back(input);
 
@@ -316,28 +474,11 @@ void Application::createBird(shared_ptr<Model> model, vec3 position) {
 	//Todo: Give constructor to graphics for models.
 
 	temporaryGameObjectPointer = make_shared<GameObject>(input, physics, graphics);
-	temporaryGameObjectPointer->position = position;
 	float randomVelocityX = randomFloat() * -1.0f;
 	temporaryGameObjectPointer->velocity += randomVelocityX;
-
-	b2BodyDef birdBodyDefinition;
-	birdBodyDefinition.position.Set(position.x, position.y); //set position from param
-	birdBodyDefinition.type = b2_dynamicBody;
-    birdBodyDefinition.userData = (void *) "bird";
-	temporaryGameObjectPointer->body = world->CreateBody(&birdBodyDefinition);
-
-	b2PolygonShape birdBox;
-	//The extents are the half-widths of the box.
-
-	float width = 1.0f;
-	float height = 1.0f;
-	float mass = 0.05f; //kilogram
-	float area = width * height;
-	float density = mass / area;
-
-	birdBox.SetAsBox(width / 2.0f, height / 2.0f);
-	//Create fixture directly from shape
-	temporaryGameObjectPointer->body->CreateFixture(&birdBox, density); //0.0f = density
+    
+    temporaryGameObjectPointer->body = createBodyFromModel(model, 0.05f, position, "bird");
+    temporaryGameObjectPointer->body->SetGravityScale(0.0f);
 
 	currentState->gameObjects.push_back(temporaryGameObjectPointer);
 }
@@ -352,7 +493,7 @@ void Application::initBirds() {
 	const float distancePerBird = (winDistance - bufferDistance * 2.0f) / (float) numberOfBirds;
 	*/
 	float currentX = bufferDistance;
-	glm::vec3 currentPosition = vec3(bufferDistance, 0.0f, 0.0f);
+	glm::vec2 currentPosition = vec2(bufferDistance, 0.0f);
 
 
 	bool high = true; //switch high & low every other bird
@@ -630,11 +771,16 @@ void Application::integrate(float t, float dt) {
 	//previousState = make_shared<State>( *currentState );    
 	int32 velocityIterations = 6;
 	int32 positionIterations = 2;
+    
+    //player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
 
+    currentState->integrate(t, dt);
+    
     world->Step(dt, velocityIterations, positionIterations);
     
     if(player->health <= 0) {
-        gameLost();
+        if(!gameOver)
+            gameLost();
     }
     
     if(gameOver) {
@@ -645,7 +791,6 @@ void Application::integrate(float t, float dt) {
         }
     }
 
-	currentState->integrate(t, dt);
 }
 
 void Application::render(float t, float alpha) {
@@ -653,10 +798,10 @@ void Application::render(float t, float alpha) {
 	moveGUIElements();
 
 	camera->player = currentState->gameObjects.at(0);
-    renderState(*currentState.get());
+    renderState(*currentState.get(), t);
 }
 
-void Application::renderState(State& state) {
+void Application::renderState(State& state, float t) {
     int windowWidth, windowHeight;
     glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
@@ -684,7 +829,7 @@ void Application::renderState(State& state) {
         for(auto& gameObject : state.gameObjects) {
 			if (gameObject->enabled) {
 				SetMaterial(mainProgram, gameObject->graphics->material);
-				gameObject->render(mainProgram);
+				gameObject->render(t, mainProgram);
 			}
         }
         M = make_shared<MatrixStack>();
@@ -692,7 +837,7 @@ void Application::renderState(State& state) {
         M->loadIdentity();
             vec3 first_bird_position = vec3((player->position.x) - 8.0f, -6.0f, 1.0f);
             M->translate(first_bird_position);
-            for(int i = 0 ; i < player->score; i++) {
+            for(int i = 0 ; i < cage->score; i++) {
                 M->pushMatrix();
                     M->translate( glm::vec3(0.5f * i, 0.0f, 0.0f) );
                     //CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
@@ -700,7 +845,19 @@ void Application::renderState(State& state) {
                 M->popMatrix();
             }
         M->popMatrix();
-    
+        M->pushMatrix();
+        M->loadIdentity();
+        vec3 first_blimp_position = vec3((player->position.x) - 8.0f, -4.0f, 1.0f);
+        M->translate(first_blimp_position);
+        for(int i = 0 ; i < playerbird->score; i++) {
+            M->pushMatrix();
+            M->translate( glm::vec3(2.2f * i, 0.0f, 0.0f) );
+            M->scale(0.3f);
+            //CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+            blimpModel->draw(mainProgram, M);
+            M->popMatrix();
+        }
+        M->popMatrix();
     mainProgram->unbind();
     
     groundProgram->bind();
@@ -732,6 +889,23 @@ void Application::renderState(State& state) {
 		renderGround();
     groundProgram->unbind();
     
+    if(B2DRAW) {
+        /*Draw Box2D Debug*/
+        simpleProgram->bind();
+            camera->setHelicopterViewMatrix(simpleProgram);
+            camera->setProjectionMatrix(simpleProgram, aspect);
+                vec2 xBounds = camera->getXBounds(aspect);
+                debugDraw->minX = xBounds[0];
+                debugDraw->maxX = xBounds[1];
+        
+                //((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_shapeBit );
+                //world->DrawDebugData();
+                ((b2Draw *)debugDraw.get())->SetFlags( b2Draw::e_jointBit );
+                world->DrawDebugData();
+        simpleProgram->unbind();
+        /*END DRAWING SECTION */
+    }
+        
 	/*draw skybox*/
 	glDepthMask(GL_FALSE);
 	sky->bind();
@@ -745,6 +919,7 @@ void Application::renderState(State& state) {
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	sky->unbind();
 	glDepthMask(GL_TRUE);
+    
 }
 
 // helper function to set materials for shading
@@ -827,7 +1002,7 @@ void Application::moveGUIElements() {
 	for (int i = 0; i < player->health; i++) {
         if(i == player->health - 1) {
             copterHealthObjs[i]->scale = 0.5f;
-            copterHealthObjs[i]->rotation.y += 1.0f;
+            copterHealthObjs[i]->rotation.y += radians(1.0f);
         }
         
         copterHealthObjs[i]->position = vec3((player->position.x) - 1 + (3 * i), -4.0f, player->position.z+8);
@@ -836,50 +1011,11 @@ void Application::moveGUIElements() {
 	}
 }
 
-void Application::setCollisionCooldown(shared_ptr<GameObject> gameObject) {
-    gameObject->collisionCooldown = 3.0f; //3 seconds
-}
-
-void Application::changeCopterHealth(int i) {
-	copterHealth += i;
-
-	switch (copterHealth) {
-	case 2:
-		player->graphics->material = 0;
-		break;
-	case 1:
-		copterHealthObjs[1]->enabled = false;
-		player->graphics->material = 6;
-		break;
-	case 0:
-		copterHealthObjs[0]->enabled = false;
-		player->graphics->material = 5;
-		gameLost();
-		break;
-	}
-}
-
-void Application::changeManHealth(int i) {
-	manHealth += i;
-
-	switch (manHealth) {
-	case 2:
-		player->graphics->material = 0;
-		break;
-	case 1:
-		player->graphics->material = 6;
-		break;
-	case 0:
-		player->graphics->material = 5;
-		gameLost();
-		break;
-	}
-}
-
 void Application::gameLost() {
-    for(int i = 0; i < 10; i ++)
+    for(int i = 0; i < 3; i ++)
         printf("GAME OVER!\n");
     gameOver = true;
+    printf("Score %d", playerbird->score);
 }
 
 void Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -890,19 +1026,19 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
 	}
 	else if (key == GLFW_KEY_A && (action == GLFW_PRESS))
 	{
-		playerInputComponent->movingForward = true;
+		playerInputComponent->movingLeftward = true;
 	}
 	else if (key == GLFW_KEY_D && (action == GLFW_PRESS))
 	{
-		playerInputComponent->movingBackward = true;
+		playerInputComponent->movingRightward = true;
 	}
 	else if (key == GLFW_KEY_A && (action == GLFW_RELEASE))
 	{
-		playerInputComponent->movingForward = false;
+		playerInputComponent->movingLeftward = false;
 	}
 	else if (key == GLFW_KEY_D && (action == GLFW_RELEASE))
 	{
-		playerInputComponent->movingBackward = false;
+		playerInputComponent->movingRightward = false;
 	}
 	else if (key == GLFW_KEY_W && (action == GLFW_PRESS))
 	{
@@ -920,10 +1056,79 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
 	{
 		playerInputComponent->movingDownward = false;
 	}
+    
+    else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS))
+    {
+        if(!camera->isGameObjectOnScreen(playerbird))
+            createPlayerBird(b2Vec2(-1.0f, 0.0f));
+        
+        playerbirdInputComponent->movingLeftward = true;
+    }
+    else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS))
+    {
+        if(!camera->isGameObjectOnScreen(playerbird))
+            createPlayerBird(b2Vec2(1.0f, 0.0f));
+        
+        playerbirdInputComponent->movingRightward = true;
+    }
+    else if (key == GLFW_KEY_LEFT && (action == GLFW_RELEASE))
+    {
+        playerbirdInputComponent->movingLeftward = false;
+    }
+    else if (key == GLFW_KEY_RIGHT && (action == GLFW_RELEASE))
+    {
+        playerbirdInputComponent->movingRightward = false;
+    }
+    else if (key == GLFW_KEY_UP && (action == GLFW_PRESS))
+    {
+        if(!camera->isGameObjectOnScreen(playerbird))
+            createPlayerBird(b2Vec2(0.0f, 1.0f));
+        
+        playerbirdInputComponent->movingUpward = true;
+    }
+    else if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS))
+    {
+        if(!camera->isGameObjectOnScreen(playerbird))
+            createPlayerBird(b2Vec2(0.0f, -1.0f));
+        
+        playerbirdInputComponent->movingDownward = true;
+    }
+    else if (key == GLFW_KEY_UP && (action == GLFW_RELEASE))
+    {
+        playerbirdInputComponent->movingUpward = false;
+    }
+    else if (key == GLFW_KEY_DOWN && (action == GLFW_RELEASE))
+    {
+        playerbirdInputComponent->movingDownward = false;
+    }
+    else if (key == GLFW_KEY_M && (action == GLFW_PRESS))
+    {
+        createPlayerBird(b2Vec2(1.0f, 0.0f));
+    }
+    
+    
     else if (key == GLFW_KEY_SPACE && (action == GLFW_RELEASE))
     {
         camera->gameStarted = true;
     }
+}
+
+void Application::createPlayerBird(b2Vec2 direction) {
+    if(cage->score < 1)
+        return;
+    
+    cage->score -= 1;
+    
+    playerbirdInputComponent->timeToLive = 120.0f; //5 seconds
+    playerBirdIsFlying = true;
+    float angle = tan(direction.y / direction.x);
+    playerbird->body->SetTransform(cage->body->GetPosition() + direction, angle);
+
+    b2Vec2 initialVelocity = cage->body->GetLinearVelocity();
+    initialVelocity += 2.0f * direction;
+    //initialVelocity *= playerbird->body->GetMass();
+    
+    playerbird->body->SetLinearVelocity(initialVelocity);
 }
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully
