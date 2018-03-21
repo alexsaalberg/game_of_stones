@@ -55,10 +55,16 @@ std::shared_ptr<MatrixStack> Camera::getHelicopterViewMatrix() {
     std::shared_ptr<MatrixStack> V = make_shared<MatrixStack>();
     V->pushMatrix();
         V->loadIdentity();
-        V->lookAt(vec3(0, 0, 0), identityVector, vec3(0, 1, 0));
-        V->translate((-1.0f * vec3(player->position.x, 0.0f, 0.0f) )); //Negative
-        V->translate(identityVector - offsetVector);
-        V->rotate(cameraRot, vec3(1, 0, 0));
+		if (!gameStarted) {
+			V->lookAt(vec3(0, 0, 0), vec3(0, 0, -1), vec3(0, 1, 0));
+			V->translate(vec3(0, 0, -2));
+		}
+		else {
+			V->lookAt(vec3(0, 0, 0), identityVector, vec3(0, 1, 0));
+			V->translate((-1.0f * vec3(player->position.x, 0.0f, 0.0f))); //Negative
+			V->translate(identityVector - offsetVector);
+			V->rotate(cameraRot, vec3(1, 0, 0));
+		}
         return V;
 }
 

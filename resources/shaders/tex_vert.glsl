@@ -13,7 +13,7 @@ out vec3 fragNor;
 
 void main() {
 
-  vec3 lightDir = vec3(1, 1, 1);
+  vec3 lightDir = vec3(0, 0, 1);
   vec4 vPosition;
   mat4 MV = V * M;
 

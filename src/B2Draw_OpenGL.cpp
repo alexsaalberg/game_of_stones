@@ -58,7 +58,7 @@ void B2Draw_OpenGL::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, 
 
 void B2Draw_OpenGL::DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color) {
     const float32 k_segments = 16.0f;
-    int vertexCount = 16;
+    const int vertexCount = 16;
     const float32 k_increment = 2.0f * b2_pi / k_segments;
     float32 theta = 0.0f;
     
@@ -75,7 +75,7 @@ void B2Draw_OpenGL::DrawCircle(const b2Vec2& center, float32 radius, const b2Col
 
 void B2Draw_OpenGL::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color) {
     const float32 k_segments = 16.0f;
-    int vertexCount = 16;
+    const int vertexCount = 16;
     const float32 k_increment = 2.0f * b2_pi / k_segments;
     float32 theta = 0.0f;
     
