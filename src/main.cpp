@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+#include "imgui.h"
+#include "imgui_impl_glfw_gl3.h"
+
 #include "WindowManager.h"
 
 const int windowWidth = 800;
@@ -27,6 +30,7 @@ int main(int argc, char **argv)
     WindowManager *windowManager = new WindowManager();
     windowManager->init(windowWidth, windowHeight);
     windowManager->setEventCallbacks(application);
+    
     application->windowManager = windowManager;
     
     application->init(resourceDir);
@@ -40,9 +44,20 @@ int main(int argc, char **argv)
     
     int numSimulationsThisFrame = 0;
     
+    //IMGUI
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+    ImGui_ImplGlfwGL3_Init(windowManager->getHandle(), true);
+    // Setup style
+    //ImGui::StyleColorsDark();
+    
+    
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
     {
+        ImGui_ImplGlfwGL3_NewFrame();
         double newTime = glfwGetTime();
         double frameTime = newTime - currentTime;
         currentTime = newTime;
@@ -73,6 +88,10 @@ int main(int argc, char **argv)
         
         //Interpolates automatically in Application.cpp
         application->render( t, alpha);
+        
+        //Render ImGUI
+        ImGui::Render();
+        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         
         // Swap front and back buffers.
         glfwSwapBuffers(windowManager->getHandle());

@@ -3,4 +3,4 @@
 *.c text
 *.h text
 *.glsl text
-*.obj text
+text
