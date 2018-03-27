@@ -74,7 +74,6 @@ public:
     //Shader Programs
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> simpleProgram;
-    std::shared_ptr<Program> groundProgram;
     
     //State
     std::shared_ptr<State> currentState;

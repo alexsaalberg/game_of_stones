@@ -20,14 +20,14 @@ void Application::init(const std::string& resourceDirectory) {
 	previousState = make_shared<State>();
     
 	initShaders(resourceDirectory+"/shaders");
-    initTextures(resourceDirectory+"/models");
+    //initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
     initQuad();
     initPlayer();
     initCamera();
     
     volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,63,63,63));
-    createSphereInVolume(*volData.get(), 32.0f);
+    createSphereInVolume(*volData.get(), 30.0f);
     voxel_rend.initCubicMesh(volData.get());
 }
 void Application::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadius)
@@ -88,7 +88,6 @@ void Application::initShaders(const std::string& resourceDirectory)
     
     initMainProgram(resourceDirectory);
     initSimpleProgram(resourceDirectory);
-    initGroundProgram(resourceDirectory);
 }
 
 void Application::initMainProgram(const std::string& resourceDirectory) {
@@ -133,29 +132,6 @@ void Application::initSimpleProgram(const std::string& resourceDirectory) {
     simpleProgram->addUniform("V");
 }
 
-
-void Application::initGroundProgram(const std::string& resourceDirectory) {
-    groundProgram = make_shared<Program>();
-    groundProgram->setVerbose(true);
-    groundProgram->setShaderNames(resourceDirectory + "/water_vert.glsl",
-                                  resourceDirectory + "/water_frag.glsl");
-
-    if (! groundProgram->init())
-    {
-        std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
-        exit(1);
-    }
-    groundProgram->addUniform("P");
-    groundProgram->addUniform("V");
-    groundProgram->addUniform("M");
-    groundProgram->addUniform("offset");
-    groundProgram->addUniform("w");
-    groundProgram->addAttribute("vertPos");
-    groundProgram->addAttribute("vertNor");
-    groundProgram->addAttribute("vertTex");
-    groundProgram->addUniform("Texture0");
-}
-
 void Application::initTextures(const std::string& resourceDirectory) {
     grassTexture = make_shared<Texture>();
     grassTexture->setFilename(resourceDirectory + "/water.jpg");
@@ -183,7 +159,7 @@ void Application::initGeom(const std::string& resourceDirectory) {
         sphereModel->createModel(TOshapes, objMaterials);
     }
     rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-                          (resourceDirectory + "/final_heli.obj").c_str());
+                          (resourceDirectory + "/Helicopter.obj").c_str());
     if (!rc)
     {
         cerr << errStr << endl;
@@ -191,7 +167,7 @@ void Application::initGeom(const std::string& resourceDirectory) {
         helicopterModel = make_shared<Model>();
         helicopterModel->createModel(TOshapes, objMaterials);
         helicopterModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
-        helicopterModel->scale *= 1.0f;
+        helicopterModel->scale *= 2.0f;
     }
 }
 
@@ -389,7 +365,7 @@ void Application::renderState(State& state, float t) {
 
         camera->setEyePosition(mainProgram);
         camera->cameraTheta = t * 50.0f;
-        camera->cameraDistance = 200.0f + (t * t );
+    camera->cameraDistance = 30.0f;// + (t * t );
 
         vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 20.0f, 10.0f); //from X to origin
         vec3 directionTowardsLight = -directionFromLight;
@@ -399,7 +375,7 @@ void Application::renderState(State& state, float t) {
 
         M->pushMatrix();
         M->loadIdentity();
-        M->scale(2.0f);
+        M->scale(0.2f);
         CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
         //renderGround(mainProgram);
         voxel_rend.render(mainProgram);
@@ -414,7 +390,6 @@ void Application::renderState(State& state, float t) {
         }
     }
     
-    
     mainProgram->unbind();
     
     renderGUI();
@@ -427,8 +402,6 @@ void Application::initCubicMesh(shared_ptr<RawVolume<uint8_t> > volume) {
     //mesh = extractCubicMesh(volume, ) 
     //CubicSurfaceExtractor< CubicVertex<uint8_t>, quadNeeded > extractor;
     mesh = PolyVox::extractCubicMesh(volume.get(), volume->getEnclosingRegion());//, quadNeeded, false );
-    
-    
     
     //CubicSurfaceExtractor< CubicVertex<uint8_t> > extractor();//(*volData.get(), volume->getEnclosingRegion(), &mesh);
 }
