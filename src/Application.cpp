@@ -17,6 +17,8 @@ void Application::init(const std::string& resourceDirectory) {
 	previousState = make_shared<State>();
     entity_manager = make_shared<EntityManager>();
     
+    input_system.entity_manager = entity_manager;
+    
 	initShaders(resourceDirectory+"/shaders");
     //initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
@@ -24,6 +26,7 @@ void Application::init(const std::string& resourceDirectory) {
     initCamera();
     initPlayer();
     
+    /*
     vec3 base_pos = vec3(10.0f, 0.0f, 0.0f);
     vec3 pos = vec3(0.0f);
     for(int i = 0; i < 10; i++) {
@@ -33,7 +36,7 @@ void Application::init(const std::string& resourceDirectory) {
                 initHelicopter(base_pos + pos);
             }
         }
-    }
+    }*/
     
     volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,63,63,63));
     createSphereInVolume(*volData.get(), 30.0f);
@@ -174,7 +177,12 @@ void Application::initEntities() {
 }
 
 void Application::initCamera() {
-    camera = make_shared<Camera>();
+    //camera = make_shared<Camera>();
+    camera_id = entity_manager->create_entity();
+    Position_Component* position = entity_manager->add_component<Position_Component>(camera_id);
+    Camera_Component* camera = entity_manager->add_component<Camera_Component>(camera_id);
+    
+    position->position = vec3(1.0f);
 }
 
 void Application::initPlayer() {
@@ -184,7 +192,6 @@ void Application::initPlayer() {
     
     position->position = vec3(1.0f);
     renderable->model = helicopterModel;
-    printf("HERE\n");
 }
 
 void Application::initHelicopter(glm::vec3 position) {
@@ -362,56 +369,7 @@ void Application::renderGUI() {
 }
 
 void Application::renderState(State& state, float t) {
-    int windowWidth, windowHeight;
-    glfwGetFramebufferSize(windowManager->getHandle(), &windowWidth, &windowHeight);
-    glViewport(0, 0, windowWidth, windowHeight);
-    
-    float aspect = windowWidth/(float)windowHeight;
-    shared_ptr<MatrixStack> M;
-    M = make_shared<MatrixStack>();
-    
-    CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
-    CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
-    CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
-
-    mainProgram->bind();
-
-        camera->setModelIdentityMatrix(mainProgram);
-        camera->setViewMatrix(mainProgram);
-        camera->setProjectionMatrix(mainProgram, aspect);
-
-        camera->setEyePosition(mainProgram);
-        //camera->cameraTheta = t * 50.0f;
-        //camera->cameraDistance = 30.0f;// + (t * t );
-
-        vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 20.0f, 10.0f); //from X to origin
-        vec3 directionTowardsLight = -directionFromLight;
-        CHECKED_GL_CALL( glUniform3f(mainProgram->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
-
-        SetMaterial(mainProgram, 6);
-
-        M->pushMatrix();
-        M->loadIdentity();
-        M->scale(0.2f);
-        CHECKED_GL_CALL(glUniformMatrix4fv(mainProgram->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
-        //renderGround(mainProgram);
-        voxel_rend.render(mainProgram);
-    
-    M->popMatrix();
-    
-    /* PRIMARY RENDER LOOP */
-    /*
-    for(auto& gameObject : state.gameObjects) {
-        if (gameObject->enabled) {
-            SetMaterial(mainProgram, gameObject->graphics->material);
-            gameObject->render(t, mainProgram);
-        }
-    }*/
     render_system.draw(entity_manager, t, mainProgram);
-    
-    mainProgram->unbind();
-    
-    //renderGUI();
 }
 
 void Application::initCubicMesh(shared_ptr<RawVolume<uint8_t> > volume) {

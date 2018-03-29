@@ -40,9 +40,6 @@ public:
     void setOrthogonalMatrix(const std::shared_ptr<Program> prog, float aspect) const;
     
     void setEyePosition(const std::shared_ptr<Program> prog) const;
-    void changeRot();
-    
-    glm::vec2 getXBounds(float aspect);
 };
 
 #endif /* Camera_hpp */

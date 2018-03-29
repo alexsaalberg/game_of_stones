@@ -27,6 +27,7 @@ public:
     Entity_Id last_found_id = 0;
     
     Entity_Id create_entity();
+    
     void delete_entity(Entity_Id id);
     
     template <class ComponentType>
@@ -38,16 +39,31 @@ public:
         return component_manager.add_component<ComponentType>(id);
     }
     
-    //template <class ComponentType>
-    //ComponentType* get_component(Entity_Id entity);
+    template <class ComponentType>
+    void remove_component(Entity_Id entity);
     
     template <class ComponentType>
     ComponentType* get_component(Entity_Id id) {
         return component_manager.get_component<ComponentType>(id);
     }
     
+    
     template <class ComponentType>
-    void remove_component(Entity_Id entity);
+    std::vector<Entity_Id> get_ids_with_component() {
+        std::vector<Entity_Id> return_list;
+        
+        Component_Index index = get_component_index<ComponentType>();
+        
+        for(std::vector<Entity_Entry>::size_type i = 0; i != entities.size(); i++) {
+            Entity_Entry* entity = &entities[i];
+            
+            if(entity_has_component(entity, index)) {
+                return_list.push_back(i);
+            }
+        }
+        
+        return return_list;
+    }
     
     template <class ComponentTypeA, class ComponentTypeB>
     std::vector<Entity_Id> get_ids_with_components() {
@@ -68,9 +84,6 @@ public:
         
         return return_list;
     }
-    
-    //template <class ComponentTypeA, class ComponentTypeB>
-    //std::vector<Entity_Id> get_ids_with_components();
     
 private:
     Component_Manager component_manager;

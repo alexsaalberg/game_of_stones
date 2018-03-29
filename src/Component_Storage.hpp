@@ -10,10 +10,11 @@
 
 #include <type_traits> //is_same
 #include <vector>
+#include <unordered_map>
 
 #include "Component.hpp"
 
-enum Storage_Type {HASHMAP, VECTOR, NO_DATA};
+enum Storage_Type {MAP, VECTOR, NO_DATA};
 
 template <class Component_Type>
 class Component_Storage {
@@ -24,6 +25,7 @@ private:
     int num_elements = 0;
     
     std::vector<Component_Type> components;
+    std::unordered_map<int, Component_Type> components_map;
     
 public:
     Component_Storage() {
@@ -34,7 +36,10 @@ public:
         Component_Type new_component;
         
         switch(type) {
-            case HASHMAP:
+            case MAP:
+                components_map[entity_id] = new_component;
+                return &components_map[entity_id];
+                //components_map.insert(entity_id, new_component);
                 break;
             case VECTOR:
                 if(entity_id == components.size()) {
@@ -60,6 +65,8 @@ public:
     
     Component_Type* get_component(int entity_id) {
         switch(type) {
+            case MAP:
+                return &components_map[entity_id];
             case VECTOR:
                 return &components[entity_id];
             case NO_DATA:
@@ -73,9 +80,11 @@ public:
         if(std::is_same<Component_Type, Active_Component>::value)
             return NO_DATA;
         if(std::is_same<Component_Type, Position_Component>::value)
-            return VECTOR;
+            return MAP;
         if(std::is_same<Component_Type, Renderable_Component>::value)
-            return VECTOR;
+            return MAP;
+        if(std::is_same<Component_Type, Camera_Component>::value)
+            return MAP;
     }
     
 };

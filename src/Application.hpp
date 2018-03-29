@@ -51,7 +51,11 @@ public:
 //Variables
     std::shared_ptr<EntityManager> entity_manager;
     Entity_Id player_id = -1;
+    Entity_Id camera_id = -1;
+    
+    //Systems
     Render_System render_system;
+    Input_System input_system;
     
     std::shared_ptr< PolyVox::RawVolume<uint8_t> > volData;
     PolyVox_OpenGL voxel_rend;
@@ -62,7 +66,7 @@ public:
     
     bool mouseDown = false;
 
-    WindowManager * windowManager = nullptr;
+    WindowManager* windowManager = nullptr;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;

@@ -16,6 +16,7 @@ public:
     Component_Storage<Active_Component> active_components;
     Component_Storage<Position_Component> position_components;
     Component_Storage<Renderable_Component> renderable_components;
+    Component_Storage<Camera_Component> camera_components;
     
     template<class Component_Type>
     Component_Type* add_component(int entity_id);

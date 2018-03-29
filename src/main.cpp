@@ -29,9 +29,10 @@ int main(int argc, char **argv)
     //Set up window manager (internally uses GLFW)
     WindowManager *windowManager = new WindowManager();
     windowManager->init(windowWidth, windowHeight);
-    windowManager->setEventCallbacks(application);
+    windowManager->setEventCallbacks(&application->input_system);
     
     application->windowManager = windowManager;
+    application->render_system.window_manager = windowManager;
     
     application->init(resourceDir);
     

@@ -36,6 +36,9 @@ class Player_Component : Component {
 };
 
 class Camera_Component : Component {
-    
+public:
+    float theta = 1; //around Y axis (turn head left & right)
+    float phi = 1; // around Z axis (nod up & down)
+    float distance = 50.0f; //Distance from view to character (think 2.5d view)
 };
 #endif /* Component_hpp */
