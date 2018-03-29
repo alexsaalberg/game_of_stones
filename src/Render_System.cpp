@@ -4,9 +4,10 @@
 //
 //  Created by Alex Saalberg on 3/28/18.
 //
-
 #include "Render_System.hpp"
 
+
+#include "GLSL.h" //CHECK_GL_CALL, among others
 //imgui
 #include "imgui.h"
 
@@ -91,13 +92,8 @@ std::shared_ptr<MatrixStack> Render_System::getViewMatrix(Camera_Component* came
     float y = sin(radians(camera->phi));
     float z = cos(radians(camera->phi))*sin(radians(camera->theta));
     
-    //x = 1.0f;
-    //z = cameraDistance;
-    //y = 5.0f;
     vec3 identityVector = vec3(0.0f) - vec3(x, y, z); //from origin to xyz
     identityVector *= camera->distance;
-    
-    vec3 offsetVector = vec3(10.0f, 0.0f, 0.0f);
     
     std::shared_ptr<MatrixStack> V = make_shared<MatrixStack>();
     V->pushMatrix();

@@ -10,6 +10,12 @@
 
 #include "System.hpp"
 
+#include <memory> //shared_ptr
+
+#include "EntityManager.hpp"
+#include "WindowManager.h" //WindowManager
+#include "Program.h"
+
 class Render_System : System {
 public:
     WindowManager* window_manager;

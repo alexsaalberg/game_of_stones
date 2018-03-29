@@ -11,7 +11,7 @@
 #include <iostream>
 #include <glad/glad.h>
 
-#include "GLSL.h"
+#include "GLSL.h" //CHECK_GL_CALL, among others
 #include "Program.h"
 #include "MatrixStack.h"
 #include "Shape.h"
@@ -40,8 +40,9 @@
 #include "PolyVox_OpenGL.hpp"
 
 //Systems
-#include "Render_System.hpp"
 #include "System.hpp"
+#include "Input_System.hpp"
+#include "Render_System.hpp"
 
 class Application
 {
