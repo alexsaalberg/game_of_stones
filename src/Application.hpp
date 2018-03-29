@@ -12,34 +12,26 @@
 #include <glad/glad.h>
 
 #include "GLSL.h" //CHECK_GL_CALL, among others
+
+//Rendering Related Stuff
 #include "Program.h"
-#include "MatrixStack.h"
 #include "Shape.h"
-#include "WindowManager.h"
-#include "GLTextureWriter.h"
 
 //State
 #include "State.hpp"
 
-//Components
-#include "EntityManager.hpp"
-#include "Component.hpp"
-
-// value_ptr for glm
+//value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "DDS_Loader.hpp"
-
 //PolyVox
-#include "PolyVox/MaterialDensityPair.h"
-#include "PolyVox/CubicSurfaceExtractor.h"
-#include "PolyVox/Mesh.h"
-#include "PolyVox/RawVolume.h"
-#include "PolyVox/Region.h"
 #include "PolyVox_OpenGL.hpp"
 
-//Systems
+//Entity-Component-System
+#include "EntityManager.hpp"
+
+#include "Component.hpp"
+
 #include "System.hpp"
 #include "Input_System.hpp"
 #include "Render_System.hpp"
@@ -92,8 +84,6 @@ public:
 
     //Physics
     void integrate(float t, float dt);
-    
-    void renderGUI();
     
     //Graphics
     void render(float t,  float alpha);
