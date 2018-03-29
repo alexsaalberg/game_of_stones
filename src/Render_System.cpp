@@ -5,7 +5,10 @@
 //  Created by Alex Saalberg on 3/28/18.
 //
 
-#include "System.hpp"
+#include "Render_System.hpp"
+
+//imgui
+#include "imgui.h"
 
 using namespace std;
 using namespace glm;
@@ -121,8 +124,31 @@ void Render_System::setProjectionMatrix(shared_ptr<Program> program, float aspec
     shared_ptr<MatrixStack> P = getProjectionMatrix(aspect);
     CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix())) );
 }
+
 void Render_System::setEyePosition(Camera_Component* camera, shared_ptr<Program> prog) {
     CHECKED_GL_CALL( glUniform3f(prog->getUniform("eyePosition"), camera->distance, 0.0f, 0.f) );
+}
+
+void Render_System::renderGUI() {
+    bool my_tool_active = true;
+    // Create a window called "My First Tool", with a menu bar.
+    ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
+    
+    static float my_color[4] = {0.0f};
+    // Edit a color (stored as ~4 floats)
+    ImGui::ColorEdit4("Color", my_color);
+    
+    // Plot some values
+    const float my_values[] = { 0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f };
+    ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
+    
+    // Display contents in a scrolling region
+    ImGui::TextColored(ImVec4(1,1,0,1), "Important Stuff");
+    ImGui::BeginChild("Scrolling");
+    for (int n = 0; n < 50; n++)
+        ImGui::Text("%04d: Some text", n);
+    ImGui::EndChild();
+    ImGui::End();
 }
 
 void Render_System::setMaterial(const std::shared_ptr<Program> prog, int i)

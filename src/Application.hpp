@@ -24,7 +24,6 @@
 //Components
 #include "EntityManager.hpp"
 #include "Component.hpp"
-#include "System.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -40,8 +39,9 @@
 #include "PolyVox/Region.h"
 #include "PolyVox_OpenGL.hpp"
 
-//imgui
-#include "imgui.h"
+//Systems
+#include "Render_System.hpp"
+#include "System.hpp"
 
 class Application
 {

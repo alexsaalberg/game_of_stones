@@ -21,27 +21,6 @@ class System {
     
 };
 
-class Render_System : System {
-public:
-    WindowManager* window_manager;
-    
-    void draw(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
-    void draw_entities(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
-    
-    //Camera Functions
-    void setModelIdentityMatrix(std::shared_ptr<Program> prog);
-    
-    std::shared_ptr<MatrixStack> getViewMatrix(Camera_Component* camera);
-    void setViewMatrix(Camera_Component* camera, std::shared_ptr<Program> prog);
-    
-    std::shared_ptr<MatrixStack> getProjectionMatrix(float aspect);
-    void setProjectionMatrix(std::shared_ptr<Program> prog, float aspect);
-    
-    void setEyePosition(Camera_Component* camera, std::shared_ptr<Program> prog);
-    
-    void setMaterial(const std::shared_ptr<Program> prog, int i);
-};
-
 class Input_System : System, public EventCallbacks {
 public:
     std::shared_ptr<EntityManager> entity_manager;
