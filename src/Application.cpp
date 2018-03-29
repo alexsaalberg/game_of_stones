@@ -20,9 +20,9 @@ void Application::init(const std::string& resourceDirectory) {
     input_system.entity_manager = entity_manager;
     
 	initShaders(resourceDirectory+"/shaders");
-    //initTextures(resourceDirectory+"/models");
+    initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
-    initQuad();
+    
     initCamera();
     initPlayer();
     
@@ -62,14 +62,12 @@ void Application::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadiu
                 
                 uint8_t uVoxelValue = 0;
                 
-                
                 //If the current voxel is less than 'radius' units from the center then we make it solid.
                 if(fDistToCenter <= fRadius)
                 {
                     //Our new voxel value
                     uVoxelValue = 255;
                 }
-                
                 
                 //Wrte the voxel value into the volume
                 volData.setVoxel(x, y, z, uVoxelValue);
@@ -80,8 +78,10 @@ void Application::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadiu
 
 void Application::initShaders(const std::string& resourceDirectory)
 {
+    /*
     int width, height;
     glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
+     */
     GLSL::checkVersion();
     glClearColor(.5f, .5f, .5f, 1.0f); // Set background color.
     glEnable(GL_DEPTH_TEST); // Enable z-buffer test.
@@ -133,12 +133,7 @@ void Application::initSimpleProgram(const std::string& resourceDirectory) {
 }
 
 void Application::initTextures(const std::string& resourceDirectory) {
-    grassTexture = make_shared<Texture>();
-    grassTexture->setFilename(resourceDirectory + "/water.jpg");
-    grassTexture->init();
-    grassTexture->setUnit(0);
-    grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
-    //grassTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    
 }
 
 void Application::initGeom(const std::string& resourceDirectory) {
@@ -172,10 +167,6 @@ void Application::initGeom(const std::string& resourceDirectory) {
     }
 }
 
-void Application::initEntities() {
-	initCamera();
-}
-
 void Application::initCamera() {
     //camera = make_shared<Camera>();
     camera_id = entity_manager->create_entity();
@@ -201,148 +192,15 @@ void Application::initHelicopter(glm::vec3 position) {
     
     pos->position = position;
     renderable->model = helicopterModel;
-    //printf("HERE X%f\n", position.x);
-}
-
-
-/**** geometry set up for ground plane *****/
-void Application::initQuad()
-{
-    GLuint VertexArrayID;
-    //generate the VAO
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-    
-    float unit = 1.0f;
-    
-    // A x-z plane at y = g_groundY of dim[-g_groundSize, g_groundSize]^2
-    float CubeVertexPositions[] = {
-        //top
-        unit, unit, unit, //right, back   0
-        -unit, unit, unit, //left, back   1
-        -unit, unit, -unit, //left, front 2
-        unit, unit, -unit, //right, front 3
-        //bottom
-        unit, -unit, unit, //right, back   4
-        -unit, -unit, unit, //left, back   5
-        -unit, -unit, -unit, //left, front 6
-        unit, -unit, -unit, //right, front 7
-    };
-    
-    unsigned short CubeIndices[] = {
-        //top
-        0,3,1,
-        1,3,2,
-        //bottom
-        4,5,7,
-        7,5,6,
-        
-        //front
-        3, 7, 2,
-        2, 7, 6,
-        //back
-        1, 5, 0,
-        0, 5, 4,
-        
-        //0, 1, 4,
-        //e4, 1, 5,
-        
-        //left
-        2, 6, 1,
-        1, 6, 5,
-        
-        //right
-        0, 4, 3,
-        3, 4, 7,
-    };
-   
-    float CubeNormals[] = {
-        0, 1, 0,
-        0, 1, 0,
-        0, 1, 0,
-        0, 1, 0,
-        0, 1, 0,
-        0, 1, 0
-    };
-    
-    /*
-     float GroundTex[] = {
-     0, 0, // back
-     0, 1,
-     1, 1,
-     1, 0
-     }; */
-    
-    
-    /*float GroundTex[] = {
-        0, 0, // back
-        0, g_groundSize,
-        g_groundSize, g_groundSize,
-        g_groundSize, 0
-    };*/
-    
-    gGiboLen = 6;
-    
-    glGenBuffers(1, &GroundBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, GroundBufferObject);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(GroundPos), GroundPos, GL_STATIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(CubeVertexPositions), CubeVertexPositions, GL_STATIC_DRAW);
-    
-    //glGenBuffers(1, &GroundTextureBufferObject);
-    //glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT)*10000*12, GroundTex, GL_STATIC_DRAW);
-    
-    //glGenBuffers(1, &GroundNormalBufferObject);
-    //glBindBuffer(GL_ARRAY_BUFFER, GroundNormalBufferObject);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(GroundNorm), GroundNorm, GL_STATIC_DRAW);
-    
-    gGiboLen = 36;
-    glGenBuffers(1, &GroundIndexBufferObject);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GroundIndexBufferObject);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, gGiboLen * sizeof(unsigned short), CubeIndices, GL_STATIC_DRAW);
-}
-
-void Application::renderGround(shared_ptr<Program> prog)
-{
-    int vertex_attribute = prog->getAttribute("vPosition");
-    int normal_attribute = prog->getAttribute("vNormal");
-    int texture_attribute = prog->getAttribute("vTextureCoordinates");
-    
-    CHECKED_GL_CALL( glEnableVertexAttribArray(vertex_attribute) );
-    CHECKED_GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, GroundBufferObject) );
-    CHECKED_GL_CALL( glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0) );
-    
-    //glEnableVertexAttribArray(normal_attribute);
-    //glBindBuffer(GL_ARRAY_BUFFER, GroundNormalBufferObject);
-    //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    
-    //glEnableVertexAttribArray(texture_attribute);
-    //glBindBuffer(GL_ARRAY_BUFFER, GroundTextureBufferObject);
-    //glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    
-    // draw!
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GroundIndexBufferObject);
-    glDrawElements(GL_TRIANGLES, gGiboLen, GL_UNSIGNED_SHORT, 0);
-    //glDrawArrays(GL_TRIANGLES, 0, 10000*12);
-    
-    CHECKED_GL_CALL( glDisableVertexAttribArray(vertex_attribute) );
-    CHECKED_GL_CALL( glDisableVertexAttribArray(normal_attribute) );
-    //glDisableVertexAttribArray(texture_attribute);
 }
 
 void Application::integrate(float t, float dt) {
 	//previousState = make_shared<State>( *currentState );
-    
-    //player->body->SetLinearVelocity(b2Vec2(15.0f, 0.0f));
 
     currentState->integrate(t, dt);
-
 }
 
 void Application::render(float t, float alpha) {
-    //player = currentState->gameObjects.at(0);
-
-	//camera->player = currentState->gameObjects.at(0);
     renderState(*currentState.get(), t);
 }
 
@@ -372,61 +230,6 @@ void Application::renderState(State& state, float t) {
     render_system.draw(entity_manager, t, mainProgram);
 }
 
-void Application::initCubicMesh(shared_ptr<RawVolume<uint8_t> > volume) {
-    Mesh< CubicVertex<uint8_t> > mesh;
-    //extrac
-    //DefaultIsQuadNeeded< uint8_t > quadNeeded;
-    //mesh = extractCubicMesh(volume, ) 
-    //CubicSurfaceExtractor< CubicVertex<uint8_t>, quadNeeded > extractor;
-    mesh = PolyVox::extractCubicMesh(volume.get(), volume->getEnclosingRegion());//, quadNeeded, false );
-    
-    //CubicSurfaceExtractor< CubicVertex<uint8_t> > extractor();//(*volData.get(), volume->getEnclosingRegion(), &mesh);
-}
-
-
-// helper function to set materials for shading
-void Application::SetMaterial(const std::shared_ptr<Program> prog, int i)
-{
-    CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.2f, 0.1f) );
-    CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 3.0f) );
-    
-    switch (i)
-    {
-        case 0: //shiny blue plastic
-           glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.02f, 0.04f, 0.2f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.0f, 0.16f, 0.9f);;
-            break;
-        case 1: // flat grey
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.13f, 0.13f, 0.14f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.3f, 0.3f, 0.4f);
-            break;
-        case 2: //brass
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.3294f, 0.2235f, 0.02745f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7804f, 0.5686f, 0.11373f);
-            break;
-        case 3: //copper
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.1913f, 0.0735f, 0.0225f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
-            break;
-        case 4: //green man
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.735f, 0.0225f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.038f, 0.048f, 0.028f);
-            break;
-        case 5: //radiation
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.7, 0.7735f, 0.225f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
-            break;
-        case 6: //stone
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.1735f, 0.1225f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.438f, 0.4048f, 0.428f);
-            break;
-		case 7:
-			glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.17f, 0.01f, 0.01f);
-			glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.61f, 0.04f, 0.04f);
-			break;
-    }
-}
-
 //[0,1.0]
 float Application::randomFloat() {
     return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -435,54 +238,4 @@ float Application::randomFloat() {
 //[-1.0, 1.0]
 float Application::randomFloatNegativePossible() {
     return (randomFloat() * 2.0f) - 1.0f;
-}
-void Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-	{
-		glfwSetWindowShouldClose(window, GL_TRUE);
-	}
-    
-    float delta_angle = 5.0f;
-    
-    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
-    {
-        camera->cameraPhi += delta_angle;
-    }
-    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
-    {
-        camera->cameraPhi -= delta_angle;
-    }
-    
-    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-    {
-        camera->cameraTheta += delta_angle;
-    }
-    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
-    {
-        camera->cameraTheta -= delta_angle;
-    }
-    
-    if (key == GLFW_KEY_R && action == GLFW_PRESS)
-    {
-        camera->cameraDistance += delta_angle;
-    }
-    if (key == GLFW_KEY_F && action == GLFW_PRESS)
-    {
-        camera->cameraDistance -= delta_angle;
-    }
-}
-
-//Todo: Remove these (Idk if they're being optimized out, but hopefully
-//                    they're not being called every time the mouse moves)
-void Application::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-{}
-void Application::mouseCallback(GLFWwindow *window, int button, int action, int mods)
-{}
-void Application::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-{}
-
-void Application::resizeCallback(GLFWwindow *window, int width, int height)
-{
-	glViewport(0, 0, width, height);
 }

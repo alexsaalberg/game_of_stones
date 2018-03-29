@@ -31,7 +31,6 @@ int main(int argc, char **argv)
     windowManager->init(windowWidth, windowHeight);
     windowManager->setEventCallbacks(&application->input_system);
     
-    application->windowManager = windowManager;
     application->render_system.window_manager = windowManager;
     
     application->init(resourceDir);
@@ -82,10 +81,8 @@ int main(int argc, char **argv)
             numSimulationsThisFrame++;
         }
         
-        if( application->gameOver == false ) {
-            printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
-            //printf("Num Simulations: %d\n", numSimulationsThisFrame);
-        }
+        printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
+        printf("Num Simulations: %d\n", numSimulationsThisFrame);
         
         float alpha = accumulator/dt;
         
