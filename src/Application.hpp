@@ -22,14 +22,11 @@
 #include "State.hpp"
 
 #include "Camera.hpp"
-#include "GameObject.hpp"
 
 //Components
+#include "EntityManager.hpp"
 #include "Component.hpp"
-
-#include "DefaultInputComponent.hpp"
-#include "DefaultPhysicsComponent.hpp"
-#include "DefaultGraphicsComponent.hpp"
+#include "System.hpp"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -48,18 +45,14 @@
 //imgui
 #include "imgui.h"
 
-
 class Application : public EventCallbacks
 {
-//const (private?)
-    const double pixelsToDegrees_X = 40;
-    const double pixelsToDegrees_Y = 40;
-    
-    const float gridDistanceFromCenter = 10.0f;
-    const float gridHeight = -1.5f;
-    
 public:
 //Variables
+    std::shared_ptr<EntityManager> entity_manager;
+    Entity_Id player_id = -1;
+    Render_System render_system;
+    
     std::shared_ptr< PolyVox::RawVolume<uint8_t> > volData;
     PolyVox_OpenGL voxel_rend;
     
@@ -81,18 +74,11 @@ public:
     
     std::shared_ptr<Camera> camera;
     
-    std::shared_ptr<GameObject> player;
-    std::shared_ptr<GameObject> temporaryGameObjectPointer;
-    
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
     std::shared_ptr<Model> helicopterModel;
     
     std::vector< std::shared_ptr<Model> > models;
-    
-    std::vector< std::shared_ptr<InputComponent> > inputComponents;
-    std::vector< std::shared_ptr<PhysicsComponent> > physicsComponents;
-    std::vector< std::shared_ptr<GraphicsComponent> > graphicsComponents;
     
     std::shared_ptr<Texture> heightmapTexture;
     std::shared_ptr<Texture> grassTexture;
@@ -110,6 +96,7 @@ public:
     void createSphereInVolume(PolyVox::RawVolume<uint8_t>& volData, float fRadius);
     
     void initPlayer();
+    void initHelicopter(glm::vec3 position);
     
     void initEntities();
     void initBox2DWorld();

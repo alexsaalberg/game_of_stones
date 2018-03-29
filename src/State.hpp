@@ -10,12 +10,11 @@
 
 #include <iostream>
 #include <vector>
-#include "GameObject.hpp"
 
 class State {
 public:
 	//Variables
-    std::vector<std::shared_ptr<GameObject>> gameObjects;
+    //std::vector<std::shared_ptr<GameObject>> gameObjects;
     
 	//Constructors
 	State();

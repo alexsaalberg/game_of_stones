@@ -35,7 +35,7 @@ std::shared_ptr<MatrixStack> Camera::getViewMatrix() {
     V->pushMatrix();
         V->loadIdentity();
         V->lookAt(vec3(0, 0, 0), identityVector, vec3(0, 1, 0));
-        V->translate((-1.0f * vec3(player->position.x, 0.0f, 0.0f))); //Negative
+        V->translate((-1.0f * vec3(0.0f, 0.0f, 0.0f))); //Negative
         V->translate(identityVector);
         return V;
 }
@@ -79,5 +79,5 @@ void Camera::setOrthogonalMatrix(const std::shared_ptr<Program> prog, float aspe
 }
 
 void Camera::setEyePosition(const std::shared_ptr<Program> prog) const {
-    CHECKED_GL_CALL( glUniform3f(prog->getUniform("eyePosition"), player->position.x + cameraDistance, player->position.y, player->position.z) );
+    CHECKED_GL_CALL( glUniform3f(prog->getUniform("eyePosition"), cameraDistance, 0.0f, 0.f) );
 }

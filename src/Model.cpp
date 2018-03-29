@@ -106,7 +106,6 @@ void Model::rotate(vec3 deltaRotation) {
 }
 
 void Model::draw(const std::shared_ptr<Program> prog, shared_ptr<MatrixStack> M) const {
-    
     M->pushMatrix();
     M->scale(scale);
     M->rotate(radians(rotation.x), vec3(1, 0, 0));

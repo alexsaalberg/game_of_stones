@@ -16,7 +16,6 @@
 
 #include "MatrixStack.h"
 
-#include "GameObject.hpp"
 #include "Program.h"
 
 
@@ -28,8 +27,6 @@ public:
     float cameraTheta = 1; //around Y axis (turn head left & right)
     float cameraPhi = 1; // around Z axis (nod up & down)
     float cameraDistance = 5.0f; //Distance from view to character (think 2.5d view)
-    
-    std::shared_ptr<GameObject> player; //GameObject to center camera around (almost always player)
     
     //Functions
     void setModelIdentityMatrix(const std::shared_ptr<Program> prog) const;
@@ -46,7 +43,6 @@ public:
     void changeRot();
     
     glm::vec2 getXBounds(float aspect);
-    bool isGameObjectOnScreen(std::shared_ptr<GameObject> object);
 };
 
 #endif /* Camera_hpp */

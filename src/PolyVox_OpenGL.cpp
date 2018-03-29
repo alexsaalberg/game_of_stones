@@ -65,16 +65,18 @@ void PolyVox_OpenGL::render(shared_ptr<Program> prog) {
     CHECKED_GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer) );
     //Draw with the index buffer
     CHECKED_GL_CALL( glDrawElements(GL_TRIANGLES, mesh.getNoOfIndices(), GL_UNSIGNED_INT, 0) );
-    printf("VBuffer:%d\t", vertexBuffer);
-    printf("VAttrib:%d\t", vertex_attribute);
-    printf("IBuffer:%d\n", indexBuffer);
-    printf("Just drew %d indices %d vertices\n", mesh.getNoOfIndices(), mesh.getNoOfVertices());
+    //printf("VBuffer:%d\t", vertexBuffer);
+    //printf("VAttrib:%d\t", vertex_attribute);
+    //printf("IBuffer:%d\n", indexBuffer);
+    //printf("Just drew %zu indices %d vertices\n", mesh.getNoOfIndices(), mesh.getNoOfVertices());
     
+    /*
     static MemoryEditor mem_edit_1;                                            // store your state somewhere
     mem_edit_1.DrawWindow("Memory Editor", (uint8_t*)mesh.getRawIndexData(), mesh.getNoOfVertices(), 0x0000); // create a window and draw memory editor (if you already have a window, use DrawContents())
-    
+    */
+     
     CHECKED_GL_CALL( glDisableVertexAttribArray(vertex_attribute) );
     
     //CHECKED_GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-    printf("\n");
+    //printf("\n");
 }

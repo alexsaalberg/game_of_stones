@@ -8,35 +8,34 @@
 #ifndef Component_hpp
 #define Component_hpp
 
-#include <stdio.h>
-#include <memory>
+#include <memory> //shared_ptr
 
-#include "GameObject.hpp"
-#include "Program.h"
+#include <glm/gtc/type_ptr.hpp> //glm stuff (vec3, quat)
 
-//Forward declaration because GameObject.hpp and Component.hpp include eachother
-class GameObject;
+#include "Model.h"
 
-class InputComponent
-{
-public:
-    virtual ~InputComponent() {}
-    virtual void update(GameObject& gameObject, float dt) = 0;
+class Component {
 };
 
-class PhysicsComponent
-{
-public:
-    virtual ~PhysicsComponent() {}
-    virtual void update(GameObject& gameObject, float dt) = 0;
+class Active_Component : Component {
 };
 
-class GraphicsComponent
-{
+class Renderable_Component : Component {
 public:
-    int material = 2;
-    virtual ~GraphicsComponent() {}
-    virtual void update(GameObject& gameObject, float t, std::shared_ptr<Program> prog) = 0;
+    unsigned int entity_id;
+    std::shared_ptr<Model> model;
 };
 
+class Position_Component : Component {
+public:
+    glm::vec3 position;
+};
+
+class Player_Component : Component {
+    
+};
+
+class Camera_Component : Component {
+    
+};
 #endif /* Component_hpp */

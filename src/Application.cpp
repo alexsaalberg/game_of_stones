@@ -8,9 +8,6 @@
 #include "Application.hpp"
 #include "stb_image.h"
 
-#define PI 3.1415
-#define B2DRAW 1
-
 using namespace std;
 using namespace glm;
 using namespace PolyVox;
@@ -18,18 +15,31 @@ using namespace PolyVox;
 void Application::init(const std::string& resourceDirectory) {
 	currentState = make_shared<State>();
 	previousState = make_shared<State>();
+    entity_manager = make_shared<EntityManager>();
     
 	initShaders(resourceDirectory+"/shaders");
     //initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
     initQuad();
-    initPlayer();
     initCamera();
+    initPlayer();
+    
+    vec3 base_pos = vec3(10.0f, 0.0f, 0.0f);
+    vec3 pos = vec3(0.0f);
+    for(int i = 0; i < 10; i++) {
+        for(int j = 0; j < 10; j++) {
+            for(int k = 0; k < 10; k++) {
+                pos = vec3(i, j, k);
+                initHelicopter(base_pos + pos);
+            }
+        }
+    }
     
     volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,63,63,63));
     createSphereInVolume(*volData.get(), 30.0f);
     voxel_rend.initCubicMesh(volData.get());
 }
+
 void Application::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadius)
 {
     //This vector hold the position of the center of the volume
@@ -49,6 +59,7 @@ void Application::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadiu
                 
                 uint8_t uVoxelValue = 0;
                 
+                
                 //If the current voxel is less than 'radius' units from the center then we make it solid.
                 if(fDistToCenter <= fRadius)
                 {
@@ -56,26 +67,12 @@ void Application::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadiu
                     uVoxelValue = 255;
                 }
                 
+                
                 //Wrte the voxel value into the volume
                 volData.setVoxel(x, y, z, uVoxelValue);
             }
         }
     }
-}
-
-void Application::initPlayer() {
-    shared_ptr<DefaultInputComponent> input;
-    input = make_shared<DefaultInputComponent>();
-    
-    shared_ptr<DefaultPhysicsComponent> physics;
-    physics = make_shared<DefaultPhysicsComponent>();
-    
-    shared_ptr<DefaultGraphicsComponent> graphics;
-    graphics = make_shared<DefaultGraphicsComponent>();
-    graphics->models.push_back(helicopterModel);
-    
-    player = make_shared<GameObject>(input, physics, graphics);
-    currentState->gameObjects.push_back(player);
 }
 
 void Application::initShaders(const std::string& resourceDirectory)
@@ -168,6 +165,7 @@ void Application::initGeom(const std::string& resourceDirectory) {
         helicopterModel->createModel(TOshapes, objMaterials);
         helicopterModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
         helicopterModel->scale *= 2.0f;
+        printf("Helicopter Model!\n");
     }
 }
 
@@ -177,7 +175,26 @@ void Application::initEntities() {
 
 void Application::initCamera() {
     camera = make_shared<Camera>();
-    camera->player = player;
+}
+
+void Application::initPlayer() {
+    player_id = entity_manager->create_entity();
+    Position_Component* position = entity_manager->add_component<Position_Component>(player_id);
+    Renderable_Component* renderable = entity_manager->add_component<Renderable_Component>(player_id);
+    
+    position->position = vec3(1.0f);
+    renderable->model = helicopterModel;
+    printf("HERE\n");
+}
+
+void Application::initHelicopter(glm::vec3 position) {
+    int id = entity_manager->create_entity();
+    Position_Component* pos = entity_manager->add_component<Position_Component>(id);
+    Renderable_Component* renderable = entity_manager->add_component<Renderable_Component>(id);
+    
+    pos->position = position;
+    renderable->model = helicopterModel;
+    //printf("HERE X%f\n", position.x);
 }
 
 
@@ -364,8 +381,8 @@ void Application::renderState(State& state, float t) {
         camera->setProjectionMatrix(mainProgram, aspect);
 
         camera->setEyePosition(mainProgram);
-        camera->cameraTheta = t * 50.0f;
-    camera->cameraDistance = 30.0f;// + (t * t );
+        //camera->cameraTheta = t * 50.0f;
+        //camera->cameraDistance = 30.0f;// + (t * t );
 
         vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 20.0f, 10.0f); //from X to origin
         vec3 directionTowardsLight = -directionFromLight;
@@ -383,16 +400,18 @@ void Application::renderState(State& state, float t) {
     M->popMatrix();
     
     /* PRIMARY RENDER LOOP */
+    /*
     for(auto& gameObject : state.gameObjects) {
         if (gameObject->enabled) {
             SetMaterial(mainProgram, gameObject->graphics->material);
             gameObject->render(t, mainProgram);
         }
-    }
+    }*/
+    render_system.draw(entity_manager, t, mainProgram);
     
     mainProgram->unbind();
     
-    renderGUI();
+    //renderGUI();
 }
 
 void Application::initCubicMesh(shared_ptr<RawVolume<uint8_t> > volume) {
@@ -466,6 +485,34 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
     
+    float delta_angle = 5.0f;
+    
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+    {
+        camera->cameraPhi += delta_angle;
+    }
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+    {
+        camera->cameraPhi -= delta_angle;
+    }
+    
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+    {
+        camera->cameraTheta += delta_angle;
+    }
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+    {
+        camera->cameraTheta -= delta_angle;
+    }
+    
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    {
+        camera->cameraDistance += delta_angle;
+    }
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+    {
+        camera->cameraDistance -= delta_angle;
+    }
 }
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully

@@ -44,6 +44,7 @@ int main(int argc, char **argv)
     
     int numSimulationsThisFrame = 0;
     
+    /*
     //IMGUI
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -52,12 +53,13 @@ int main(int argc, char **argv)
     ImGui_ImplGlfwGL3_Init(windowManager->getHandle(), true);
     // Setup style
     //ImGui::StyleColorsDark();
+    */
     
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
     {
-        ImGui_ImplGlfwGL3_NewFrame();
+        //ImGui_ImplGlfwGL3_NewFrame();
         double newTime = glfwGetTime();
         double frameTime = newTime - currentTime;
         currentTime = newTime;
@@ -80,7 +82,7 @@ int main(int argc, char **argv)
         }
         
         if( application->gameOver == false ) {
-            //printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
+            printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
             //printf("Num Simulations: %d\n", numSimulationsThisFrame);
         }
         
@@ -90,8 +92,8 @@ int main(int argc, char **argv)
         application->render( t, alpha);
         
         //Render ImGUI
-        ImGui::Render();
-        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+        //ImGui::Render();
+        //ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         
         // Swap front and back buffers.
         glfwSwapBuffers(windowManager->getHandle());
