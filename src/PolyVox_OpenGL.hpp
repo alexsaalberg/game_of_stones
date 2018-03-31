@@ -19,7 +19,6 @@
 #include "PolyVox/RawVolume.h"
 #include "PolyVox/Region.h"
 
-
 #include "GLSL.h"
 
 

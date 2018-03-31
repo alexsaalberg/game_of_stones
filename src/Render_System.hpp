@@ -16,12 +16,21 @@
 #include "WindowManager.h" //WindowManager
 #include "Program.h"
 
+#include "PolyVox_OpenGL.hpp"
+
 class Render_System : System {
 public:
     WindowManager* window_manager;
     
     void draw(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
     void draw_entities(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
+    
+    //Voxel Stuff
+    void initVoxels();
+    std::shared_ptr< PolyVox::RawVolume<uint8_t> > volData;
+    PolyVox_OpenGL voxel_rend;
+    
+    void createSphereInVolume(PolyVox::RawVolume<uint8_t>& volData, float fRadius);
     
     //Camera Functions
     void setModelIdentityMatrix(std::shared_ptr<Program> prog);

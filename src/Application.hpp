@@ -48,8 +48,6 @@ public:
     Render_System render_system;
     Input_System input_system;
     
-    std::shared_ptr< PolyVox::RawVolume<uint8_t> > volData;
-    PolyVox_OpenGL voxel_rend;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;
@@ -67,7 +65,6 @@ public:
     /* Initilizations */
     void init(const std::string& resourceDirectory);
     
-    void createSphereInVolume(PolyVox::RawVolume<uint8_t>& volData, float fRadius);
     
     void initPlayer();
     void initHelicopter(glm::vec3 position);

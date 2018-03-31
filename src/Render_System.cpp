@@ -13,6 +13,13 @@
 
 using namespace std;
 using namespace glm;
+using namespace PolyVox;
+
+void Render_System::initVoxels() {
+    volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,63,63,63));
+    createSphereInVolume(*volData.get(), 30.0f);
+    voxel_rend.initCubicMesh(volData.get());
+}
 
 void Render_System::draw(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
     int windowWidth, windowHeight;
@@ -49,6 +56,8 @@ void Render_System::draw(shared_ptr<EntityManager> entity_manager, float t, std:
     
     draw_entities(entity_manager, t, program);
     
+    voxel_rend.render(program);
+    
     program->unbind();
 }
 
@@ -75,6 +84,40 @@ void Render_System::draw_entities(shared_ptr<EntityManager> entity_manager, floa
         renderable_component->model->draw(program, M);
         
         M->popMatrix();
+    }
+}
+
+//Voxel Stuff
+void Render_System::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadius)
+{
+    //This vector hold the position of the center of the volume
+    Vector3DFloat v3dVolCenter(volData.getWidth() / 2, volData.getHeight() / 2, volData.getDepth() / 2);
+    
+    //This three-level for loop iterates over every voxel in the volume
+    for (int z = 0; z < volData.getDepth(); z++)
+    {
+        for (int y = 0; y < volData.getHeight(); y++)
+        {
+            for (int x = 0; x < volData.getWidth(); x++)
+            {
+                //Store our current position as a vector...
+                Vector3DFloat v3dCurrentPos(x,y,z);
+                //And compute how far the current position is from the center of the volume
+                float fDistToCenter = (v3dCurrentPos - v3dVolCenter).length();
+                
+                uint8_t uVoxelValue = 0;
+                
+                //If the current voxel is less than 'radius' units from the center then we make it solid.
+                if(fDistToCenter <= fRadius)
+                {
+                    //Our new voxel value
+                    uVoxelValue = 255;
+                }
+                
+                //Wrte the voxel value into the volume
+                volData.setVoxel(x, y, z, uVoxelValue);
+            }
+        }
     }
 }
 

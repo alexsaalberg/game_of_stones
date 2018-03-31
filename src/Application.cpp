@@ -19,6 +19,8 @@ void Application::init(const std::string& resourceDirectory) {
     
     input_system.entity_manager = entity_manager;
     
+    render_system.initVoxels();
+    
 	initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
     initGeom(resourceDirectory+"/models");
@@ -38,43 +40,8 @@ void Application::init(const std::string& resourceDirectory) {
         }
     }*/
     
-    volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,63,63,63));
-    createSphereInVolume(*volData.get(), 30.0f);
-    voxel_rend.initCubicMesh(volData.get());
 }
 
-void Application::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadius)
-{
-    //This vector hold the position of the center of the volume
-    Vector3DFloat v3dVolCenter(volData.getWidth() / 2, volData.getHeight() / 2, volData.getDepth() / 2);
-    
-    //This three-level for loop iterates over every voxel in the volume
-    for (int z = 0; z < volData.getDepth(); z++)
-    {
-        for (int y = 0; y < volData.getHeight(); y++)
-        {
-            for (int x = 0; x < volData.getWidth(); x++)
-            {
-                //Store our current position as a vector...
-                Vector3DFloat v3dCurrentPos(x,y,z);
-                //And compute how far the current position is from the center of the volume
-                float fDistToCenter = (v3dCurrentPos - v3dVolCenter).length();
-                
-                uint8_t uVoxelValue = 0;
-                
-                //If the current voxel is less than 'radius' units from the center then we make it solid.
-                if(fDistToCenter <= fRadius)
-                {
-                    //Our new voxel value
-                    uVoxelValue = 255;
-                }
-                
-                //Wrte the voxel value into the volume
-                volData.setVoxel(x, y, z, uVoxelValue);
-            }
-        }
-    }
-}
 
 void Application::initShaders(const std::string& resourceDirectory)
 {
