@@ -55,6 +55,7 @@ void Application::initShaders(const std::string& resourceDirectory)
     
     initMainProgram(resourceDirectory);
     initSimpleProgram(resourceDirectory);
+    initVoxelProgram(resourceDirectory);
 }
 
 void Application::initMainProgram(const std::string& resourceDirectory) {
@@ -97,6 +98,32 @@ void Application::initSimpleProgram(const std::string& resourceDirectory) {
     }
     simpleProgram->addUniform("P");
     simpleProgram->addUniform("V");
+}
+
+void Application::initVoxelProgram(const std::string& resourceDirectory) {
+    voxelProgram = make_shared<Program>();
+    voxelProgram->setVerbose(true);
+    voxelProgram->setShaderNames(resourceDirectory + "/voxel_normalCalc_vert.glsl",
+                                  resourceDirectory + "/voxel_normalCalc_frag.glsl");
+    
+    if (! voxelProgram->init()) {
+        std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+        exit(1);
+    }
+    //Transformation Matrices
+    voxelProgram->addUniform("P");
+    voxelProgram->addUniform("V");
+    voxelProgram->addUniform("M");
+    //Material constants
+    voxelProgram->addUniform("mAmbientCoefficient");
+    voxelProgram->addUniform("mDiffusionCoefficient");
+    voxelProgram->addUniform("mSpecularCoefficient");
+    voxelProgram->addUniform("mSpecularAlpha");
+    //Lighting
+    voxelProgram->addUniform("eyePosition");
+    voxelProgram->addUniform("directionTowardsLight");
+    
+    voxelProgram->addAttribute("vPosition");
 }
 
 void Application::initTextures(const std::string& resourceDirectory) {
@@ -172,7 +199,12 @@ void Application::render(float t, float alpha) {
 }
 
 void Application::renderState(State& state, float t) {
+    CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
+    CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+    CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
+    
     render_system.draw(entity_manager, t, mainProgram);
+    render_system.draw_voxels(entity_manager, t, voxelProgram);
 }
 
 //[0,1.0]

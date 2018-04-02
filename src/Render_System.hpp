@@ -24,6 +24,7 @@ public:
     
     void draw(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
     void draw_entities(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
+    void draw_voxels(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
     
     //Voxel Stuff
     void initVoxels();
@@ -33,6 +34,8 @@ public:
     void createSphereInVolume(PolyVox::RawVolume<uint8_t>& volData, float fRadius);
     
     //Camera Functions
+    void setMVPE(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
+    
     void setModelIdentityMatrix(std::shared_ptr<Program> prog);
     
     std::shared_ptr<MatrixStack> getViewMatrix(Camera_Component* camera);

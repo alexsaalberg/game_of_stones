@@ -22,46 +22,23 @@ void Render_System::initVoxels() {
 }
 
 void Render_System::draw(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
-    int windowWidth, windowHeight;
-    glfwGetFramebufferSize(window_manager->getHandle(), &windowWidth, &windowHeight);
-    glViewport(0, 0, windowWidth, windowHeight);
     
-    float aspect = windowWidth/(float)windowHeight;
-    shared_ptr<MatrixStack> M;
-    M = make_shared<MatrixStack>();
     
-    CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
-    CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
-    CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
     
     program->bind();
     
-    vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
-    Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
-    
-    setModelIdentityMatrix(program);
-    setViewMatrix(camera, program);
-    setProjectionMatrix(program, aspect);
-    
-    setEyePosition(camera, program);
-    //camera->cameraTheta = t * 50.0f;
-    //camera->cameraDistance = 30.0f;// + (t * t );
-    
-    vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 20.0f, 10.0f); //from X to origin
-    vec3 directionTowardsLight = -directionFromLight;
-    CHECKED_GL_CALL( glUniform3f(program->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
-    
-    setMaterial(program, 6);
-    
+    setMVPE(entity_manager, t, program);
     
     draw_entities(entity_manager, t, program);
-    
-    voxel_rend.render(program);
     
     program->unbind();
 }
 
 void Render_System::draw_entities(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
+    
+    
+    setMaterial(program, 6);
+    
     vector<Entity_Id> id_list = entity_manager->get_ids_with_components<Position_Component, Renderable_Component>();
     
     Renderable_Component* renderable_component;
@@ -87,7 +64,51 @@ void Render_System::draw_entities(shared_ptr<EntityManager> entity_manager, floa
     }
 }
 
+void Render_System::setMVPE(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
+    int windowWidth, windowHeight;
+    glfwGetFramebufferSize(window_manager->getHandle(), &windowWidth, &windowHeight);
+    glViewport(0, 0, windowWidth, windowHeight);
+    
+    float aspect = windowWidth/(float)windowHeight;
+    
+    
+    
+    vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+    Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
+    
+    setModelIdentityMatrix(program);
+    setViewMatrix(camera, program);
+    setProjectionMatrix(program, aspect);
+    
+    setEyePosition(camera, program);
+    //camera->cameraTheta = t * 50.0f;
+    //camera->cameraDistance = 30.0f;// + (t * t );
+    
+    vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 0.0f, 10.0f); //from X to origin
+    vec3 directionTowardsLight = -directionFromLight;
+    CHECKED_GL_CALL( glUniform3f(program->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
+}
+
 //Voxel Stuff
+void Render_System::draw_voxels(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
+    program->bind();
+    
+    setMVPE(entity_manager, t, program);
+    
+    float radius = 5.0f;
+    
+    auto M = make_shared<MatrixStack>();
+    M->loadIdentity();
+    M->translate(radius * vec3(sin(t), 0.0f, cos(t)));
+    
+    CHECKED_GL_CALL(glUniformMatrix4fv(program->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+
+    setMaterial(program, 2);
+    voxel_rend.render(program);
+    
+    program->unbind();
+}
+
 void Render_System::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadius)
 {
     //This vector hold the position of the center of the volume

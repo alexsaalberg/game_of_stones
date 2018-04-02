@@ -52,6 +52,7 @@ public:
     //Shader Programs
     std::shared_ptr<Program> mainProgram;
     std::shared_ptr<Program> simpleProgram;
+    std::shared_ptr<Program> voxelProgram;
     
     //State
     std::shared_ptr<State> currentState;
@@ -72,6 +73,7 @@ public:
     void initShaders(const std::string& resourceDirectory);
     void initMainProgram(const std::string& resourceDirectory);
     void initSimpleProgram(const std::string& resourceDirectory);
+    void initVoxelProgram(const std::string& resourceDirectory);
 
     void initTextures(const std::string& resourceDirectory);
 
