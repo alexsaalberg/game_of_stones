@@ -11,13 +11,22 @@
 //imgui
 #include "imgui.h"
 
+#include "FastNoise.h"
+#include "PolyVox/FilePager.h"
+
 using namespace std;
 using namespace glm;
 using namespace PolyVox;
 
 void Render_System::initVoxels() {
-    volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,63,63,63));
-    createSphereInVolume(*volData.get(), 30.0f);
+    //volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,63,63,63));
+    //createSphereInVolume(*volData.get(), 30.0f);
+    
+    volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,127,127,127));
+    pagedData = make_shared<PagedVolume<uint8_t>>(new FilePager<uint8_t>());
+    
+    createLand(*volData.get());
+    
     voxel_rend.initCubicMesh(volData.get());
 }
 
@@ -103,10 +112,122 @@ void Render_System::draw_voxels(shared_ptr<EntityManager> entity_manager, float 
     
     CHECKED_GL_CALL(glUniformMatrix4fv(program->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
 
-    setMaterial(program, 2);
+    setMaterial(program, 6);
     voxel_rend.render(program);
     
     program->unbind();
+}
+
+void Render_System::createFunction(RawVolume<uint8_t>& volData)
+{
+    
+    //This three-level for loop iterates over every voxel in the volume
+    for (int z = 0; z < volData.getDepth()-3; z++)
+    {
+            for (int x = 0; x < volData.getWidth()-3; x++)
+            {
+                uint8_t uVoxelValue = 0;
+                
+                float xF = (float) x;
+                float zF = (float) z;
+                float scale = 0.01f;
+                xF *= scale;
+                zF *= scale;
+                
+                //sin(10(x^2+y^2))/10
+                float calc = sin(10.0f * (xF*xF+zF*zF))/10.0f;
+                //printf("calc %f\n", calc);
+                
+                //1/(15(x^2+y^2))
+                //calc = 1 / (15.0f*(xF*xF+zF*zF));
+                
+                calc = (calc + 1.0f) / 2.0f;
+                float height = (int)(calc * 100.0f);
+                
+                for (int y = 0; y < volData.getHeight()-3; y++)
+                {
+                    uVoxelValue = 0;
+                    if(y < height) {
+                        uVoxelValue = 5;
+                    }
+                    volData.setVoxel(x, y, z, uVoxelValue);
+                }
+            }
+        
+    }
+}
+
+void Render_System::createLand(RawVolume<uint8_t>& volData)
+{
+    FastNoise myNoise; // Create a FastNoise object
+    //myNoise.SetSeed(13);
+    myNoise.SetNoiseType(FastNoise::SimplexFractal); // Set the desired noise type
+    
+    myNoise.SetFractalOctaves(4);
+    myNoise.SetFractalLacunarity(3);
+    myNoise.SetFractalGain(0.5f);
+    
+    //This vector hold the position of the center of the volume
+    Vector3DFloat v3dVolCenter(volData.getWidth() / 2, volData.getHeight() / 2, volData.getDepth() / 2);
+    
+    /*
+    //This three-level for loop iterates over every voxel in the volume
+    for (int z = 0; z < volData.getDepth(); z++)
+    {
+        for (int y = 0; y < volData.getHeight(); y++)
+        {
+            for (int x = 0; x < volData.getWidth(); x++)
+            {
+                //Store our current position as a vector...
+                Vector3DFloat v3dCurrentPos(x,y,z);
+                //And compute how far the current position is from the center of the volume
+                //float fDistToCenter = (v3dCurrentPos - v3dVolCenter).length();
+                float val = myNoise.GetValue(x, y, z);
+                if(val > 0.01f || ((x==0) && (y==0) && (z==0))) {
+                    //printf("X%d Y%d Z%d =  %f\n", x,y,z, val);
+                }
+                uint8_t uVoxelValue = 0;
+                if(val > 0.5f)
+                    uVoxelValue = 1;
+                
+                //= myNoise.GetValue(x, y);
+                
+                //Wrte the voxel value into the volume
+                volData.setVoxel(x, y, z, uVoxelValue);
+            }
+        }
+    }
+     */
+    
+    for(int x = 0; x < volData.getWidth()-2; x++) {
+        for(int z = 0; z < volData.getDepth()-2; z++) {
+            float xF = (float) x;
+            float zF = (float) z;
+            uint8_t voxelVal = 0;
+            
+            float scale = 0.01f;
+            xF *= scale;
+            zF *= scale;
+            
+            float val = myNoise.GetValue(x, z);
+            
+            val += 1.0f;
+            val *= 0.5f;
+            
+            int height = (int) (val * 100.0f);
+            
+            printf("X%d Z%d, height %d\n", x, z, height);
+            
+            for(int y = 0; y < volData.getHeight()-2; y++) {
+                voxelVal = 0;
+                
+                if(y < height)
+                    voxelVal = 255;
+                
+                volData.setVoxel(x, y, z, voxelVal);
+            }
+        }
+    }
 }
 
 void Render_System::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadius)
@@ -186,7 +307,14 @@ void Render_System::setProjectionMatrix(shared_ptr<Program> program, float aspec
 }
 
 void Render_System::setEyePosition(Camera_Component* camera, shared_ptr<Program> prog) {
-    CHECKED_GL_CALL( glUniform3f(prog->getUniform("eyePosition"), camera->distance, 0.0f, 0.f) );
+    float x = cos(radians(camera->phi))*cos(radians(camera->theta));
+    float y = sin(radians(camera->phi));
+    float z = cos(radians(camera->phi))*sin(radians(camera->theta));
+    
+    vec3 cV = vec3(0.0f) - vec3(x, y, z); //from origin to xyz
+    cV *= camera->distance;
+    
+    CHECKED_GL_CALL( glUniform3f(prog->getUniform("eyePosition"), cV.x, cV.y, cV.z) );
 }
 
 void Render_System::renderGUI() {

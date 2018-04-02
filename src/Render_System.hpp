@@ -29,8 +29,11 @@ public:
     //Voxel Stuff
     void initVoxels();
     std::shared_ptr< PolyVox::RawVolume<uint8_t> > volData;
+    std::shared_ptr< PolyVox::PagedVolume<uint8_t> > pagedData;
     PolyVox_OpenGL voxel_rend;
     
+    void createFunction(PolyVox::RawVolume<uint8_t>& volData);
+    void createLand(PolyVox::RawVolume<uint8_t>& volData);
     void createSphereInVolume(PolyVox::RawVolume<uint8_t>& volData, float fRadius);
     
     //Camera Functions

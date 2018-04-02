@@ -24,6 +24,7 @@ void Input_System::keyCallback(GLFWwindow *window, int key, int scancode, int ac
     Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
     
     float delta_angle = 5.0f;
+    float delta_distance = 30.0f;
     
     if (key == GLFW_KEY_UP && action == GLFW_PRESS)
     {
@@ -45,11 +46,11 @@ void Input_System::keyCallback(GLFWwindow *window, int key, int scancode, int ac
     
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
-        camera->distance += delta_angle;
+        camera->distance += delta_distance;
     }
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
     {
-        camera->distance -= delta_angle;
+        camera->distance -= delta_distance;
     }
 }
 

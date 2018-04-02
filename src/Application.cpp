@@ -166,6 +166,7 @@ void Application::initCamera() {
     camera_id = entity_manager->create_entity();
     Position_Component* position = entity_manager->add_component<Position_Component>(camera_id);
     Camera_Component* camera = entity_manager->add_component<Camera_Component>(camera_id);
+    camera->distance = 500.0f;
     
     position->position = vec3(1.0f);
 }
