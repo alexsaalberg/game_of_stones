@@ -21,10 +21,23 @@ void Input_System::keyCallback(GLFWwindow *window, int key, int scancode, int ac
     }
     
     vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
-    Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
+    Entity_Id camera_id = camera_ids.at(0);
     
-    float delta_angle = 5.0f;
-    float delta_distance = 30.0f;
+    Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
+    Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
+    
+    static float move_scale = 1.0f;
+    float delta_angle = 5.0 * move_scale;
+    float delta_distance = 30.0f * move_scale;
+    
+    if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    {
+        move_scale += 0.1f;
+    }
+    if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    {
+        move_scale -=0.1f;
+    }
     
     if (key == GLFW_KEY_UP && action == GLFW_PRESS)
     {

@@ -10,7 +10,7 @@
 
 using namespace std;
 using namespace glm;
-using namespace PolyVox;
+//using namespace PolyVox;
 
 void Application::init(const std::string& resourceDirectory) {
 	currentState = make_shared<State>();

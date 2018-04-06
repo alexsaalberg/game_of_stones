@@ -17,6 +17,7 @@
 #include "Program.h"
 
 #include "PolyVox_OpenGL.hpp"
+#include "PolyVoxExample.h"
 
 class Render_System : System {
 public:
@@ -31,8 +32,12 @@ public:
     std::shared_ptr< PolyVox::RawVolume<uint8_t> > volData;
     std::shared_ptr< PolyVox::PagedVolume<uint8_t> > pagedData;
     PolyVox_OpenGL voxel_rend;
+    PolyVoxExample poly_vox_example;
     
     void createFunction(PolyVox::RawVolume<uint8_t>& volData);
+    void createFunction3D(PolyVox::RawVolume<uint8_t>& volData);
+    void clearRegion(PolyVox::PagedVolume<uint8_t>& volData, PolyVox::Region region);
+    void createLand(PolyVox::PagedVolume<uint8_t>& volData, PolyVox::Region region);
     void createLand(PolyVox::RawVolume<uint8_t>& volData);
     void createSphereInVolume(PolyVox::RawVolume<uint8_t>& volData, float fRadius);
     

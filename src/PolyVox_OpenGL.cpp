@@ -11,7 +11,8 @@
 using namespace PolyVox;
 using namespace std;
 
-void PolyVox_OpenGL::initCubicMesh(RawVolume<uint8_t>* volume) {
+/*
+void PolyVox_OpenGL::initCubicMesh_RawVolume(RawVolume<uint8_t>* volume) {
     mesh = PolyVox::extractCubicMesh(volume, volume->getEnclosingRegion());
     
     //Build an OpenGL index buffer
@@ -27,7 +28,41 @@ void PolyVox_OpenGL::initCubicMesh(RawVolume<uint8_t>* volume) {
     beginIndex = 0;
     endIndex = mesh.getNoOfIndices();
 }
+ */
 
+void PolyVox_OpenGL::initCubicMesh_PagedVolume(PagedVolume<uint8_t>* volume, Region region) {
+    region.grow(5);
+    
+    // Perform the extraction for this region of the volume
+    auto mesh = extractCubicMesh(volume, region);
+    
+    // The returned mesh needs to be decoded to be appropriate for GPU rendering.
+    auto decodedMesh = decodeMesh(mesh);
+    
+    //mesh = PolyVox::extractCubicMesh(volume, region);
+    //PolyVox::Mesh<uint8_t> mesh2 = PolyVox::decodeMesh<uint8_t>(&mesh);
+    
+    //Build an OpenGL index buffer
+    glGenBuffers(1, &indexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, decodedMesh.getNoOfIndices() * sizeof(unsigned int), decodedMesh.getRawIndexData(), GL_STATIC_DRAW);
+    
+    //Build an OpenGL vertex buffer
+    glGenBuffers(1, &vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, mesh.getNoOfVertices() * sizeof(CubicVertex<uint8_t>), decodedMesh.getRawVertexData(), GL_STATIC_DRAW);
+    
+    for(int i = 0; i < 100; i++) {
+        printf("Offset %d: %d %d %d\n", i, decodedMesh.getOffset().getX(), decodedMesh.getOffset().getY(), decodedMesh.getOffset().getZ());
+    }
+    
+    beginIndex = 0;
+    endIndex = decodedMesh.getNoOfIndices();
+    
+    numVertices = decodedMesh.getNoOfVertices();
+}
+
+/*
 void PolyVox_OpenGL::initCubicMesh(shared_ptr<RawVolume<uint8_t> > volume) {
     mesh = PolyVox::extractCubicMesh(volume.get(), volume->getEnclosingRegion());
     
@@ -44,14 +79,14 @@ void PolyVox_OpenGL::initCubicMesh(shared_ptr<RawVolume<uint8_t> > volume) {
     beginIndex = 0;
     endIndex = mesh.getNoOfIndices();
     exit(-1);
-}
+}*/
 
 void PolyVox_OpenGL::render(shared_ptr<Program> prog) {
     int vertex_attribute = prog->getAttribute("vPosition");
     
     CHECKED_GL_CALL(glEnableVertexAttribArray(vertex_attribute) );
     CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer));
-    CHECKED_GL_CALL(glVertexAttribPointer(vertex_attribute, 4, GL_BYTE, GL_FALSE, 0, (const void *)0));
+    CHECKED_GL_CALL(glVertexAttribPointer(vertex_attribute, 3, GL_BYTE, GL_FALSE, 0, (const void *)0));
     
     //Bind the vertex buffer
     CHECKED_GL_CALL( glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer) );
@@ -64,11 +99,11 @@ void PolyVox_OpenGL::render(shared_ptr<Program> prog) {
     //Bind the index buffer
     CHECKED_GL_CALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer) );
     //Draw with the index buffer
-    CHECKED_GL_CALL( glDrawElements(GL_TRIANGLES, mesh.getNoOfIndices(), GL_UNSIGNED_INT, 0) );
+    CHECKED_GL_CALL( glDrawElements(GL_TRIANGLES, endIndex, GL_UNSIGNED_INT, 0) );
     //printf("VBuffer:%d\t", vertexBuffer);
     //printf("VAttrib:%d\t", vertex_attribute);
     //printf("IBuffer:%d\n", indexBuffer);
-    //printf("Just drew %zu indices %d vertices\n", mesh.getNoOfIndices(), mesh.getNoOfVertices());
+    printf("Just drew %d indices %d vertices\n", endIndex, numVertices);
     
     /*
     static MemoryEditor mem_edit_1;                                            // store your state somewhere

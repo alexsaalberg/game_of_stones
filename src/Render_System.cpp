@@ -13,6 +13,7 @@
 
 #include "FastNoise.h"
 #include "PolyVox/FilePager.h"
+#include "NoisePager.h"
 
 using namespace std;
 using namespace glm;
@@ -23,17 +24,70 @@ void Render_System::initVoxels() {
     //createSphereInVolume(*volData.get(), 30.0f);
     
     volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,127,127,127));
-    pagedData = make_shared<PagedVolume<uint8_t>>(new FilePager<uint8_t>());
+    pagedData = make_shared<PagedVolume<uint8_t>>(new NoisePager());
     
-    createLand(*volData.get());
+    //createLand(*volData.get());
+    //createFunction3D(*volData.get());
     
-    voxel_rend.initCubicMesh(volData.get());
+    //voxel_rend.initCubicMesh_RawVolume(volData.get());
+    Region region = Region(1,1,1,244,244,244);
+    //Region region = Region(1,1,1,255,255,255);
+    //Region region2 = Region(-100,-100,-100,100,100,100);
+    
+    //pagedData->flushAll();
+    //pagedData->prefetch(region2);
+    //clearRegion(*pagedData.get(), region2);
+    createLand(*pagedData.get(), region);
+    
+    
+    const int32_t extractedRegionSize = 128;
+    int meshCounter = 0;
+    const int32_t render_edge_length = 512;
+    const int32_t render_height = 128;
+    
+    /*
+    for (int32_t z = -render_edge_length / 2; z < render_edge_length /2; z += extractedRegionSize)
+    {
+        for (int32_t y = -render_height / 2; y < render_height / 2; y += extractedRegionSize)
+        {
+            for (int32_t x = -render_edge_length / 2; x < render_edge_length / 2; x += extractedRegionSize)
+            {
+                // Specify the region to extract based on a starting position and the desired region sze.
+                PolyVox::Region regToExtract(x, y, z, x + extractedRegionSize, y + extractedRegionSize, z + extractedRegionSize);
+                
+                // If you uncomment this line you will be able to see that the volume is rendered as multiple seperate meshes.
+                //regToExtract.shrink(1);
+                
+                // Perform the extraction for this region of the volume
+                auto mesh = extractCubicMesh(pagedData.get(), regToExtract);
+                
+                // The returned mesh needs to be decoded to be appropriate for GPU rendering.
+                auto decodedMesh = decodeMesh(mesh);
+                
+                // Pass the surface to the OpenGL window. Note that we are also passing an offset in this multi-mesh example. This is because
+                // the surface extractors return a mesh with 'local space' positions to reduce storage requirements and precision problems.
+                poly_vox_example.addMesh(decodedMesh);//, decodedMesh.getOffset());
+                
+                meshCounter++;
+                printf("Mesh #%d\n", meshCounter);
+            }
+        }
+    }*/
+    
+    
+    //voxel_rend.initCubicMesh_RawVolume(volData.get());
+    //voxel_rend.initCubicMesh_PagedVolume(pagedData.get(), region);
+    
+    // Perform the extraction for this region of the volume
+    auto mesh = extractCubicMesh(pagedData.get(), region);
+    
+    // The returned mesh needs to be decoded to be appropriate for GPU rendering.
+    auto decodedMesh = decodeMesh(mesh);
+    
+    poly_vox_example.addMesh(decodedMesh);
 }
 
 void Render_System::draw(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
-    
-    
-    
     program->bind();
     
     setMVPE(entity_manager, t, program);
@@ -44,8 +98,6 @@ void Render_System::draw(shared_ptr<EntityManager> entity_manager, float t, std:
 }
 
 void Render_System::draw_entities(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
-    
-    
     setMaterial(program, 6);
     
     vector<Entity_Id> id_list = entity_manager->get_ids_with_components<Position_Component, Renderable_Component>();
@@ -100,22 +152,82 @@ void Render_System::setMVPE(shared_ptr<EntityManager> entity_manager, float t, s
 
 //Voxel Stuff
 void Render_System::draw_voxels(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
+    
     program->bind();
     
     setMVPE(entity_manager, t, program);
     
-    float radius = 5.0f;
-    
-    auto M = make_shared<MatrixStack>();
-    M->loadIdentity();
-    M->translate(radius * vec3(sin(t), 0.0f, cos(t)));
-    
-    CHECKED_GL_CALL(glUniformMatrix4fv(program->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
-
-    setMaterial(program, 6);
-    voxel_rend.render(program);
+    setMaterial(program, 2);
+    poly_vox_example.render(program);
     
     program->unbind();
+}
+
+
+void Render_System::createFunction3D(RawVolume<uint8_t>& volData)
+{
+    //This three-level for loop iterates over every voxel in the volume
+    for (int z = 0; z < volData.getDepth()-3; z++)
+    {
+        for (int x = 0; x < volData.getWidth()-3; x++)
+        {
+            for (int y = 0; y < volData.getHeight()-3; y++)
+            {
+                uint8_t uVoxelValue = 0;
+                
+                float xCenter = volData.getWidth() / 2.0f;
+                float zCenter = volData.getDepth() / 2.0f;
+                float yCenter = volData.getHeight() / 2.0f;
+                
+                float xF = (float) x;
+                float zF = (float) z;
+                float yF = (float) y;
+                
+                xF -= xCenter;
+                zF -= zCenter;
+                yF -= yCenter;
+                
+                float scale = 0.035f;
+                xF *= scale;
+                zF *= scale;
+                yF *= scale;
+                
+                
+                //sin(10(x^2+y^2))/10
+                float calc = sin(10.0f * (xF*xF+zF*zF))/10.0f;
+                //printf("calc %f\n", calc);
+                
+                //(0.4^2-(0.6-(x^2+y^2)^0.5)^2)^0.5
+                calc = xF*xF + zF*zF;
+                calc = 0.6f - pow(calc, 0.5f);
+                calc = pow(0.4f, 2.0f) - pow(calc, 2.0f);
+                calc = pow(calc, 0.5f);
+                
+                calc = pow(xF, 2.0f) + (9.0f * pow(yF, 2.0f)) / 4.0f + pow(zF, 2.0f) - 1.0f;
+                calc = pow(calc, 3.0f);
+                
+                calc = calc - pow(xF, 2.0f)*pow(zF, 3.0f);
+                calc = calc - (9.0f * pow(yF, 2.0f) * pow(zF, 3.0f) / 80.0f);
+                
+                
+                //calc = (0.4^2 - (0.6f - (xF*xF + zF*zF)^0.5f)^2.0f)^0.5f;
+                
+                //1/(15(x^2+y^2))
+                //calc = 1 / (15.0f*(xF*xF+zF*zF));
+                
+                //calc = (calc + 1.0f) / 2.0f;
+                //float threshold = (calc * 100.0f);
+                
+                uVoxelValue = 0;
+                if(abs(calc) < 0.2f) {
+                    uVoxelValue = 5;
+                }
+                volData.setVoxel(x, y, z, uVoxelValue);
+            }
+        }
+        
+    }
+    
 }
 
 void Render_System::createFunction(RawVolume<uint8_t>& volData)
@@ -128,15 +240,32 @@ void Render_System::createFunction(RawVolume<uint8_t>& volData)
             {
                 uint8_t uVoxelValue = 0;
                 
+                float xCenter = volData.getWidth() / 2.0f;
+                float zCenter = volData.getDepth() / 2.0f;
+                
                 float xF = (float) x;
                 float zF = (float) z;
-                float scale = 0.01f;
+                
+                xF -= xCenter;
+                zF -= zCenter;
+                
+                float scale = 0.02f;
                 xF *= scale;
                 zF *= scale;
+                
                 
                 //sin(10(x^2+y^2))/10
                 float calc = sin(10.0f * (xF*xF+zF*zF))/10.0f;
                 //printf("calc %f\n", calc);
+                
+                //(0.4^2-(0.6-(x^2+y^2)^0.5)^2)^0.5
+                calc = xF*xF + zF*zF;
+                calc = 0.6f - pow(calc, 0.5f);
+                calc = pow(0.4f, 2.0f) - pow(calc, 2.0f);
+                calc = pow(calc, 0.5f);
+                
+                
+                //calc = (0.4^2 - (0.6f - (xF*xF + zF*zF)^0.5f)^2.0f)^0.5f;
                 
                 //1/(15(x^2+y^2))
                 //calc = 1 / (15.0f*(xF*xF+zF*zF));
@@ -157,6 +286,56 @@ void Render_System::createFunction(RawVolume<uint8_t>& volData)
     }
 }
 
+void Render_System::clearRegion(PagedVolume<uint8_t>& volData, Region region) {
+    for(int x = region.getLowerX(); x < region.getUpperX(); x++) {
+        for(int z = region.getLowerZ(); z < region.getUpperZ(); z++) {
+            for(int y = region.getLowerY(); y < region.getUpperY(); y++) {
+                volData.setVoxel(x, y, z, 0);
+            }
+        }
+    }
+}
+
+void Render_System::createLand(PagedVolume<uint8_t>& volData, Region region)
+{
+    FastNoise myNoise; // Create a FastNoise object
+    //myNoise.SetSeed(13);
+    myNoise.SetNoiseType(FastNoise::SimplexFractal); // Set the desired noise type
+    
+    myNoise.SetFractalOctaves(4);
+    myNoise.SetFractalLacunarity(3);
+    myNoise.SetFractalGain(0.5f);
+    
+    //This vector hold the position of the center of the volume
+    
+    uint8_t voxelVal = 0;
+    
+    for(int x = region.getLowerX(); x <= region.getUpperX(); x++) {
+        for(int z = region.getLowerZ(); z <= region.getUpperZ(); z++) {
+            
+            float val = myNoise.GetValue(x, z);
+            
+            val += 1.0f;
+            val *= 0.5f;
+            
+            int height = (int) (val * 100.0f);
+            
+            //printf("X%d Z%d, height %d\n", x, z, height);
+            
+            for(int y = region.getLowerY(); y <= region.getUpperY(); y++) {
+                voxelVal = 0;
+                
+                if(y < height) {
+                    //printf("X%d Z%d, Y%d H%d\n", x, z, y, height);
+                    voxelVal = 255-128;
+                }
+                
+                volData.setVoxel(x, y, z, voxelVal);
+            }
+        }
+    }
+}
+
 void Render_System::createLand(RawVolume<uint8_t>& volData)
 {
     FastNoise myNoise; // Create a FastNoise object
@@ -169,35 +348,6 @@ void Render_System::createLand(RawVolume<uint8_t>& volData)
     
     //This vector hold the position of the center of the volume
     Vector3DFloat v3dVolCenter(volData.getWidth() / 2, volData.getHeight() / 2, volData.getDepth() / 2);
-    
-    /*
-    //This three-level for loop iterates over every voxel in the volume
-    for (int z = 0; z < volData.getDepth(); z++)
-    {
-        for (int y = 0; y < volData.getHeight(); y++)
-        {
-            for (int x = 0; x < volData.getWidth(); x++)
-            {
-                //Store our current position as a vector...
-                Vector3DFloat v3dCurrentPos(x,y,z);
-                //And compute how far the current position is from the center of the volume
-                //float fDistToCenter = (v3dCurrentPos - v3dVolCenter).length();
-                float val = myNoise.GetValue(x, y, z);
-                if(val > 0.01f || ((x==0) && (y==0) && (z==0))) {
-                    //printf("X%d Y%d Z%d =  %f\n", x,y,z, val);
-                }
-                uint8_t uVoxelValue = 0;
-                if(val > 0.5f)
-                    uVoxelValue = 1;
-                
-                //= myNoise.GetValue(x, y);
-                
-                //Wrte the voxel value into the volume
-                volData.setVoxel(x, y, z, uVoxelValue);
-            }
-        }
-    }
-     */
     
     for(int x = 0; x < volData.getWidth()-2; x++) {
         for(int z = 0; z < volData.getDepth()-2; z++) {
@@ -216,9 +366,9 @@ void Render_System::createLand(RawVolume<uint8_t>& volData)
             
             int height = (int) (val * 100.0f);
             
-            printf("X%d Z%d, height %d\n", x, z, height);
+            //printf("X%d Z%d, height %d\n", x, z, height);
             
-            for(int y = 0; y < volData.getHeight()-2; y++) {
+            for(int y = 0; y <= volData.getHeight() - 1; y++) {
                 voxelVal = 0;
                 
                 if(y < height)
@@ -342,7 +492,7 @@ void Render_System::renderGUI() {
 void Render_System::setMaterial(const std::shared_ptr<Program> prog, int i)
 {
     CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.2f, 0.1f) );
-    CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 3.0f) );
+    CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 1.0f) );
     
     switch (i)
     {
@@ -376,6 +526,10 @@ void Render_System::setMaterial(const std::shared_ptr<Program> prog, int i)
             break;
         case 7:
             glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.17f, 0.01f, 0.01f);
+            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.61f, 0.04f, 0.04f);
+            break;
+        case 8:
+            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.6f, 0.01f, 0.01f);
             glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.61f, 0.04f, 0.04f);
             break;
     }
