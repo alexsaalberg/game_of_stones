@@ -27,6 +27,7 @@ void main()
     
     vec4 fNormal_camera_nohomo = P * V * vec4(fNormal_world, 0.0f);
     vec3 fNormal_camera = fNormal_camera_nohomo.xyz / fNormal_camera_nohomo.w;
+    fNormal_camera = normalize(fNormal_camera);
     
     vec3 directionTowardsEye = normalize(eyePosition - fPosition_World);
     
@@ -41,4 +42,6 @@ void main()
     lightColor += mSpecularCoefficient * pow( clamp(dot(H, N), 0.0, 1.0), mSpecularAlpha);
     
     color = vec4(lightColor, 1.0);
+    //color = (vec4(lightColor, 1.0) + vec4(abs(fNormal_world), 1.0f)) / 2.0f;
+    //color = vec4(abs(fNormal_world) * 0.5 + vec3(0.5, 0.5, 0.5), 1.0);
 }

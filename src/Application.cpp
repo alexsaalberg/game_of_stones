@@ -206,6 +206,7 @@ void Application::renderState(State& state, float t) {
     
     render_system.draw(entity_manager, t, mainProgram);
     render_system.draw_voxels(entity_manager, t, voxelProgram);
+    //render_system.draw_voxels(entity_manager, t, mainProgram);
 }
 
 //[0,1.0]

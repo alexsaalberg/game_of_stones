@@ -37,7 +37,7 @@ void Render_System::initVoxels() {
     //pagedData->flushAll();
     //pagedData->prefetch(region2);
     //clearRegion(*pagedData.get(), region2);
-    createLand(*pagedData.get(), region);
+    //createLand(*pagedData.get(), region);
     
     
     const int32_t extractedRegionSize = 128;
@@ -45,10 +45,10 @@ void Render_System::initVoxels() {
     const int32_t render_edge_length = 512;
     const int32_t render_height = 128;
     
-    /*
+    
     for (int32_t z = -render_edge_length / 2; z < render_edge_length /2; z += extractedRegionSize)
     {
-        for (int32_t y = -render_height / 2; y < render_height / 2; y += extractedRegionSize)
+        for (int32_t y = 0; y < render_height; y += extractedRegionSize)
         {
             for (int32_t x = -render_edge_length / 2; x < render_edge_length / 2; x += extractedRegionSize)
             {
@@ -60,31 +60,32 @@ void Render_System::initVoxels() {
                 
                 // Perform the extraction for this region of the volume
                 auto mesh = extractCubicMesh(pagedData.get(), regToExtract);
+                //auto mesh = extractMarchingCubesMesh(pagedData.get(), regToExtract);
                 
                 // The returned mesh needs to be decoded to be appropriate for GPU rendering.
                 auto decodedMesh = decodeMesh(mesh);
                 
                 // Pass the surface to the OpenGL window. Note that we are also passing an offset in this multi-mesh example. This is because
                 // the surface extractors return a mesh with 'local space' positions to reduce storage requirements and precision problems.
-                poly_vox_example.addMesh(decodedMesh);//, decodedMesh.getOffset());
+                poly_vox_example.addMesh(decodedMesh, decodedMesh.getOffset());
                 
                 meshCounter++;
-                printf("Mesh #%d\n", meshCounter);
+                //printf("Mesh #%d\n", meshCounter);
             }
         }
-    }*/
+    }
     
     
     //voxel_rend.initCubicMesh_RawVolume(volData.get());
     //voxel_rend.initCubicMesh_PagedVolume(pagedData.get(), region);
     
     // Perform the extraction for this region of the volume
-    auto mesh = extractCubicMesh(pagedData.get(), region);
+    //auto mesh = extractCubicMesh(pagedData.get(), region);
     
     // The returned mesh needs to be decoded to be appropriate for GPU rendering.
-    auto decodedMesh = decodeMesh(mesh);
+    //auto decodedMesh = decodeMesh(mesh);
     
-    poly_vox_example.addMesh(decodedMesh);
+    //poly_vox_example.addMesh(decodedMesh);
 }
 
 void Render_System::draw(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
@@ -145,19 +146,20 @@ void Render_System::setMVPE(shared_ptr<EntityManager> entity_manager, float t, s
     //camera->cameraTheta = t * 50.0f;
     //camera->cameraDistance = 30.0f;// + (t * t );
     
-    vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 0.0f, 10.0f); //from X to origin
+    vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 200.0f, 10.0f); //from X to origin
     vec3 directionTowardsLight = -directionFromLight;
     CHECKED_GL_CALL( glUniform3f(program->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
 }
 
 //Voxel Stuff
 void Render_System::draw_voxels(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
     
     program->bind();
     
     setMVPE(entity_manager, t, program);
     
-    setMaterial(program, 2);
+    setMaterial(program, 1);
     poly_vox_example.render(program);
     
     program->unbind();

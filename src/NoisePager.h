@@ -56,7 +56,32 @@ public:
                 }
             }
         }*/
+        uint8_t voxelVal = 0;
         
+        for(int x = region.getLowerX(); x <= region.getUpperX(); x++) {
+            for(int z = region.getLowerZ(); z <= region.getUpperZ(); z++) {
+                
+                float val = myNoise.GetValue(x, z);
+                
+                val += 1.0f;
+                val *= 0.5f;
+                
+                int height = (int) (val * 100.0f);
+                
+                //printf("X%d Z%d, height %d\n", x, z, height);
+                
+                for(int y = region.getLowerY(); y <= region.getUpperY(); y++) {
+                    voxelVal = 0;
+                    
+                    if(y < height) {
+                        //printf("X%d Z%d, Y%d H%d\n", x, z, y, height);
+                        voxelVal = 255-128;
+                    }
+                    pChunk->setVoxel(x - region.getLowerX(), y - region.getLowerY(), z - region.getLowerZ(), voxelVal);
+                }
+            }
+        }
+        /*
         for (int x = region.getLowerX(); x <= region.getUpperX(); x++)
         {
             for (int y = region.getLowerY(); y <= region.getUpperY(); y++)
@@ -84,6 +109,7 @@ public:
                 }
             }
         }
+         */
     }
     
     virtual void pageOut(const PolyVox::Region& region, PagedVolume<uint8_t>::Chunk* /*pChunk*/)
