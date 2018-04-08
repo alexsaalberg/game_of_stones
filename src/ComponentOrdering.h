@@ -16,7 +16,7 @@ typedef unsigned int Component_Index;
 
 class Active_Component;
 class Position_Component;
-class Renderable_Component;
+class Model_Component;
 class Player_Component;
 class Camera_Component;
 
@@ -26,7 +26,7 @@ Component_Index get_component_index() {
         return ACTIVE_INDEX;
     if(std::is_same<Component_Type, Position_Component>::value)
         return POSITION_INDEX;
-    if(std::is_same<Component_Type, Renderable_Component>::value)
+    if(std::is_same<Component_Type, Model_Component>::value)
         return RENDERABLE_INDEX;
     if(std::is_same<Component_Type, Player_Component>::value)
         return PLAYER_INDEX;

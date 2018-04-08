@@ -81,7 +81,7 @@ public:
             return NO_DATA;
         if(std::is_same<Component_Type, Position_Component>::value)
             return MAP;
-        if(std::is_same<Component_Type, Renderable_Component>::value)
+        if(std::is_same<Component_Type, Model_Component>::value)
             return MAP;
         if(std::is_same<Component_Type, Camera_Component>::value)
             return MAP;

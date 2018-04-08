@@ -15,7 +15,7 @@ class Component_Manager {
 public:
     Component_Storage<Active_Component> active_components;
     Component_Storage<Position_Component> position_components;
-    Component_Storage<Renderable_Component> renderable_components;
+    Component_Storage<Model_Component> renderable_components;
     Component_Storage<Camera_Component> camera_components;
     
     template<class Component_Type>

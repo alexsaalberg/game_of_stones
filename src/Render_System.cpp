@@ -101,13 +101,13 @@ void Render_System::draw(shared_ptr<EntityManager> entity_manager, float t, std:
 void Render_System::draw_entities(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
     setMaterial(program, 6);
     
-    vector<Entity_Id> id_list = entity_manager->get_ids_with_components<Position_Component, Renderable_Component>();
+    vector<Entity_Id> id_list = entity_manager->get_ids_with_components<Position_Component, Model_Component>();
     
-    Renderable_Component* renderable_component;
+    Model_Component* renderable_component;
     Position_Component* position_component;
     
     for(Entity_Id id : id_list) {
-        renderable_component = entity_manager->get_component<Renderable_Component>(id);
+        renderable_component = entity_manager->get_component<Model_Component>(id);
         position_component = entity_manager->get_component<Position_Component>(id);
         
         auto M = make_shared<MatrixStack>();

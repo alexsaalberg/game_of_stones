@@ -20,11 +20,16 @@ class Component {
 class Active_Component : Component {
 };
 
-class Renderable_Component : Component {
+class Model_Component : Component {
 public:
     unsigned int entity_id;
     std::shared_ptr<Model> model;
 };
+
+class Voxel_Component: Component {
+public:
+    
+}
 
 class Position_Component : Component {
 public:

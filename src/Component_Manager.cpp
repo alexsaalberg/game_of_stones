@@ -23,11 +23,11 @@ template<> Position_Component* Component_Manager::get_component<Position_Compone
     return position_components.get_component(entity_id);
 }
 
-template<> Renderable_Component* Component_Manager::add_component<Renderable_Component>(int entity_id) {
+template<> Model_Component* Component_Manager::add_component<Model_Component>(int entity_id) {
     return renderable_components.add_component(entity_id);
 }
 
-template<> Renderable_Component* Component_Manager::get_component<Renderable_Component>(int entity_id) {
+template<> Model_Component* Component_Manager::get_component<Model_Component>(int entity_id) {
     return renderable_components.get_component(entity_id);
 }
 

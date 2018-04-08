@@ -179,7 +179,7 @@ void Application::initCamera() {
 void Application::initPlayer() {
     player_id = entity_manager->create_entity();
     Position_Component* position = entity_manager->add_component<Position_Component>(player_id);
-    Renderable_Component* renderable = entity_manager->add_component<Renderable_Component>(player_id);
+    Model_Component* renderable = entity_manager->add_component<Model_Component>(player_id);
     
     position->position = vec3(1.0f);
     renderable->model = helicopterModel;
@@ -188,7 +188,7 @@ void Application::initPlayer() {
 void Application::initHelicopter(glm::vec3 position) {
     int id = entity_manager->create_entity();
     Position_Component* pos = entity_manager->add_component<Position_Component>(id);
-    Renderable_Component* renderable = entity_manager->add_component<Renderable_Component>(id);
+    Model_Component* renderable = entity_manager->add_component<Model_Component>(id);
     
     pos->position = position;
     renderable->model = helicopterModel;
