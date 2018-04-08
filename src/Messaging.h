@@ -2,6 +2,9 @@
 //  Messaging.h
 //  CastleSim
 //
+
+//  https://gamedev.stackexchange.com/questions/47476/tips-for-component-based-entity-system-message-handling/47483#47483
+
 //  Created by Alex Saalberg on 4/7/18.
 //
 

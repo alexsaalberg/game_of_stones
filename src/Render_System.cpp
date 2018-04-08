@@ -2,7 +2,6 @@
 //  Render_System.cpp
 //  CastleSim
 //
-//  https://gamedev.stackexchange.com/questions/47476/tips-for-component-based-entity-system-message-handling/47483#47483
 //  file created by Alex Saalberg on 3/28/18.
 //
 #include "Render_System.hpp"
