@@ -2,7 +2,8 @@
 //  Render_System.cpp
 //  CastleSim
 //
-//  Created by Alex Saalberg on 3/28/18.
+//  https://gamedev.stackexchange.com/questions/47476/tips-for-component-based-entity-system-message-handling/47483#47483
+//  file created by Alex Saalberg on 3/28/18.
 //
 #include "Render_System.hpp"
 
@@ -40,10 +41,10 @@ void Render_System::initVoxels() {
     //createLand(*pagedData.get(), region);
     
     
-    const int32_t extractedRegionSize = 128;
+    const int32_t extractedRegionSize = 64;
     int meshCounter = 0;
-    const int32_t render_edge_length = 512;
-    const int32_t render_height = 128;
+    const int32_t render_edge_length = 256;
+    const int32_t render_height = 64;
     
     
     for (int32_t z = -render_edge_length / 2; z < render_edge_length /2; z += extractedRegionSize)

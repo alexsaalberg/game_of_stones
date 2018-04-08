@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "MatrixStack.h"
+#include "PolyVox/Picking.h"
 
 using namespace std;
 
@@ -72,7 +73,15 @@ void Input_System::keyCallback(GLFWwindow *window, int key, int scancode, int ac
 void Input_System::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
 {}
 void Input_System::mouseCallback(GLFWwindow *window, int button, int action, int mods)
-{}
+{
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    
+    if(button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
+        MouseClickEvent click(xpos, ypos, GLFW_MOUSE_BUTTON_1);
+        event_handler->emit(click);
+    }
+}
 void Input_System::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {}
 

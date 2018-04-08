@@ -15,9 +15,13 @@ using namespace glm;
 void Application::init(const std::string& resourceDirectory) {
 	currentState = make_shared<State>();
 	previousState = make_shared<State>();
+    
+    
     entity_manager = make_shared<EntityManager>();
+    event_handler = make_shared<EventHandler>();
     
     input_system.entity_manager = entity_manager;
+    input_system.event_handler = event_handler;
     
     render_system.initVoxels();
     
@@ -39,7 +43,8 @@ void Application::init(const std::string& resourceDirectory) {
             }
         }
     }*/
-    
+    event_handler->subscribe<MouseClickEvent>(&voxel_system);
+    //event_handler->subscribe<MouseClickEvent>(static_cast<Receiver<MouseClickEvent>*>(&voxel_system));
 }
 
 

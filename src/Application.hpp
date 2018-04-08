@@ -8,6 +8,10 @@
 #ifndef Application_hpp
 #define Application_hpp
 
+
+//Messaging System
+#include "Messaging.h"
+
 #include <iostream>
 #include <glad/glad.h>
 
@@ -35,19 +39,24 @@
 #include "System.hpp"
 #include "Input_System.hpp"
 #include "Render_System.hpp"
+#include "Voxel_System.hpp"
+
 
 class Application
 {
 public:
 //Variables
+    //Messaing
+    std::shared_ptr<EventHandler> event_handler;
     std::shared_ptr<EntityManager> entity_manager;
+    
     Entity_Id player_id = -1;
     Entity_Id camera_id = -1;
     
     //Systems
     Render_System render_system;
     Input_System input_system;
-    
+    Voxel_System voxel_system;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;
@@ -65,7 +74,6 @@ public:
 //Functions
     /* Initilizations */
     void init(const std::string& resourceDirectory);
-    
     
     void initPlayer();
     void initHelicopter(glm::vec3 position);

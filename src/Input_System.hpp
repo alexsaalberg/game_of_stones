@@ -10,11 +10,14 @@
 #include "System.hpp"
 
 #include "WindowManager.h" //EventCallbacks
+
 #include "EntityManager.hpp"
+#include "Messaging.h"
 
 class Input_System : System, public EventCallbacks {
 public:
     std::shared_ptr<EntityManager> entity_manager;
+    std::shared_ptr<EventHandler> event_handler;
     
     //Control Callbacks
     void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
