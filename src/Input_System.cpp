@@ -101,12 +101,10 @@ void Input_System::keyCallback(GLFWwindow *window, int key, int scancode, int ac
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
         position->position.y += delta_distance;
-        camera->distance += delta_distance;
     }
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
     {
         position->position.y -= delta_distance;
-        camera->distance -= delta_distance;
     }
 }
 

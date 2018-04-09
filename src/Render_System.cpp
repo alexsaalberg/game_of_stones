@@ -14,6 +14,8 @@
 #include "FastNoise.h"
 #include "NoisePager.h"
 
+#include "Camera.h"
+
 //value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -136,7 +138,7 @@ void Render_System::setMVPE(shared_ptr<EntityManager> entity_manager, float t, s
     glViewport(0, 0, windowWidth, windowHeight);
     
     float aspect = windowWidth/(float)windowHeight;
-    
+    Camera::aspect = aspect;
     
     
     vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
@@ -145,11 +147,9 @@ void Render_System::setMVPE(shared_ptr<EntityManager> entity_manager, float t, s
     
     setModelIdentityMatrix(program);
     setViewMatrix(camera, position, program);
-    setProjectionMatrix(program, aspect);
+    setProjectionMatrix(program);
     
     setEyePosition(position->position, program);
-    //camera->cameraTheta = t * 50.0f;
-    //camera->cameraDistance = 30.0f;// + (t * t );
     
     vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 200.0f, 10.0f); //from X to origin
     vec3 directionTowardsLight = -directionFromLight;
@@ -430,21 +430,11 @@ void Render_System::setModelIdentityMatrix(shared_ptr<Program> program) {
 }
 
 std::shared_ptr<MatrixStack> Render_System::getViewMatrix(Camera_Component* camera, Position_Component* camera_position) {
-    
     vec3 norot_identity = vec3(0.0f, 0.0f, 1.0f);
-    
-    
     
     vec3 position = camera_position->position;
     vec3 identity = camera_position->rotation * norot_identity;
     identity = position + identity;
-
-    static vec3 lastIdentity = vec3(0.0f);
-    
-    if(identity != lastIdentity) {
-        printf("(%f %f %f), (%f %f %f)\n", position.x, position.y, position.z, identity.x, identity.y, identity.z);
-        lastIdentity = identity;
-    }
     
     std::shared_ptr<MatrixStack> V = make_shared<MatrixStack>();
     V->pushMatrix();
@@ -457,20 +447,22 @@ std::shared_ptr<MatrixStack> Render_System::getViewMatrix(Camera_Component* came
 }
 
 void Render_System::setViewMatrix(Camera_Component* camera,  Position_Component* camera_position, std::shared_ptr<Program> program) {
-    std::shared_ptr<MatrixStack> V = getViewMatrix(camera, camera_position);
-    CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix()) ) );
+    //std::shared_ptr<MatrixStack> V = Camera::getViewMatrix(camera, camera_position);
+    glm::mat4 V = Camera::getViewMatrix(camera, camera_position);
+    CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("V"), 1, GL_FALSE, value_ptr(V) ) );
 }
 
 std::shared_ptr<MatrixStack> Render_System::getProjectionMatrix(float aspect) {
+    
     std::shared_ptr<MatrixStack> P = make_shared<MatrixStack>();
     P->pushMatrix();
     P->perspective(45.0f, aspect, 0.1f, 1000.0f);
     return P;
 }
 
-void Render_System::setProjectionMatrix(shared_ptr<Program> program, float aspect) {
-    shared_ptr<MatrixStack> P = getProjectionMatrix(aspect);
-    CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix())) );
+void Render_System::setProjectionMatrix(shared_ptr<Program> program) {
+    glm::mat4 P = Camera::getProjectionMatrix();
+    CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("P"), 1, GL_FALSE, value_ptr(P)) );
 }
 
 void Render_System::setEyePosition(vec3 position, shared_ptr<Program> prog) {

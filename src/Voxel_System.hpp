@@ -13,10 +13,16 @@
 #include "System.hpp"
 #include "Messaging.h"
 #include "EntityManager.hpp"
+#include "WindowManager.h"
 
 class Voxel_System : System, public Receiver<MouseClickEvent> {
 public:
+    WindowManager* window_manager;
+    
     std::shared_ptr<EntityManager> entity_manager;
+    
+    void draw_voxels(float t, std::shared_ptr<Program> program);
+    void setMVPE(std::shared_ptr<Program> program);
     
     virtual void receive(const MouseClickEvent& collision);
 };

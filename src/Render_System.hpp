@@ -16,6 +16,7 @@
 #include "WindowManager.h" //WindowManager
 #include "Program.h"
 
+
 #include "PolyVox_OpenGL.hpp"
 #include "PolyVoxMeshManager.h"
 
@@ -50,7 +51,7 @@ public:
     static void setViewMatrix(Camera_Component* camera, Position_Component* camera_position, std::shared_ptr<Program> prog);
     
     std::shared_ptr<MatrixStack> getProjectionMatrix(float aspect);
-    void setProjectionMatrix(std::shared_ptr<Program> prog, float aspect);
+    void setProjectionMatrix(std::shared_ptr<Program> prog);
     
     void setEyePosition(glm::vec3 position, std::shared_ptr<Program> prog);
     

@@ -32,6 +32,7 @@ int main(int argc, char **argv)
     windowManager->setEventCallbacks(&application->input_system);
     
     application->render_system.window_manager = windowManager;
+    application->voxel_system.window_manager = windowManager;
     
     application->init(resourceDir);
     
