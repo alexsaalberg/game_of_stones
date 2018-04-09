@@ -52,6 +52,7 @@ public:
     
     Entity_Id player_id = -1;
     Entity_Id camera_id = -1;
+    Entity_Id voxel_id = -1;
     
     //Systems
     Render_System render_system;
@@ -75,7 +76,10 @@ public:
     /* Initilizations */
     void init(const std::string& resourceDirectory);
     
+    void initCamera();
     void initPlayer();
+    void initVoxels();
+    
     void initHelicopter(glm::vec3 position);
     
     void initShaders(const std::string& resourceDirectory);
@@ -87,7 +91,6 @@ public:
 
     void initGeom(const std::string& resourceDirectory);
     
-    void initCamera();
 
     //Physics
     void integrate(float t, float dt);

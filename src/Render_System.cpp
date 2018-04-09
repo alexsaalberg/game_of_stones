@@ -12,8 +12,12 @@
 #include "imgui.h"
 
 #include "FastNoise.h"
-#include "PolyVox/FilePager.h"
 #include "NoisePager.h"
+
+//value_ptr for glm
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp> //quat stuff
 
 using namespace std;
 using namespace glm;
@@ -137,12 +141,13 @@ void Render_System::setMVPE(shared_ptr<EntityManager> entity_manager, float t, s
     
     vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
     Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
+    Position_Component* position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
     
     setModelIdentityMatrix(program);
-    setViewMatrix(camera, program);
+    setViewMatrix(camera, position, program);
     setProjectionMatrix(program, aspect);
     
-    setEyePosition(camera, program);
+    setEyePosition(position->position, program);
     //camera->cameraTheta = t * 50.0f;
     //camera->cameraDistance = 30.0f;// + (t * t );
     
@@ -424,25 +429,35 @@ void Render_System::setModelIdentityMatrix(shared_ptr<Program> program) {
     M->popMatrix();
 }
 
-std::shared_ptr<MatrixStack> Render_System::getViewMatrix(Camera_Component* camera) {
-    float x = cos(radians(camera->phi))*cos(radians(camera->theta));
-    float y = sin(radians(camera->phi));
-    float z = cos(radians(camera->phi))*sin(radians(camera->theta));
+std::shared_ptr<MatrixStack> Render_System::getViewMatrix(Camera_Component* camera, Position_Component* camera_position) {
     
-    vec3 identityVector = vec3(0.0f) - vec3(x, y, z); //from origin to xyz
-    identityVector *= camera->distance;
+    vec3 norot_identity = vec3(0.0f, 0.0f, 1.0f);
+    
+    
+    
+    vec3 position = camera_position->position;
+    vec3 identity = camera_position->rotation * norot_identity;
+    identity = position + identity;
+
+    static vec3 lastIdentity = vec3(0.0f);
+    
+    if(identity != lastIdentity) {
+        printf("(%f %f %f), (%f %f %f)\n", position.x, position.y, position.z, identity.x, identity.y, identity.z);
+        lastIdentity = identity;
+    }
     
     std::shared_ptr<MatrixStack> V = make_shared<MatrixStack>();
     V->pushMatrix();
-    V->loadIdentity();
-    V->lookAt(vec3(0, 0, 0), identityVector, vec3(0, 1, 0));
-    V->translate((-1.0f * vec3(0.0f, 0.0f, 0.0f))); //Negative
-    V->translate(identityVector);
+    
+    //V->loadIdentity();
+    //V->multMatrix(&rot); //rotate based on camera's rotation
+    V->lookAt(position, identity, vec3(0, 1, 0)); //Look at identity from position
+    //V->translate(-1.0f * position); //Negative
     return V;
 }
 
-void Render_System::setViewMatrix(Camera_Component* camera, std::shared_ptr<Program> program) {
-    std::shared_ptr<MatrixStack> V = getViewMatrix(camera);
+void Render_System::setViewMatrix(Camera_Component* camera,  Position_Component* camera_position, std::shared_ptr<Program> program) {
+    std::shared_ptr<MatrixStack> V = getViewMatrix(camera, camera_position);
     CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix()) ) );
 }
 
@@ -458,15 +473,15 @@ void Render_System::setProjectionMatrix(shared_ptr<Program> program, float aspec
     CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix())) );
 }
 
-void Render_System::setEyePosition(Camera_Component* camera, shared_ptr<Program> prog) {
-    float x = cos(radians(camera->phi))*cos(radians(camera->theta));
-    float y = sin(radians(camera->phi));
-    float z = cos(radians(camera->phi))*sin(radians(camera->theta));
+void Render_System::setEyePosition(vec3 position, shared_ptr<Program> prog) {
+
+    //float x = cos(radians(camera->phi))*cos(radians(camera->theta));
+    //float y = sin(radians(camera->phi));
+    //float z = cos(radians(camera->phi))*sin(radians(camera->theta));
     
-    vec3 cV = vec3(0.0f) - vec3(x, y, z); //from origin to xyz
-    cV *= camera->distance;
+    //vec3 invertedPosition = vec3(0.0f) - position; //from origin to xyz
     
-    CHECKED_GL_CALL( glUniform3f(prog->getUniform("eyePosition"), cV.x, cV.y, cV.z) );
+    CHECKED_GL_CALL( glUniform3fv(prog->getUniform("eyePosition"), 1, value_ptr(position)) );
 }
 
 void Render_System::renderGUI() {

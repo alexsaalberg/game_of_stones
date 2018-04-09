@@ -17,7 +17,7 @@
 #include "Program.h"
 
 #include "PolyVox_OpenGL.hpp"
-#include "PolyVoxExample.h"
+#include "PolyVoxMeshManager.h"
 
 class Render_System : System {
 public:
@@ -32,7 +32,7 @@ public:
     std::shared_ptr< PolyVox::RawVolume<uint8_t> > volData;
     std::shared_ptr< PolyVox::PagedVolume<uint8_t> > pagedData;
     PolyVox_OpenGL voxel_rend;
-    PolyVoxExample poly_vox_example;
+    PolyVoxMeshManager poly_vox_example;
     
     void createFunction(PolyVox::RawVolume<uint8_t>& volData);
     void createFunction3D(PolyVox::RawVolume<uint8_t>& volData);
@@ -46,13 +46,13 @@ public:
     
     void setModelIdentityMatrix(std::shared_ptr<Program> prog);
     
-    std::shared_ptr<MatrixStack> getViewMatrix(Camera_Component* camera);
-    void setViewMatrix(Camera_Component* camera, std::shared_ptr<Program> prog);
+    static std::shared_ptr<MatrixStack> getViewMatrix(Camera_Component* camera, Position_Component* camera_position);
+    static void setViewMatrix(Camera_Component* camera, Position_Component* camera_position, std::shared_ptr<Program> prog);
     
     std::shared_ptr<MatrixStack> getProjectionMatrix(float aspect);
     void setProjectionMatrix(std::shared_ptr<Program> prog, float aspect);
     
-    void setEyePosition(Camera_Component* camera, std::shared_ptr<Program> prog);
+    void setEyePosition(glm::vec3 position, std::shared_ptr<Program> prog);
     
     void renderGUI();
     

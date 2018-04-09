@@ -23,7 +23,9 @@ void Application::init(const std::string& resourceDirectory) {
     input_system.entity_manager = entity_manager;
     input_system.event_handler = event_handler;
     
-    render_system.initVoxels();
+    voxel_system.entity_manager = entity_manager;
+    
+    //render_system.initVoxels();
     
 	initShaders(resourceDirectory+"/shaders");
     initTextures(resourceDirectory+"/models");
@@ -31,6 +33,7 @@ void Application::init(const std::string& resourceDirectory) {
     
     initCamera();
     initPlayer();
+    initVoxels();
     
     /*
     vec3 base_pos = vec3(10.0f, 0.0f, 0.0f);
@@ -174,6 +177,7 @@ void Application::initCamera() {
     camera->distance = 500.0f;
     
     position->position = vec3(1.0f);
+    position->rotation = quat(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
 void Application::initPlayer() {
@@ -183,6 +187,12 @@ void Application::initPlayer() {
     
     position->position = vec3(1.0f);
     renderable->model = helicopterModel;
+}
+
+void Application::initVoxels() {
+    voxel_id = entity_manager->create_entity();
+    
+    Voxel_Component* voxels = entity_manager->add_component<Voxel_Component>(voxel_id);
 }
 
 void Application::initHelicopter(glm::vec3 position) {
@@ -210,7 +220,7 @@ void Application::renderState(State& state, float t) {
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
     
     render_system.draw(entity_manager, t, mainProgram);
-    render_system.draw_voxels(entity_manager, t, voxelProgram);
+    //render_system.draw_voxels(entity_manager, t, voxelProgram);
     //render_system.draw_voxels(entity_manager, t, mainProgram);
 }
 

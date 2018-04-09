@@ -47,7 +47,7 @@ public:
         return component_manager.get_component<ComponentType>(id);
     }
     
-    
+    //Some functions have to be in header for template reasons
     template <class ComponentType>
     std::vector<Entity_Id> get_ids_with_component() {
         std::vector<Entity_Id> return_list;
@@ -83,6 +83,22 @@ public:
         }
         
         return return_list;
+    }
+    
+    ///Created to get first camera entity (should only be one).
+    template <class ComponentType>
+    ComponentType* get_first_component_of_type() {
+        Component_Index index = get_component_index<ComponentType>();
+        
+        for(std::vector<Entity_Entry>::size_type i = 0; i != entities.size(); i++) {
+            Entity_Entry* entity = &entities[i];
+            
+            if(entity_has_component(entity, index)) {
+                return get_component<ComponentType>(i);
+            }
+        }
+        
+        return nullptr;
     }
     
 private:

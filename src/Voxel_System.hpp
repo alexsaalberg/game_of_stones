@@ -8,14 +8,17 @@
 #ifndef Voxel_System_hpp
 #define Voxel_System_hpp
 
+#include <memory> //shared_ptr
+
 #include "System.hpp"
 #include "Messaging.h"
+#include "EntityManager.hpp"
 
 class Voxel_System : System, public Receiver<MouseClickEvent> {
 public:
-    virtual void receive(const MouseClickEvent& collision) {
-        printf("Received click at x%lf y%lf!\n", collision.x, collision.y);
-    }
+    std::shared_ptr<EntityManager> entity_manager;
+    
+    virtual void receive(const MouseClickEvent& collision);
 };
 
 #endif /* Voxel_System_hpp */

@@ -39,5 +39,12 @@ template<> Camera_Component* Component_Manager::get_component<Camera_Component>(
     return camera_components.get_component(entity_id);
 }
 
+template<> Voxel_Component* Component_Manager::add_component<Voxel_Component>(int entity_id) {
+    return voxel_components.add_component(entity_id);
+}
+
+template<> Voxel_Component* Component_Manager::get_component<Voxel_Component>(int entity_id) {
+    return voxel_components.get_component(entity_id);
+}
 
 

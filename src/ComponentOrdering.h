@@ -10,7 +10,7 @@
 
 #include <type_traits>
 
-enum Component_Enum{ACTIVE_INDEX, POSITION_INDEX, RENDERABLE_INDEX, PHYSICS_INDEX, INPUT_INDEX, PLAYER_INDEX, CAMERA_INDEX, NUM_COMPONENTS};
+enum Component_Enum{ACTIVE_INDEX, POSITION_INDEX, RENDERABLE_INDEX, PHYSICS_INDEX, INPUT_INDEX, PLAYER_INDEX, CAMERA_INDEX, VOXEL_INDEX, NUM_COMPONENTS};
 
 typedef unsigned int Component_Index;
 
@@ -19,6 +19,7 @@ class Position_Component;
 class Model_Component;
 class Player_Component;
 class Camera_Component;
+class Voxel_Component;
 
 template<class Component_Type>
 Component_Index get_component_index() {
@@ -32,7 +33,8 @@ Component_Index get_component_index() {
         return PLAYER_INDEX;
     if(std::is_same<Component_Type, Camera_Component>::value)
         return CAMERA_INDEX;
-    
+    if(std::is_same<Component_Type, Voxel_Component>::value)
+        return VOXEL_INDEX;
     
     return NUM_COMPONENTS;
 }

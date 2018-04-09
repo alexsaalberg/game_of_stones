@@ -48,12 +48,12 @@ struct OpenGLMeshData
 	float scale;
 };
 
-class PolyVoxExample
+class PolyVoxMeshManager
 {
 public:
     // Index/vertex buffer data
     std::vector<OpenGLMeshData> meshes;
-
+    
 	// Convert a PolyVox mesh to OpenGL index/vertex buffers. Inlined because it's templatised.
 	template <typename MeshType>
 	void addMesh(const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation = PolyVox::Vector3DInt32(0, 0, 0), float scale = 1.0f)
@@ -113,6 +113,7 @@ public:
 		meshes.push_back(meshData);
 	}
 
+    ///Renders all meshes being managed
     void render(std::shared_ptr<Program> program)
     {
         std::shared_ptr<MatrixStack> M = std::make_shared<MatrixStack>();
@@ -137,13 +138,7 @@ public:
             // Unbind the vertex array.
             glBindVertexArray(0);
         }
-        
-        // We're done with the shader for this frame.
     }
-private:
-	const float PI = 3.14159265358979f;
-
-
 };
 
 #endif //__PolyVoxExample_H__
