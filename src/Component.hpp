@@ -30,7 +30,7 @@ public:
 
 class Voxel_Component: Component {
 public:
-    float dirty_time;
+    double dirty_time;
     std::shared_ptr<PolyVox::PagedVolume<uint8_t> > volume;
 
     Voxel_Component() {

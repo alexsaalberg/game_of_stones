@@ -71,7 +71,7 @@ void Render_System::initVoxels() {
 }
  */
 
-void Render_System::draw(float t, std::shared_ptr<Program> program) {
+void Render_System::draw(double t, std::shared_ptr<Program> program) {
     program->bind();
     
     setMVPE(t, program);
@@ -81,7 +81,7 @@ void Render_System::draw(float t, std::shared_ptr<Program> program) {
     program->unbind();
 }
 
-void Render_System::draw_entities(float t, std::shared_ptr<Program> program) {
+void Render_System::draw_entities(double t, std::shared_ptr<Program> program) {
     Camera::setMaterial(program, 6);
     
     vector<Entity_Id> id_list = entity_manager->get_ids_with_components<Position_Component, Model_Component>();
@@ -109,7 +109,7 @@ void Render_System::draw_entities(float t, std::shared_ptr<Program> program) {
     }
 }
 
-void Render_System::setMVPE(float t, std::shared_ptr<Program> program) {
+void Render_System::setMVPE(double t, std::shared_ptr<Program> program) {
     int windowWidth, windowHeight;
     glfwGetFramebufferSize(window_manager->getHandle(), &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
@@ -129,7 +129,7 @@ void Render_System::setMVPE(float t, std::shared_ptr<Program> program) {
 }
 
 //Voxel Stuff
-void Render_System::draw_voxels(float t, std::shared_ptr<Program> program) {
+void Render_System::draw_voxels(double t, std::shared_ptr<Program> program) {
     //Calculate Meshes
     vector<Entity_Id> voxel_id_list = entity_manager->get_ids_with_component<Voxel_Component>();
     
@@ -139,11 +139,16 @@ void Render_System::draw_voxels(float t, std::shared_ptr<Program> program) {
         if(voxel_meshes.count(id) == 0) {
             //create mesh
             calculate_mesh(t, id, voxel_component);
+            printf("%lf: Calculated Initial mesh for id %d\n", t, id);
+        } else if (voxel_component->dirty_time > t) {
+            //The physics goes a bit ahead of rendering
+            //So it's possible for the voxels to change AFTER the moment we're rendering
+            //In this case, do nothing
         } else if (voxel_component->dirty_time > voxel_meshes.find(id)->second.dirty_time) {
             //recreate mesh
             voxel_meshes.erase(id);
             calculate_mesh(t, id, voxel_component);
-            printf("%f: Recalculating mesh for id %d\n", t, id);
+            printf("%lf: Recalculating mesh for id %d\n", t, id);
         }
     }
     
@@ -178,7 +183,7 @@ void Render_System::draw_voxels(float t, std::shared_ptr<Program> program) {
     program->unbind();
 }
             
-void Render_System::calculate_mesh(float t, Entity_Id id, Voxel_Component *voxel_component) {
+void Render_System::calculate_mesh(double t, Entity_Id id, Voxel_Component *voxel_component) {
     const int32_t extractedRegionSize = 64;
     int meshCounter = 0;
     const int32_t render_edge_length = 256;
@@ -217,7 +222,7 @@ void Render_System::calculate_mesh(float t, Entity_Id id, Voxel_Component *voxel
 
 // Convert a PolyVox mesh to OpenGL index/vertex buffers. Inlined because it's templatised.
 template <typename MeshType>
-void Render_System::addMesh(float t, Entity_Id id, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation, float scale)
+void Render_System::addMesh(double t, Entity_Id id, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation, float scale)
 {
     // This struct holds the OpenGL properties (buffer handles, etc) which will be used
     // to render our mesh. We copy the data from the PolyVox mesh into this structure.

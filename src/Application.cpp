@@ -201,6 +201,7 @@ void Application::initVoxels() {
     voxel_id = entity_manager->create_entity();
     
     Voxel_Component* voxels = entity_manager->add_component<Voxel_Component>(voxel_id);
+    voxels->dirty_time = -1.0f;
 }
 
 void Application::initHelicopter(glm::vec3 position) {
@@ -212,22 +213,24 @@ void Application::initHelicopter(glm::vec3 position) {
     renderable->model = helicopterModel;
 }
 
-void Application::integrate(float t, float dt) {
+void Application::integrate(double t, float dt) {
 	//previousState = make_shared<State>( *currentState );
 
     currentState->integrate(t, dt);
+    voxel_system.update(t);
 }
 
-void Application::render(float t, float alpha) {
+void Application::render(double t, float alpha) {
     renderState(*currentState.get(), t);
 }
 
-void Application::renderState(State& state, float t) {
+void Application::renderState(State& state, double t) {
     CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
     CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
     
     render_system.draw(t, mainProgram);
+    
     render_system.draw_voxels(t, voxelProgram);
     //render_system.draw_voxels(entity_manager, t, mainProgram);
 }

@@ -25,7 +25,7 @@ struct VoxelMeshData
     GLuint vertexArrayObject;
     glm::vec3 translation;
     float scale;
-    float dirty_time;
+    double dirty_time;
 };
 
 class Render_System : System {
@@ -35,20 +35,20 @@ public:
     //std::vector<VoxelMeshData> voxel_meshes;
     std::multimap<Entity_Id, VoxelMeshData> voxel_meshes;
     
-    void draw(float t, std::shared_ptr<Program> program);
-    void draw_entities(float t, std::shared_ptr<Program> program);
-    void draw_voxels(float t, std::shared_ptr<Program> program);
+    void draw(double t, std::shared_ptr<Program> program);
+    void draw_entities(double t, std::shared_ptr<Program> program);
+    void draw_voxels(double t, std::shared_ptr<Program> program);
     
     //Voxel helpers
-    void calculate_mesh(float t, Entity_Id id, Voxel_Component *voxel_component);
+    void calculate_mesh(double t, Entity_Id id, Voxel_Component *voxel_component);
     
     template <typename MeshType>
-    void addMesh(float t, Entity_Id id, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation = PolyVox::Vector3DInt32(0, 0, 0), float scale = 1.0f);
+    void addMesh(double t, Entity_Id id, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation = PolyVox::Vector3DInt32(0, 0, 0), float scale = 1.0f);
     
     void addMeshData(Entity_Id id, VoxelMeshData meshData);
     
     //Camera Functions
-    void setMVPE(float t, std::shared_ptr<Program> program);
+    void setMVPE(double t, std::shared_ptr<Program> program);
     void renderGUI();
 };
 

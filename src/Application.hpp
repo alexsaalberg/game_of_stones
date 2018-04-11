@@ -93,11 +93,11 @@ public:
     
 
     //Physics
-    void integrate(float t, float dt);
+    void integrate(double t, float dt);
     
     //Graphics
-    void render(float t,  float alpha);
-    void renderState(State& state, float t);
+    void render(double t,  float alpha);
+    void renderState(State& state, double t);
     
     //[0,1.0]
     float randomFloat();

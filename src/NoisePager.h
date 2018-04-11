@@ -43,7 +43,7 @@ public:
     {
         static int counter = 0;
         counter++;
-        printf("Paging in chunk%d, %d-%d %d-%d %d-%d\n", counter, region.getLowerX(), region.getUpperX(), region.getLowerY(), region.getUpperY(), region.getLowerZ(), region.getUpperZ());
+        //printf("Paging in chunk%d, %d-%d %d-%d %d-%d\n", counter, region.getLowerX(), region.getUpperX(), region.getLowerY(), region.getUpperY(), region.getLowerZ(), region.getUpperZ());
         
         /*
         for (int x = region.getLowerX(); x <= region.getUpperX(); x++)

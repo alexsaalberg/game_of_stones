@@ -17,10 +17,14 @@
 
 class Voxel_System : System, public Receiver<MouseClickEvent> {
 public:
+    //Variables
     WindowManager* window_manager;
-    
     std::shared_ptr<EntityManager> entity_manager;
+    std::vector<MouseClickEvent> click_events;
     
+    //Functions
+    void update(double t);
+    void processClickEvent(double t, MouseClickEvent& click);
     virtual void receive(const MouseClickEvent& collision);
 };
 
