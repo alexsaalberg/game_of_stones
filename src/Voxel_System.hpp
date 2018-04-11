@@ -21,9 +21,6 @@ public:
     
     std::shared_ptr<EntityManager> entity_manager;
     
-    void draw_voxels(float t, std::shared_ptr<Program> program);
-    void setMVPE(std::shared_ptr<Program> program);
-    
     virtual void receive(const MouseClickEvent& collision);
 };
 

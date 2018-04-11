@@ -76,6 +76,52 @@ public:
         return P->topMatrix();
     }
     
+    static void setMaterial(const std::shared_ptr<Program> prog, int i)
+    {
+        CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.2f, 0.1f) );
+        CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 1.0f) );
+        
+        switch (i)
+        {
+            case 0: //shiny blue plastic
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.02f, 0.04f, 0.2f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.0f, 0.16f, 0.9f);;
+                break;
+            case 1: // flat grey
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.13f, 0.13f, 0.14f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.3f, 0.3f, 0.4f);
+                break;
+            case 2: //brass
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.3294f, 0.2235f, 0.02745f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7804f, 0.5686f, 0.11373f);
+                break;
+            case 3: //copper
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.1913f, 0.0735f, 0.0225f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
+                break;
+            case 4: //green man
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.735f, 0.0225f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.038f, 0.048f, 0.028f);
+                break;
+            case 5: //radiation
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.7, 0.7735f, 0.225f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
+                break;
+            case 6: //stone
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.1735f, 0.1225f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.438f, 0.4048f, 0.428f);
+                break;
+            case 7:
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.17f, 0.01f, 0.01f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.61f, 0.04f, 0.04f);
+                break;
+            case 8:
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.6f, 0.01f, 0.01f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.61f, 0.04f, 0.04f);
+                break;
+        }
+    }
+    
 };
 
 #endif /* Camera_h */

@@ -16,48 +16,40 @@
 #include "WindowManager.h" //WindowManager
 #include "Program.h"
 
-
-#include "PolyVox_OpenGL.hpp"
-#include "PolyVoxMeshManager.h"
+struct VoxelMeshData
+{
+    GLuint noOfIndices;
+    GLenum indexType;
+    GLuint indexBuffer;
+    GLuint vertexBuffer;
+    GLuint vertexArrayObject;
+    glm::vec3 translation;
+    float scale;
+    float dirty_time;
+};
 
 class Render_System : System {
 public:
+    std::shared_ptr<EntityManager> entity_manager;
     WindowManager* window_manager;
+    //std::vector<VoxelMeshData> voxel_meshes;
+    std::multimap<Entity_Id, VoxelMeshData> voxel_meshes;
     
-    void draw(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
-    void draw_entities(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
-    void draw_voxels(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
+    void draw(float t, std::shared_ptr<Program> program);
+    void draw_entities(float t, std::shared_ptr<Program> program);
+    void draw_voxels(float t, std::shared_ptr<Program> program);
     
-    //Voxel Stuff
-    void initVoxels();
-    std::shared_ptr< PolyVox::RawVolume<uint8_t> > volData;
-    std::shared_ptr< PolyVox::PagedVolume<uint8_t> > pagedData;
-    PolyVox_OpenGL voxel_rend;
-    PolyVoxMeshManager poly_vox_example;
+    //Voxel helpers
+    void calculate_mesh(float t, Entity_Id id, Voxel_Component *voxel_component);
     
-    void createFunction(PolyVox::RawVolume<uint8_t>& volData);
-    void createFunction3D(PolyVox::RawVolume<uint8_t>& volData);
-    void clearRegion(PolyVox::PagedVolume<uint8_t>& volData, PolyVox::Region region);
-    void createLand(PolyVox::PagedVolume<uint8_t>& volData, PolyVox::Region region);
-    void createLand(PolyVox::RawVolume<uint8_t>& volData);
-    void createSphereInVolume(PolyVox::RawVolume<uint8_t>& volData, float fRadius);
+    template <typename MeshType>
+    void addMesh(float t, Entity_Id id, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation = PolyVox::Vector3DInt32(0, 0, 0), float scale = 1.0f);
+    
+    void addMeshData(Entity_Id id, VoxelMeshData meshData);
     
     //Camera Functions
-    void setMVPE(std::shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program);
-    
-    void setModelIdentityMatrix(std::shared_ptr<Program> prog);
-    
-    static std::shared_ptr<MatrixStack> getViewMatrix(Camera_Component* camera, Position_Component* camera_position);
-    static void setViewMatrix(Camera_Component* camera, Position_Component* camera_position, std::shared_ptr<Program> prog);
-    
-    std::shared_ptr<MatrixStack> getProjectionMatrix(float aspect);
-    void setProjectionMatrix(std::shared_ptr<Program> prog);
-    
-    void setEyePosition(glm::vec3 position, std::shared_ptr<Program> prog);
-    
+    void setMVPE(float t, std::shared_ptr<Program> program);
     void renderGUI();
-    
-    void setMaterial(const std::shared_ptr<Program> prog, int i);
 };
 
 #endif /* Render_System_h */

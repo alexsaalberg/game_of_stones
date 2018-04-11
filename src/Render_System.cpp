@@ -25,25 +25,13 @@ using namespace std;
 using namespace glm;
 using namespace PolyVox;
 
+/*
 void Render_System::initVoxels() {
     //volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,63,63,63));
     //createSphereInVolume(*volData.get(), 30.0f);
     
     volData = make_shared<RawVolume<uint8_t>>(Region(0,0,0,127,127,127));
     pagedData = make_shared<PagedVolume<uint8_t>>(new NoisePager());
-    
-    //createLand(*volData.get());
-    //createFunction3D(*volData.get());
-    
-    //voxel_rend.initCubicMesh_RawVolume(volData.get());
-    Region region = Region(1,1,1,244,244,244);
-    //Region region = Region(1,1,1,255,255,255);
-    //Region region2 = Region(-100,-100,-100,100,100,100);
-    
-    //pagedData->flushAll();
-    //pagedData->prefetch(region2);
-    //clearRegion(*pagedData.get(), region2);
-    //createLand(*pagedData.get(), region);
     
     
     const int32_t extractedRegionSize = 64;
@@ -80,32 +68,21 @@ void Render_System::initVoxels() {
             }
         }
     }
-    
-    
-    //voxel_rend.initCubicMesh_RawVolume(volData.get());
-    //voxel_rend.initCubicMesh_PagedVolume(pagedData.get(), region);
-    
-    // Perform the extraction for this region of the volume
-    //auto mesh = extractCubicMesh(pagedData.get(), region);
-    
-    // The returned mesh needs to be decoded to be appropriate for GPU rendering.
-    //auto decodedMesh = decodeMesh(mesh);
-    
-    //poly_vox_example.addMesh(decodedMesh);
 }
+ */
 
-void Render_System::draw(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
+void Render_System::draw(float t, std::shared_ptr<Program> program) {
     program->bind();
     
-    setMVPE(entity_manager, t, program);
+    setMVPE(t, program);
     
-    draw_entities(entity_manager, t, program);
+    draw_entities(t, program);
     
     program->unbind();
 }
 
-void Render_System::draw_entities(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
-    setMaterial(program, 6);
+void Render_System::draw_entities(float t, std::shared_ptr<Program> program) {
+    Camera::setMaterial(program, 6);
     
     vector<Entity_Id> id_list = entity_manager->get_ids_with_components<Position_Component, Model_Component>();
     
@@ -132,7 +109,7 @@ void Render_System::draw_entities(shared_ptr<EntityManager> entity_manager, floa
     }
 }
 
-void Render_System::setMVPE(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
+void Render_System::setMVPE(float t, std::shared_ptr<Program> program) {
     int windowWidth, windowHeight;
     glfwGetFramebufferSize(window_manager->getHandle(), &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
@@ -140,340 +117,164 @@ void Render_System::setMVPE(shared_ptr<EntityManager> entity_manager, float t, s
     float aspect = windowWidth/(float)windowHeight;
     Camera::aspect = aspect;
     
-    
     vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
     Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
     Position_Component* position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
     
-    setModelIdentityMatrix(program);
-    setViewMatrix(camera, position, program);
-    setProjectionMatrix(program);
-    
-    setEyePosition(position->position, program);
-    
-    vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 200.0f, 10.0f); //from X to origin
-    vec3 directionTowardsLight = -directionFromLight;
-    CHECKED_GL_CALL( glUniform3f(program->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
+    Camera::setModelIdentityMatrix(program);
+    Camera::setViewMatrix(camera, position, program);
+    Camera::setProjectionMatrix(program);
+    Camera::setEyePosition(position->position, program);
+    Camera::setLight(program);
 }
 
 //Voxel Stuff
-void Render_System::draw_voxels(shared_ptr<EntityManager> entity_manager, float t, std::shared_ptr<Program> program) {
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+void Render_System::draw_voxels(float t, std::shared_ptr<Program> program) {
+    //Calculate Meshes
+    vector<Entity_Id> voxel_id_list = entity_manager->get_ids_with_component<Voxel_Component>();
+    
+    for(Entity_Id id : voxel_id_list) {
+        Voxel_Component* voxel_component = entity_manager->get_component<Voxel_Component>(id);
+        
+        if(voxel_meshes.count(id) == 0) {
+            //create mesh
+            calculate_mesh(t, id, voxel_component);
+        } else if (voxel_component->dirty_time > voxel_meshes.find(id)->second.dirty_time) {
+            //recreate mesh
+            voxel_meshes.erase(id);
+            calculate_mesh(t, id, voxel_component);
+            printf("%f: Recalculating mesh for id %d\n", t, id);
+        }
+    }
+    
+    //Render
+    program->bind();
+    
+    setMVPE(t, program);
+    Camera::setMaterial(program, 1);
+    
+    std::shared_ptr<MatrixStack> M = std::make_shared<MatrixStack>();
+    M->loadIdentity();
     
     program->bind();
     
-    setMVPE(entity_manager, t, program);
-    
-    setMaterial(program, 1);
-    poly_vox_example.render(program);
+    for(auto meshIterator : voxel_meshes) {
+        auto meshData = meshIterator.second;
+        
+        M->pushMatrix();
+            M->translate(meshData.translation);
+            M->scale(meshData.scale);
+            glUniformMatrix4fv(program->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
+        M->popMatrix();
+        
+        // Bind the vertex array for the current mesh
+        glBindVertexArray(meshData.vertexArrayObject);
+        // Draw the mesh
+        glDrawElements(GL_TRIANGLES, meshData.noOfIndices, meshData.indexType, 0);
+        // Unbind the vertex array.
+        glBindVertexArray(0);
+    }
     
     program->unbind();
 }
-
-
-void Render_System::createFunction3D(RawVolume<uint8_t>& volData)
-{
-    //This three-level for loop iterates over every voxel in the volume
-    for (int z = 0; z < volData.getDepth()-3; z++)
+            
+void Render_System::calculate_mesh(float t, Entity_Id id, Voxel_Component *voxel_component) {
+    const int32_t extractedRegionSize = 64;
+    int meshCounter = 0;
+    const int32_t render_edge_length = 256;
+    const int32_t render_height = 128;
+    
+    
+    for (int32_t z = -render_edge_length / 2; z < render_edge_length /2; z += extractedRegionSize)
     {
-        for (int x = 0; x < volData.getWidth()-3; x++)
+        for (int32_t y = 0; y < render_height; y += extractedRegionSize)
         {
-            for (int y = 0; y < volData.getHeight()-3; y++)
+            for (int32_t x = -render_edge_length / 2; x < render_edge_length / 2; x += extractedRegionSize)
             {
-                uint8_t uVoxelValue = 0;
+                // Specify the region to extract based on a starting position and the desired region sze.
+                PolyVox::Region regToExtract(x, y, z, x + extractedRegionSize, y + extractedRegionSize, z + extractedRegionSize);
                 
-                float xCenter = volData.getWidth() / 2.0f;
-                float zCenter = volData.getDepth() / 2.0f;
-                float yCenter = volData.getHeight() / 2.0f;
+                // If you uncomment this line you will be able to see that the volume is rendered as multiple seperate meshes.
+                //regToExtract.shrink(1);
                 
-                float xF = (float) x;
-                float zF = (float) z;
-                float yF = (float) y;
+                // Perform the extraction for this region of the volume
+                auto mesh = extractCubicMesh(voxel_component->volume.get(), regToExtract);
+                //auto mesh = extractMarchingCubesMesh(pagedData.get(), regToExtract);
                 
-                xF -= xCenter;
-                zF -= zCenter;
-                yF -= yCenter;
+                // The returned mesh needs to be decoded to be appropriate for GPU rendering.
+                auto decodedMesh = decodeMesh(mesh);
                 
-                float scale = 0.035f;
-                xF *= scale;
-                zF *= scale;
-                yF *= scale;
+                // Pass the surface to the OpenGL window. Note that we are also passing an offset in this multi-mesh example. This is because
+                // the surface extractors return a mesh with 'local space' positions to reduce storage requirements and precision problems.
+                addMesh(t, id, decodedMesh, decodedMesh.getOffset());
                 
-                
-                //sin(10(x^2+y^2))/10
-                float calc = sin(10.0f * (xF*xF+zF*zF))/10.0f;
-                //printf("calc %f\n", calc);
-                
-                //(0.4^2-(0.6-(x^2+y^2)^0.5)^2)^0.5
-                calc = xF*xF + zF*zF;
-                calc = 0.6f - pow(calc, 0.5f);
-                calc = pow(0.4f, 2.0f) - pow(calc, 2.0f);
-                calc = pow(calc, 0.5f);
-                
-                calc = pow(xF, 2.0f) + (9.0f * pow(yF, 2.0f)) / 4.0f + pow(zF, 2.0f) - 1.0f;
-                calc = pow(calc, 3.0f);
-                
-                calc = calc - pow(xF, 2.0f)*pow(zF, 3.0f);
-                calc = calc - (9.0f * pow(yF, 2.0f) * pow(zF, 3.0f) / 80.0f);
-                
-                
-                //calc = (0.4^2 - (0.6f - (xF*xF + zF*zF)^0.5f)^2.0f)^0.5f;
-                
-                //1/(15(x^2+y^2))
-                //calc = 1 / (15.0f*(xF*xF+zF*zF));
-                
-                //calc = (calc + 1.0f) / 2.0f;
-                //float threshold = (calc * 100.0f);
-                
-                uVoxelValue = 0;
-                if(abs(calc) < 0.2f) {
-                    uVoxelValue = 5;
-                }
-                volData.setVoxel(x, y, z, uVoxelValue);
+                meshCounter++;
+                //printf("Mesh #%d\n", meshCounter);
             }
         }
-        
     }
-    
 }
 
-void Render_System::createFunction(RawVolume<uint8_t>& volData)
+// Convert a PolyVox mesh to OpenGL index/vertex buffers. Inlined because it's templatised.
+template <typename MeshType>
+void Render_System::addMesh(float t, Entity_Id id, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation, float scale)
 {
+    // This struct holds the OpenGL properties (buffer handles, etc) which will be used
+    // to render our mesh. We copy the data from the PolyVox mesh into this structure.
+    VoxelMeshData meshData;
     
-    //This three-level for loop iterates over every voxel in the volume
-    for (int z = 0; z < volData.getDepth()-3; z++)
-    {
-            for (int x = 0; x < volData.getWidth()-3; x++)
-            {
-                uint8_t uVoxelValue = 0;
-                
-                float xCenter = volData.getWidth() / 2.0f;
-                float zCenter = volData.getDepth() / 2.0f;
-                
-                float xF = (float) x;
-                float zF = (float) z;
-                
-                xF -= xCenter;
-                zF -= zCenter;
-                
-                float scale = 0.02f;
-                xF *= scale;
-                zF *= scale;
-                
-                
-                //sin(10(x^2+y^2))/10
-                float calc = sin(10.0f * (xF*xF+zF*zF))/10.0f;
-                //printf("calc %f\n", calc);
-                
-                //(0.4^2-(0.6-(x^2+y^2)^0.5)^2)^0.5
-                calc = xF*xF + zF*zF;
-                calc = 0.6f - pow(calc, 0.5f);
-                calc = pow(0.4f, 2.0f) - pow(calc, 2.0f);
-                calc = pow(calc, 0.5f);
-                
-                
-                //calc = (0.4^2 - (0.6f - (xF*xF + zF*zF)^0.5f)^2.0f)^0.5f;
-                
-                //1/(15(x^2+y^2))
-                //calc = 1 / (15.0f*(xF*xF+zF*zF));
-                
-                calc = (calc + 1.0f) / 2.0f;
-                float height = (int)(calc * 100.0f);
-                
-                for (int y = 0; y < volData.getHeight()-3; y++)
-                {
-                    uVoxelValue = 0;
-                    if(y < height) {
-                        uVoxelValue = 5;
-                    }
-                    volData.setVoxel(x, y, z, uVoxelValue);
-                }
-            }
-        
-    }
+    // Create the VAO for the mesh
+    glGenVertexArrays(1, &(meshData.vertexArrayObject));
+    glBindVertexArray(meshData.vertexArrayObject);
+    
+    // The GL_ARRAY_BUFFER will contain the list of vertex positions
+    glGenBuffers(1, &(meshData.vertexBuffer));
+    glBindBuffer(GL_ARRAY_BUFFER, meshData.vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, surfaceMesh.getNoOfVertices() * sizeof(typename MeshType::VertexType), surfaceMesh.getRawVertexData(), GL_STATIC_DRAW);
+    
+    // and GL_ELEMENT_ARRAY_BUFFER will contain the indices
+    glGenBuffers(1, &(meshData.indexBuffer));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, surfaceMesh.getNoOfIndices() * sizeof(typename MeshType::IndexType), surfaceMesh.getRawIndexData(), GL_STATIC_DRAW);
+    
+    // Every surface extractor outputs valid positions for the vertices, so tell OpenGL how these are laid out
+    glEnableVertexAttribArray(0); // Attrib '0' is the vertex positions
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(typename MeshType::VertexType), (GLvoid*)(offsetof(typename MeshType::VertexType, position))); //take the first 3 floats from every sizeof(decltype(vecVertices)::value_type)
+    
+    // Some surface extractors also generate normals, so tell OpenGL how these are laid out. If a surface extractor
+    // does not generate normals then nonsense values are written into the buffer here and sghould be ignored by the
+    // shader. This is mostly just to simplify this example code - in a real application you will know whether your
+    // chosen surface extractor generates normals and can skip uploading them if not.
+    glEnableVertexAttribArray(1); // Attrib '1' is the vertex normals.
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(typename MeshType::VertexType), (GLvoid*)(offsetof(typename MeshType::VertexType, normal)));
+    
+    // Finally a surface extractor will probably output additional data. This is highly application dependant. For this example code
+    // we're just uploading it as a set of bytes which we can read individually, but real code will want to do something specialised here.
+    glEnableVertexAttribArray(2); //We're talking about shader attribute '2'
+    GLint size = (std::min)(sizeof(typename MeshType::VertexType::DataType), size_t(4)); // Can't upload more that 4 components (vec4 is GLSL's biggest type)
+    glVertexAttribIPointer(2, size, GL_UNSIGNED_BYTE, sizeof(typename MeshType::VertexType), (GLvoid*)(offsetof(typename MeshType::VertexType, data)));
+    
+    // We're done uploading and can now unbind.
+    glBindVertexArray(0);
+    
+    // A few additional properties can be copied across for use during rendering.
+    meshData.noOfIndices = surfaceMesh.getNoOfIndices();
+    meshData.translation = glm::vec3(translation.getX(), translation.getY(), translation.getZ());
+    meshData.scale = scale;
+    
+    // Set 16 or 32-bit index buffer size.
+    meshData.indexType = sizeof(typename MeshType::IndexType) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
+    
+    meshData.dirty_time = t;
+    // Now add the mesh to the list of meshes to render.
+    addMeshData(id, meshData);
 }
 
-void Render_System::clearRegion(PagedVolume<uint8_t>& volData, Region region) {
-    for(int x = region.getLowerX(); x < region.getUpperX(); x++) {
-        for(int z = region.getLowerZ(); z < region.getUpperZ(); z++) {
-            for(int y = region.getLowerY(); y < region.getUpperY(); y++) {
-                volData.setVoxel(x, y, z, 0);
-            }
-        }
-    }
-}
 
-void Render_System::createLand(PagedVolume<uint8_t>& volData, Region region)
+void Render_System::addMeshData(Entity_Id id, VoxelMeshData meshData)
 {
-    FastNoise myNoise; // Create a FastNoise object
-    //myNoise.SetSeed(13);
-    myNoise.SetNoiseType(FastNoise::SimplexFractal); // Set the desired noise type
-    
-    myNoise.SetFractalOctaves(4);
-    myNoise.SetFractalLacunarity(3);
-    myNoise.SetFractalGain(0.5f);
-    
-    //This vector hold the position of the center of the volume
-    
-    uint8_t voxelVal = 0;
-    
-    for(int x = region.getLowerX(); x <= region.getUpperX(); x++) {
-        for(int z = region.getLowerZ(); z <= region.getUpperZ(); z++) {
-            
-            float val = myNoise.GetValue(x, z);
-            
-            val += 1.0f;
-            val *= 0.5f;
-            
-            int height = (int) (val * 100.0f);
-            
-            //printf("X%d Z%d, height %d\n", x, z, height);
-            
-            for(int y = region.getLowerY(); y <= region.getUpperY(); y++) {
-                voxelVal = 0;
-                
-                if(y < height) {
-                    //printf("X%d Z%d, Y%d H%d\n", x, z, y, height);
-                    voxelVal = 255-128;
-                }
-                
-                volData.setVoxel(x, y, z, voxelVal);
-            }
-        }
-    }
-}
-
-void Render_System::createLand(RawVolume<uint8_t>& volData)
-{
-    FastNoise myNoise; // Create a FastNoise object
-    //myNoise.SetSeed(13);
-    myNoise.SetNoiseType(FastNoise::SimplexFractal); // Set the desired noise type
-    
-    myNoise.SetFractalOctaves(4);
-    myNoise.SetFractalLacunarity(3);
-    myNoise.SetFractalGain(0.5f);
-    
-    //This vector hold the position of the center of the volume
-    Vector3DFloat v3dVolCenter(volData.getWidth() / 2, volData.getHeight() / 2, volData.getDepth() / 2);
-    
-    for(int x = 0; x < volData.getWidth()-2; x++) {
-        for(int z = 0; z < volData.getDepth()-2; z++) {
-            float xF = (float) x;
-            float zF = (float) z;
-            uint8_t voxelVal = 0;
-            
-            float scale = 0.01f;
-            xF *= scale;
-            zF *= scale;
-            
-            float val = myNoise.GetValue(x, z);
-            
-            val += 1.0f;
-            val *= 0.5f;
-            
-            int height = (int) (val * 100.0f);
-            
-            //printf("X%d Z%d, height %d\n", x, z, height);
-            
-            for(int y = 0; y <= volData.getHeight() - 1; y++) {
-                voxelVal = 0;
-                
-                if(y < height)
-                    voxelVal = 255;
-                
-                volData.setVoxel(x, y, z, voxelVal);
-            }
-        }
-    }
-}
-
-void Render_System::createSphereInVolume(RawVolume<uint8_t>& volData, float fRadius)
-{
-    //This vector hold the position of the center of the volume
-    Vector3DFloat v3dVolCenter(volData.getWidth() / 2, volData.getHeight() / 2, volData.getDepth() / 2);
-    
-    //This three-level for loop iterates over every voxel in the volume
-    for (int z = 0; z < volData.getDepth(); z++)
-    {
-        for (int y = 0; y < volData.getHeight(); y++)
-        {
-            for (int x = 0; x < volData.getWidth(); x++)
-            {
-                //Store our current position as a vector...
-                Vector3DFloat v3dCurrentPos(x,y,z);
-                //And compute how far the current position is from the center of the volume
-                float fDistToCenter = (v3dCurrentPos - v3dVolCenter).length();
-                
-                uint8_t uVoxelValue = 0;
-                
-                //If the current voxel is less than 'radius' units from the center then we make it solid.
-                if(fDistToCenter <= fRadius)
-                {
-                    //Our new voxel value
-                    uVoxelValue = 255;
-                }
-                
-                //Wrte the voxel value into the volume
-                volData.setVoxel(x, y, z, uVoxelValue);
-            }
-        }
-    }
-}
-
-//Camera Stuff
-void Render_System::setModelIdentityMatrix(shared_ptr<Program> program) {
-    auto M = make_shared<MatrixStack>();
-    M->pushMatrix();
-    M->loadIdentity();
-    CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())) );
-    M->popMatrix();
-}
-
-std::shared_ptr<MatrixStack> Render_System::getViewMatrix(Camera_Component* camera, Position_Component* camera_position) {
-    vec3 norot_identity = vec3(0.0f, 0.0f, 1.0f);
-    
-    vec3 position = camera_position->position;
-    vec3 identity = camera_position->rotation * norot_identity;
-    identity = position + identity;
-    
-    std::shared_ptr<MatrixStack> V = make_shared<MatrixStack>();
-    V->pushMatrix();
-    
-    //V->loadIdentity();
-    //V->multMatrix(&rot); //rotate based on camera's rotation
-    V->lookAt(position, identity, vec3(0, 1, 0)); //Look at identity from position
-    //V->translate(-1.0f * position); //Negative
-    return V;
-}
-
-void Render_System::setViewMatrix(Camera_Component* camera,  Position_Component* camera_position, std::shared_ptr<Program> program) {
-    //std::shared_ptr<MatrixStack> V = Camera::getViewMatrix(camera, camera_position);
-    glm::mat4 V = Camera::getViewMatrix(camera, camera_position);
-    CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("V"), 1, GL_FALSE, value_ptr(V) ) );
-}
-
-std::shared_ptr<MatrixStack> Render_System::getProjectionMatrix(float aspect) {
-    
-    std::shared_ptr<MatrixStack> P = make_shared<MatrixStack>();
-    P->pushMatrix();
-    P->perspective(45.0f, aspect, 0.1f, 1000.0f);
-    return P;
-}
-
-void Render_System::setProjectionMatrix(shared_ptr<Program> program) {
-    glm::mat4 P = Camera::getProjectionMatrix();
-    CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("P"), 1, GL_FALSE, value_ptr(P)) );
-}
-
-void Render_System::setEyePosition(vec3 position, shared_ptr<Program> prog) {
-
-    //float x = cos(radians(camera->phi))*cos(radians(camera->theta));
-    //float y = sin(radians(camera->phi));
-    //float z = cos(radians(camera->phi))*sin(radians(camera->theta));
-    
-    //vec3 invertedPosition = vec3(0.0f) - position; //from origin to xyz
-    
-    CHECKED_GL_CALL( glUniform3fv(prog->getUniform("eyePosition"), 1, value_ptr(position)) );
+    std::pair<Entity_Id, VoxelMeshData> element(id, meshData);
+    voxel_meshes.insert(element);
 }
 
 void Render_System::renderGUI() {
@@ -498,48 +299,4 @@ void Render_System::renderGUI() {
     ImGui::End();
 }
 
-void Render_System::setMaterial(const std::shared_ptr<Program> prog, int i)
-{
-    CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.2f, 0.1f) );
-    CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 1.0f) );
-    
-    switch (i)
-    {
-        case 0: //shiny blue plastic
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.02f, 0.04f, 0.2f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.0f, 0.16f, 0.9f);;
-            break;
-        case 1: // flat grey
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.13f, 0.13f, 0.14f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.3f, 0.3f, 0.4f);
-            break;
-        case 2: //brass
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.3294f, 0.2235f, 0.02745f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7804f, 0.5686f, 0.11373f);
-            break;
-        case 3: //copper
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.1913f, 0.0735f, 0.0225f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
-            break;
-        case 4: //green man
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.735f, 0.0225f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.038f, 0.048f, 0.028f);
-            break;
-        case 5: //radiation
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.7, 0.7735f, 0.225f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
-            break;
-        case 6: //stone
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.1735f, 0.1225f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.438f, 0.4048f, 0.428f);
-            break;
-        case 7:
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.17f, 0.01f, 0.01f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.61f, 0.04f, 0.04f);
-            break;
-        case 8:
-            glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.6f, 0.01f, 0.01f);
-            glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.61f, 0.04f, 0.04f);
-            break;
-    }
-}
+

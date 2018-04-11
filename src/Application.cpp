@@ -25,6 +25,8 @@ void Application::init(const std::string& resourceDirectory) {
     
     voxel_system.entity_manager = entity_manager;
     
+    render_system.entity_manager = entity_manager;
+    
     //render_system.initVoxels();
     
 	initShaders(resourceDirectory+"/shaders");
@@ -176,8 +178,14 @@ void Application::initCamera() {
     Camera_Component* camera = entity_manager->add_component<Camera_Component>(camera_id);
     camera->distance = 500.0f;
     
-    position->position = vec3(1.0f);
+    position->position = vec3(0.0f, 120.0f, 0.0f);
     position->rotation = quat(1.0f, 0.0f, 0.0f, 0.0f);
+    
+    
+    glm::quat deltaRotation;
+    deltaRotation = glm::angleAxis(1.0f * 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    position->rotation *= deltaRotation;
+    
 }
 
 void Application::initPlayer() {
@@ -219,8 +227,8 @@ void Application::renderState(State& state, float t) {
     CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
     
-    render_system.draw(entity_manager, t, mainProgram);
-    //render_system.draw_voxels(entity_manager, t, voxelProgram);
+    render_system.draw(t, mainProgram);
+    render_system.draw_voxels(t, voxelProgram);
     //render_system.draw_voxels(entity_manager, t, mainProgram);
 }
 
