@@ -18,6 +18,7 @@ using namespace glm;
 using namespace PolyVox;
 
 void Voxel_System::update(double t) {
+    
     for(MouseClickEvent& click : click_events) {
         processClickEvent(t, click);
     }
@@ -36,12 +37,12 @@ void Voxel_System::processClickEvent(double t, MouseClickEvent& click) {
     Position_Component* camera_position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
     
     if(camera == NULL) {
-        printf("Trying to do picking without camera\n");
+        printf("Trying to do picking without camera. Very odd.\n");
         exit(-1);
     }
     
     int windowWidth, windowHeight;
-    glfwGetFramebufferSize(window_manager->getHandle(), &windowWidth, &windowHeight);
+    glfwGetWindowSize(window_manager->getHandle(), &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
     
     mat4 V = Camera::getViewMatrix(camera, camera_position);
@@ -49,6 +50,7 @@ void Voxel_System::processClickEvent(double t, MouseClickEvent& click) {
     mat4 PV = P * V;
     
     mat4 invPV = inverse( PV );
+    
     
     float xpercent = click.x / windowWidth;
     float ypercent = click.y / windowHeight;
@@ -95,8 +97,8 @@ void Voxel_System::processClickEvent(double t, MouseClickEvent& click) {
             }
         }
         
-        voxel_component->dirty_time = glfwGetTime();
-        printf("%f: Set Dirty Time\n", voxel_component->dirty_time);
+        voxel_component->dirty_time = t;
+        //printf("%f: Set Dirty Time\n", voxel_component->dirty_time);
     }
 }
 

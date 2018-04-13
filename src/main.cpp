@@ -55,11 +55,12 @@ int main(int argc, char **argv)
     // Setup style
     //ImGui::StyleColorsDark();
     */
-    
+    int frame = 0;
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
     {
+        frame++;
         //ImGui_ImplGlfwGL3_NewFrame();
         double newTime = glfwGetTime();
         double frameTime = newTime - currentTime;
@@ -67,8 +68,8 @@ int main(int argc, char **argv)
         
         /*
         if (frameTime>0.25f)
-            frameTime = 0.25f;*/
-        
+            frameTime = 0.25f;
+        */
         accumulator += frameTime;
         
         numSimulationsThisFrame = 0;
@@ -82,9 +83,11 @@ int main(int argc, char **argv)
             numSimulationsThisFrame++;
         }
         
-        //printf("Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
-        //printf("Num Simulations: %d\n", numSimulationsThisFrame);
-        
+        if((1.0f / frameTime) < 20.0f) { //Long frame
+            printf("%d: Frame Rate: %f\tTime: %f\n", frame, 1.0f / frameTime, frameTime);
+            printf("Num Simulations: %d\tTTime: %lf\n", numSimulationsThisFrame, t);
+        }
+            
         float alpha = accumulator/dt;
         
         //Interpolates automatically in Application.cpp

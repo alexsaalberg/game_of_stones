@@ -45,17 +45,6 @@ public:
         counter++;
         //printf("Paging in chunk%d, %d-%d %d-%d %d-%d\n", counter, region.getLowerX(), region.getUpperX(), region.getLowerY(), region.getUpperY(), region.getLowerZ(), region.getUpperZ());
         
-        /*
-        for (int x = region.getLowerX(); x <= region.getUpperX(); x++)
-        {
-            for (int y = region.getLowerY(); y <= region.getUpperY(); y++)
-            {
-                for (int z = region.getLowerZ(); z <= region.getUpperZ(); z++)
-                {
-                    pChunk->setVoxel(x - region.getLowerX(), y - region.getLowerY(), z - region.getLowerZ(), 0);
-                }
-            }
-        }*/
         uint8_t voxelVal = 0;
         
         for(int x = region.getLowerX(); x <= region.getUpperX(); x++) {
@@ -77,39 +66,14 @@ public:
                         //printf("X%d Z%d, Y%d H%d\n", x, z, y, height);
                         voxelVal = 255-128;
                     }
+                    
+                    // Voxel position within a chunk always start from zero. So if a chunk represents region (4, 8, 12) to (11, 19, 15)
+                    // then the valid chunk voxels are from (0, 0, 0) to (7, 11, 3). Hence we subtract the lower corner position of the
+                    // region from the volume space position in order to get the chunk space position.
                     pChunk->setVoxel(x - region.getLowerX(), y - region.getLowerY(), z - region.getLowerZ(), voxelVal);
                 }
             }
         }
-        /*
-        for (int x = region.getLowerX(); x <= region.getUpperX(); x++)
-        {
-            for (int y = region.getLowerY(); y <= region.getUpperY(); y++)
-            {
-                float val = myNoise.GetValue(x, y);
-                val += 1.0f;
-                val *= 0.5f;
-                int height = (int)(val * 100.0f);
-                
-                //printf("height %d\n", height);
-                
-                
-                for (int z = region.getLowerZ(); z <= region.getUpperZ(); z++)
-                {
-                    uint8_t voxel_val = 0;
-                    
-                    if(z < height)
-                        voxel_val = 255;
-                
-                    // Voxel position within a chunk always start from zero. So if a chunk represents region (4, 8, 12) to (11, 19, 15)
-                    // then the valid chunk voxels are from (0, 0, 0) to (7, 11, 3). Hence we subtract the lower corner position of the
-                    // region from the volume space position in order to get the chunk space position.
-                    pChunk->setVoxel(x - region.getLowerX(), y - region.getLowerY(), z - region.getLowerZ(), 0);
-                    //pChunk->setVoxel(x, y, z, voxel);
-                }
-            }
-        }
-         */
     }
     
     virtual void pageOut(const PolyVox::Region& region, PagedVolume<uint8_t>::Chunk* /*pChunk*/)

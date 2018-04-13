@@ -215,7 +215,6 @@ void Application::initHelicopter(glm::vec3 position) {
 
 void Application::integrate(double t, float dt) {
 	//previousState = make_shared<State>( *currentState );
-
     currentState->integrate(t, dt);
     voxel_system.update(t);
 }

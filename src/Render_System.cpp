@@ -139,8 +139,9 @@ void Render_System::draw_voxels(double t, std::shared_ptr<Program> program) {
         if(voxel_meshes.count(id) == 0) {
             //create mesh
             calculate_mesh(t, id, voxel_component);
-            printf("%lf: Calculated Initial mesh for id %d\n", t, id);
+            //printf("%lf: Calculated Initial mesh for id %d\n", t, id);
         } else if (voxel_component->dirty_time > t) {
+            printf("No Update %lf < %lf\n", t, voxel_component->dirty_time);
             //The physics goes a bit ahead of rendering
             //So it's possible for the voxels to change AFTER the moment we're rendering
             //In this case, do nothing
@@ -148,7 +149,8 @@ void Render_System::draw_voxels(double t, std::shared_ptr<Program> program) {
             //recreate mesh
             voxel_meshes.erase(id);
             calculate_mesh(t, id, voxel_component);
-            printf("%lf: Recalculating mesh for id %d\n", t, id);
+            //voxel_meshes.find(id)->second.dirty_time = t;
+            //printf("%lf: Recalculating mesh for id %d\n", t, id);
         }
     }
     
