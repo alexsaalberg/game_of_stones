@@ -5,10 +5,13 @@
   * Click again to unbind
 * Use WASD to move. 
 * Use R/F to move vertically.
+* Use arrow keys to change camera
 
 ## Naming Conventions
-* Variables
-  * underscore_seperated
+* Variables (local and member)
+  * snake_case 
 * Classes
-  * Underscore seperated
+  * PascalCase
+* Functions
+  * camelCase
 
