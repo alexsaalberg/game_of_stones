@@ -1,11 +1,11 @@
 //
-//  Input_System.hpp
+//  InputSystem.hpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 3/29/18.
 //
-#ifndef Input_System_hpp
-#define Input_System_hpp
+#ifndef InputSystem_hpp
+#define InputSystem_hpp
 
 #include "System.hpp"
 
@@ -14,7 +14,7 @@
 #include "EntityManager.hpp"
 #include "Messaging.h"
 
-class Input_System : System, public EventCallbacks {
+class InputSystem : System, public EventCallbacks {
 public:
     std::shared_ptr<EntityManager> entity_manager;
     std::shared_ptr<EventHandler> event_handler;
@@ -27,4 +27,4 @@ public:
     void resizeCallback(GLFWwindow *window, int width, int height);
 };
 
-#endif /* Input_System_hpp */
+#endif /* InputSystem_hpp */

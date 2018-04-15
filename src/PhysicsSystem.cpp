@@ -1,8 +1,8 @@
 //
-//  Physics_System.cpp
+//  PhysicsSystem.cpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 4/8/18.
 //
 
-#include "Physics_System.hpp"
+#include "PhysicsSystem.hpp"

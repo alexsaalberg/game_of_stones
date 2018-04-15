@@ -29,7 +29,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 //PolyVox
-#include "PolyVox_OpenGL.hpp"
+#include "PolyVoxOpenGL.hpp"
 
 //Entity-Component-System
 #include "EntityManager.hpp"
@@ -37,9 +37,9 @@
 #include "Component.hpp"
 
 #include "System.hpp"
-#include "Input_System.hpp"
-#include "Render_System.hpp"
-#include "Voxel_System.hpp"
+#include "InputSystem.hpp"
+#include "RenderSystem.hpp"
+#include "VoxelSystem.hpp"
 
 
 class Application
@@ -55,9 +55,9 @@ public:
     Entity_Id voxel_id = -1;
     
     //Systems
-    Render_System render_system;
-    Input_System input_system;
-    Voxel_System voxel_system;
+    RenderSystem render_system;
+    InputSystem input_system;
+    VoxelSystem voxel_system;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;

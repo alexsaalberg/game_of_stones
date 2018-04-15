@@ -1,11 +1,11 @@
 //
-//  Input_System.cpp
+//  InputSystem.cpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 3/29/18.
 //
 
-#include "Input_System.hpp"
+#include "InputSystem.hpp"
 
 #include <vector>
 
@@ -15,7 +15,7 @@
 using namespace std;
 using namespace glm;
 
-void Input_System::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
@@ -110,9 +110,9 @@ void Input_System::keyCallback(GLFWwindow *window, int key, int scancode, int ac
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully
 //                    they're not being called every time the mouse moves)
-void Input_System::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
+void InputSystem::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
 {}
-void Input_System::mouseCallback(GLFWwindow *window, int button, int action, int mods)
+void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int mods)
 {
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
@@ -122,10 +122,10 @@ void Input_System::mouseCallback(GLFWwindow *window, int button, int action, int
         event_handler->emit(click);
     }
 }
-void Input_System::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {}
 
-void Input_System::resizeCallback(GLFWwindow *window, int width, int height)
+void InputSystem::resizeCallback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }

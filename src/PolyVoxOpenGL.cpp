@@ -1,11 +1,11 @@
 //
-//  PolyVox_OpenGL.cpp
+//  PolyVoxOpenGL.cpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 3/26/18.
 //
 
-#include "PolyVox_OpenGL.hpp"
+#include "PolyVoxOpenGL.hpp"
 #include "imgui_memory_editor.h"
 
 using namespace PolyVox;
@@ -30,7 +30,7 @@ void PolyVox_OpenGL::initCubicMesh_RawVolume(RawVolume<uint8_t>* volume) {
 }
  */
 
-void PolyVox_OpenGL::initCubicMesh_PagedVolume(PagedVolume<uint8_t>* volume, Region region) {
+void PolyVoxOpenGL::initCubicMesh_PagedVolume(PagedVolume<uint8_t>* volume, Region region) {
     region.grow(5);
     
     // Perform the extraction for this region of the volume
@@ -81,7 +81,7 @@ void PolyVox_OpenGL::initCubicMesh(shared_ptr<RawVolume<uint8_t> > volume) {
     exit(-1);
 }*/
 
-void PolyVox_OpenGL::render(shared_ptr<Program> prog) {
+void PolyVoxOpenGL::render(shared_ptr<Program> prog) {
     int vertex_attribute = prog->getAttribute("vPosition");
     
     CHECKED_GL_CALL(glEnableVertexAttribArray(vertex_attribute) );

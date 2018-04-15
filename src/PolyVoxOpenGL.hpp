@@ -1,12 +1,12 @@
 //
-//  PolyVox_OpenGL.hpp
+//  PolyVoxOpenGL.hpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 3/26/18.
 //
 
-#ifndef PolyVox_OpenGL_hpp
-#define PolyVox_OpenGL_hpp
+#ifndef PolyVoxOpenGL_hpp
+#define PolyVoxOpenGL_hpp
 
 #include <stdio.h>
 
@@ -23,7 +23,7 @@
 #include "GLSL.h"
 
 
-class PolyVox_OpenGL {
+class PolyVoxOpenGL {
 public:
     //PolyVox::Mesh< PolyVox::CubicVertex<uint8_t> > mesh;
     //PolyVox::Mesh< PolyVox::CubicVertex<uint8_t> > decodedMesh;
@@ -44,4 +44,4 @@ public:
     void render(std::shared_ptr<Program> prog);
 };
 
-#endif /* PolyVox_OpenGL_hpp */
+#endif /* PolyVoxOpenGL_hpp */

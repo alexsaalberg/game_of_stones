@@ -5,20 +5,20 @@
 //  Created by Alex Saalberg on 4/13/18.
 //
 
-#include "Selection_Stack.hpp"
+#include "SelectionStack.hpp"
 
 #include <algorithm>
 
 using namespace PolyVox;
 
 template <class VoxelType>
-void Selection_Stack<VoxelType>::add(Region region, VoxelType new_type, VoxelType old_type, SelectionType selection_type) {
+void SelectionStack<VoxelType>::add(Region region, VoxelType new_type, VoxelType old_type, SelectionType selection_type) {
     Selection<VoxelType> selection(region, new_type, old_type, selection_type);
     selections.push_back(selection);
 }
 
 template <class VoxelType>
-void Selection_Stack<VoxelType>::updateEnclosingRegion(Region& region) {
+void SelectionStack<VoxelType>::updateEnclosingRegion(Region& region) {
     enclosing_region.setLowerX(max(enclosing_region.getLowerX(), region.getLowerX()));
     enclosing_region.setLowerY(max(enclosing_region.getLowerY(), region.getLowerY()));
     enclosing_region.setLowerZ(max(enclosing_region.getLowerZ(), region.getLowerZ()));
@@ -53,7 +53,7 @@ static void replaceTypeInRegion(Region region, RawVolume<VoxelType> volume, Voxe
 }
 
 template <class VoxelType>
-void Selection_Stack<VoxelType>::setVolumeFromSelection(Selection<VoxelType> &selection, RawVolume<VoxelType> volume) {
+void SelectionStack<VoxelType>::setVolumeFromSelection(Selection<VoxelType> &selection, RawVolume<VoxelType> volume) {
     switch(selection.selection_type) {
         case SELECTION_FILL:
             setRegion(selection.region, volume, selection.voxel_type);
@@ -68,7 +68,7 @@ void Selection_Stack<VoxelType>::setVolumeFromSelection(Selection<VoxelType> &se
 
 
 template <class VoxelType>
-RawVolume<VoxelType> Selection_Stack<VoxelType>::flatten() {
+RawVolume<VoxelType> SelectionStack<VoxelType>::flatten() {
     RawVolume<VoxelType> volume;
     
     for(Selection<VoxelType> selection : selections) {

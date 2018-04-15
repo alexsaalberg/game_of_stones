@@ -1,12 +1,12 @@
 //
-//  Render_System.hpp
+//  RenderSystem.hpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 3/29/18.
 //
 
-#ifndef Render_System_h
-#define Render_System_h
+#ifndef RenderSystem_h
+#define RenderSystem_h
 
 #include "System.hpp"
 
@@ -28,7 +28,7 @@ struct VoxelMeshData
     double dirty_time;
 };
 
-class Render_System : System {
+class RenderSystem : System {
 public:
     std::shared_ptr<EntityManager> entity_manager;
     WindowManager* window_manager;
@@ -52,4 +52,4 @@ public:
     void renderGUI();
 };
 
-#endif /* Render_System_h */
+#endif /* RenderSystem_h */

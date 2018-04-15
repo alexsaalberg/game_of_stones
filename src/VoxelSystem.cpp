@@ -1,5 +1,5 @@
 //
-//  Voxel_System.cpp
+//  VoxelSystem.cpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 4/7/18.
@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "Voxel_System.hpp"
+#include "VoxelSystem.hpp"
 #include "Component.hpp"
 #include "Camera.h"
 
@@ -17,7 +17,7 @@ using namespace std;
 using namespace glm;
 using namespace PolyVox;
 
-void Voxel_System::update(double t) {
+void VoxelSystem::update(double t) {
     
     for(MouseClickEvent& click : click_events) {
         processClickEvent(t, click);
@@ -25,7 +25,7 @@ void Voxel_System::update(double t) {
     click_events.clear();
 }
 
-void Voxel_System::processClickEvent(double t, MouseClickEvent& click) {
+void VoxelSystem::processClickEvent(double t, MouseClickEvent& click) {
 
     vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<Voxel_Component>();
     Voxel_Component* voxel_component;
@@ -102,7 +102,7 @@ void Voxel_System::processClickEvent(double t, MouseClickEvent& click) {
     }
 }
 
-void Voxel_System::receive(const MouseClickEvent& collision) {
+void VoxelSystem::receive(const MouseClickEvent& collision) {
     click_events.push_back(collision);
 
 }

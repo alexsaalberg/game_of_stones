@@ -1,10 +1,10 @@
 //
-//  Render_System.cpp
+//  RenderSystem.cpp
 //  CastleSim
 //
 //  file created by Alex Saalberg on 3/28/18.
 //
-#include "Render_System.hpp"
+#include "RenderSystem.hpp"
 
 
 #include "GLSL.h" //CHECK_GL_CALL, among others
@@ -71,7 +71,7 @@ void Render_System::initVoxels() {
 }
  */
 
-void Render_System::draw(double t, std::shared_ptr<Program> program) {
+void RenderSystem::draw(double t, std::shared_ptr<Program> program) {
     program->bind();
     
     setMVPE(t, program);
@@ -81,7 +81,7 @@ void Render_System::draw(double t, std::shared_ptr<Program> program) {
     program->unbind();
 }
 
-void Render_System::draw_entities(double t, std::shared_ptr<Program> program) {
+void RenderSystem::draw_entities(double t, std::shared_ptr<Program> program) {
     Camera::setMaterial(program, 6);
     
     vector<Entity_Id> id_list = entity_manager->get_ids_with_components<Position_Component, Model_Component>();
@@ -109,7 +109,7 @@ void Render_System::draw_entities(double t, std::shared_ptr<Program> program) {
     }
 }
 
-void Render_System::setMVPE(double t, std::shared_ptr<Program> program) {
+void RenderSystem::setMVPE(double t, std::shared_ptr<Program> program) {
     int windowWidth, windowHeight;
     glfwGetFramebufferSize(window_manager->getHandle(), &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
@@ -129,7 +129,7 @@ void Render_System::setMVPE(double t, std::shared_ptr<Program> program) {
 }
 
 //Voxel Stuff
-void Render_System::draw_voxels(double t, std::shared_ptr<Program> program) {
+void RenderSystem::draw_voxels(double t, std::shared_ptr<Program> program) {
     //Calculate Meshes
     vector<Entity_Id> voxel_id_list = entity_manager->get_ids_with_component<Voxel_Component>();
     
@@ -185,7 +185,7 @@ void Render_System::draw_voxels(double t, std::shared_ptr<Program> program) {
     program->unbind();
 }
             
-void Render_System::calculate_mesh(double t, Entity_Id id, Voxel_Component *voxel_component) {
+void RenderSystem::calculate_mesh(double t, Entity_Id id, Voxel_Component *voxel_component) {
     const int32_t extractedRegionSize = 64;
     int meshCounter = 0;
     const int32_t render_edge_length = 256;
@@ -224,7 +224,7 @@ void Render_System::calculate_mesh(double t, Entity_Id id, Voxel_Component *voxe
 
 // Convert a PolyVox mesh to OpenGL index/vertex buffers. Inlined because it's templatised.
 template <typename MeshType>
-void Render_System::addMesh(double t, Entity_Id id, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation, float scale)
+void RenderSystem::addMesh(double t, Entity_Id id, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation, float scale)
 {
     // This struct holds the OpenGL properties (buffer handles, etc) which will be used
     // to render our mesh. We copy the data from the PolyVox mesh into this structure.
@@ -278,13 +278,13 @@ void Render_System::addMesh(double t, Entity_Id id, const MeshType& surfaceMesh,
 }
 
 
-void Render_System::addMeshData(Entity_Id id, VoxelMeshData meshData)
+void RenderSystem::addMeshData(Entity_Id id, VoxelMeshData meshData)
 {
     std::pair<Entity_Id, VoxelMeshData> element(id, meshData);
     voxel_meshes.insert(element);
 }
 
-void Render_System::renderGUI() {
+void RenderSystem::renderGUI() {
     bool my_tool_active = true;
     // Create a window called "My First Tool", with a menu bar.
     ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);

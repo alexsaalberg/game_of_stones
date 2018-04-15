@@ -1,12 +1,12 @@
 //
-//  Voxel_System.hpp
+//  VoxelSystem.hpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 4/7/18.
 //
 
-#ifndef Voxel_System_hpp
-#define Voxel_System_hpp
+#ifndef VoxelSystem_hpp
+#define VoxelSystem_hpp
 
 #include <memory> //shared_ptr
 
@@ -15,7 +15,7 @@
 #include "EntityManager.hpp"
 #include "WindowManager.h"
 
-class Voxel_System : System, public Receiver<MouseClickEvent> {
+class VoxelSystem : System, public Receiver<MouseClickEvent> {
 public:
     //Variables
     WindowManager* window_manager;
@@ -28,4 +28,4 @@ public:
     virtual void receive(const MouseClickEvent& collision);
 };
 
-#endif /* Voxel_System_hpp */
+#endif /* VoxelSystem_hpp */

@@ -24,7 +24,7 @@ struct Selection {
 };
 
 template <class VoxelType>
-class Selection_Stack {
+class SelectionStack {
 public:
     void add(PolyVox::Region, VoxelType, VoxelType, SelectionType);
     void updateEnclosingRegion(PolyVox::Region& region);
