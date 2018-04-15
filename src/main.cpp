@@ -83,9 +83,11 @@ int main(int argc, char **argv)
             numSimulationsThisFrame++;
         }
         
-        if((1.0f / frameTime) < 20.0f) { //Long frame
-            printf("%d: Frame Rate: %f\tTime: %f\n", frame, 1.0f / frameTime, frameTime);
-            printf("Num Simulations: %d\tTTime: %lf\n", numSimulationsThisFrame, t);
+        const float low_frame_rate = 20.0f; //seconds
+        if((1.0f / frameTime) < low_frame_rate) { //Long frame
+            printf("/ #%d Long Frame! (>%.01fs) #%d\n",frame, low_frame_rate);
+            printf("| Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
+            printf("\\ Num Simulations: %d\tTTime: %lf\n", numSimulationsThisFrame, t);
         }
             
         float alpha = accumulator/dt;
