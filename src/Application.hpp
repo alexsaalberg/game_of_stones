@@ -40,6 +40,7 @@
 #include "InputSystem.hpp"
 #include "RenderSystem.hpp"
 #include "VoxelSystem.hpp"
+#include "ChunkSystem.hpp"
 
 
 class Application
@@ -58,6 +59,7 @@ public:
     RenderSystem render_system;
     InputSystem input_system;
     VoxelSystem voxel_system;
+    ChunkSystem chunk_system;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;

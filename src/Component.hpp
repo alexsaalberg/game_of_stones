@@ -14,6 +14,7 @@
 
 #include "Model.h"
 #include "PolyVox/PagedVolume.h"
+#include "PolyVox/FilePager.h"
 #include "NoisePager.h"
 
 class Component {

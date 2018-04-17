@@ -26,6 +26,7 @@ void Application::init(const std::string& resourceDirectory) {
     voxel_system.entity_manager = entity_manager;
     
     render_system.entity_manager = entity_manager;
+    chunk_system.entity_manager = entity_manager;
     
     //render_system.initVoxels();
     
@@ -217,6 +218,7 @@ void Application::integrate(double t, float dt) {
 	//previousState = make_shared<State>( *currentState );
     currentState->integrate(t, dt);
     voxel_system.update(t);
+    chunk_system.update(t);
 }
 
 void Application::render(double t, float alpha) {
