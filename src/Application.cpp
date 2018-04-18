@@ -12,7 +12,7 @@ using namespace std;
 using namespace glm;
 //using namespace PolyVox;
 
-void Application::init(const std::string& resourceDirectory) {
+void Application::init(double t, const std::string& resourceDirectory) {
 	currentState = make_shared<State>();
 	previousState = make_shared<State>();
     
@@ -27,6 +27,7 @@ void Application::init(const std::string& resourceDirectory) {
     
     render_system.entity_manager = entity_manager;
     chunk_system.entity_manager = entity_manager;
+    
     
     //render_system.initVoxels();
     
@@ -49,8 +50,12 @@ void Application::init(const std::string& resourceDirectory) {
             }
         }
     }*/
-    event_handler->subscribe<MouseClickEvent>(&voxel_system);
+    //event_handler->subscribe<MouseClickEvent>(&voxel_system);
+    event_handler->subscribe<MouseClickEvent>(&chunk_system);
     //event_handler->subscribe<MouseClickEvent>(static_cast<Receiver<MouseClickEvent>*>(&voxel_system));
+    
+    
+    chunk_system.addLoader(t, camera_id);
 }
 
 
@@ -179,7 +184,7 @@ void Application::initCamera() {
     Camera_Component* camera = entity_manager->add_component<Camera_Component>(camera_id);
     camera->distance = 500.0f;
     
-    position->position = vec3(0.0f, 120.0f, 0.0f);
+    position->position = vec3(500.0f, 120.0f, 500.0f);
     position->rotation = quat(1.0f, 0.0f, 0.0f, 0.0f);
     
     
@@ -232,7 +237,9 @@ void Application::renderState(State& state, double t) {
     
     render_system.draw(t, mainProgram);
     
-    render_system.draw_voxels(t, voxelProgram);
+    //render_system.draw_voxels(t, voxelProgram);
+    //chunk_system.recalculateAllMeshes();
+    chunk_system.renderAllChunks(t, voxelProgram);
     //render_system.draw_voxels(entity_manager, t, mainProgram);
 }
 

@@ -14,6 +14,8 @@
 #include "GLSL.h" //CHECK_GL_CALL, among others
 
 #include "MatrixStack.h"
+#include "WindowManager.h"
+#include "EntityManager.hpp"
 #include "Component.hpp"
 
 using namespace std;
@@ -22,6 +24,25 @@ using namespace glm;
 class Camera {
 public:
     static float aspect;
+    
+    static void setMVPE(double t, WindowManager* window_manager, EntityManager* entity_manager, std::shared_ptr<Program> program) {
+        int windowWidth, windowHeight;
+        glfwGetFramebufferSize(window_manager->getHandle(), &windowWidth, &windowHeight);
+        glViewport(0, 0, windowWidth, windowHeight);
+        
+        float aspect = windowWidth/(float)windowHeight;
+        Camera::aspect = aspect;
+        
+        vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+        Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
+        Position_Component* position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
+        
+        Camera::setModelIdentityMatrix(program);
+        Camera::setViewMatrix(camera, position, program);
+        Camera::setProjectionMatrix(program);
+        Camera::setEyePosition(position->position, program);
+        Camera::setLight(program);
+    }
     
     static void setModelIdentityMatrix(shared_ptr<Program> program) {
         auto M = make_shared<MatrixStack>();

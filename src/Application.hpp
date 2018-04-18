@@ -76,7 +76,7 @@ public:
     
 //Functions
     /* Initilizations */
-    void init(const std::string& resourceDirectory);
+    void init(double t, const std::string& resourceDirectory);
     
     void initCamera();
     void initPlayer();

@@ -25,19 +25,20 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
     Entity_Id camera_id = camera_ids.at(0);
     
-    Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
+    //Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
     Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
     
     static float move_scale = 1.0f;
-    float delta_angle = 5.0 * move_scale;
+    static float rotate_scale = 1.0f;
+    float delta_angle = 5.0;
     float delta_distance = 0.25f * move_scale;
     
     //positive z is forward (default orientation of camera)
-    vec3 forwardMove = position->rotation * vec3(0.0f, 0.0f, delta_distance);
-    vec3 rightwardMove = position->rotation * vec3(-delta_distance, 0.0f, 0.0f);
+    vec3 forwardMove = position->rotation * vec3(0.0f, 0.0f, 1.0f);
+    vec3 rightwardMove = position->rotation * vec3(1.0f, 0.0f, 0.0f);
     
-    forwardMove = normalize(forwardMove);
-    rightwardMove = normalize(rightwardMove);
+    forwardMove = normalize(forwardMove) * delta_distance;
+    rightwardMove = normalize(rightwardMove) * delta_distance;
     
     forwardMove = vec3(forwardMove.x, 0.0f, forwardMove.z);
     rightwardMove = vec3(rightwardMove.x, 0.0f, rightwardMove.z);
@@ -46,13 +47,29 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     
     delta_angle = glm::radians(delta_angle);
     
-    if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
     {
-        move_scale += 0.1f;
+        move_scale *= 2.0f;
+        printf("Move Scale: %f\n", move_scale);
     }
-    if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    if (key == GLFW_KEY_X && action == GLFW_PRESS)
     {
-        move_scale -=0.1f;
+        move_scale /=2.0f;
+        if(move_scale < 0.25f) {
+            move_scale = 0.25f;
+        }
+    }
+    if (key == GLFW_KEY_V && action == GLFW_PRESS)
+    {
+        rotate_scale *= 2.0f;
+        printf("Move Scale: %f\n", move_scale);
+    }
+    if (key == GLFW_KEY_B && action == GLFW_PRESS)
+    {
+        rotate_scale /=2.0f;
+        if(rotate_scale < 0.25f) {
+            rotate_scale = 0.25f;
+        }
     }
     
     if (key == GLFW_KEY_W && action == GLFW_PRESS) {

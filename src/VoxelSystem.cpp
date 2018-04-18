@@ -104,5 +104,4 @@ void VoxelSystem::processClickEvent(double t, MouseClickEvent& click) {
 
 void VoxelSystem::receive(const MouseClickEvent& collision) {
     click_events.push_back(collision);
-
 }

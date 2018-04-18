@@ -33,8 +33,8 @@ int main(int argc, char **argv)
     
     application->render_system.window_manager = windowManager;
     application->voxel_system.window_manager = windowManager;
+    application->chunk_system.window_manager = windowManager;
     
-    application->init(resourceDir);
     
     double t = 0.0;
     double currentTime = glfwGetTime();
@@ -56,6 +56,8 @@ int main(int argc, char **argv)
     //ImGui::StyleColorsDark();
     */
     int frame = 0;
+    
+    application->init(t, resourceDir);
     
     // Loop until the user closes the window.
     while (! glfwWindowShouldClose(windowManager->getHandle()))
@@ -85,7 +87,7 @@ int main(int argc, char **argv)
         
         const float low_frame_rate = 20.0f; //seconds
         if((1.0f / frameTime) < low_frame_rate) { //Long frame
-            printf("/ #%d Long Frame! (>%.01fs) #%d\n",frame, low_frame_rate);
+            printf("/ #%d Long Frame! (>%.01fs)\n",frame, low_frame_rate);
             printf("| Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
             printf("\\ Num Simulations: %d\tTTime: %lf\n", numSimulationsThisFrame, t);
         }
