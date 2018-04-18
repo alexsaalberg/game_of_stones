@@ -84,8 +84,14 @@ void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
             for(int y = -radius; y < radius; y++) {
                 for(int z = -radius; z < radius; z++) {
                     locToSet = Vector3DInt32(x + result.hitVoxel.getX(), y + result.hitVoxel.getY(), z + result.hitVoxel.getZ());
-                    voxel_component->volume->setVoxel(locToSet, 255-128);
-                    setDirtyTimeViaVoxel(t, locToSet);
+                    if(click.button == 1) {
+                        voxel_component->volume->setVoxel(locToSet, 255-128);
+                        setDirtyTimeViaVoxel(t, locToSet);
+                    } else if (click.button == 0) {
+                        voxel_component->volume->setVoxel(locToSet, 0);
+                        setDirtyTimeViaVoxel(t, locToSet);
+                    }
+                    printf("Mouse button %d\n", click.button);
                 }
             }
         }
@@ -123,7 +129,7 @@ void ChunkSystem::update(double t) {
                 removeChunk(chunk);
             }
             for(auto chunk : chunks_to_add) {
-                addChunk(t, chunk);
+                addChunk(t, chunk, loader.current_chunk_coord);
             }
         }
     }
@@ -146,7 +152,10 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
         ChunkData& chunk_data = chunk_pair.second;
         
         //printf("%lf | %lf\n", chunk_data.dirty_time, chunk_data.mesh.clean_time);
-        if(chunk_data.dirty_time > chunk_data.mesh.clean_time) {
+        if(chunk_data.dirty_time > t) {
+            //This is in the future, do nothing
+            printf("%lf in future (%lf)\n", chunk_data.dirty_time, t);
+        } else if(chunk_data.dirty_time > chunk_data.mesh.clean_time) {
             //recalculate mesh
             eraseMeshData(chunk_data.mesh);
             chunk_data.mesh = calculateMesh(t, chunk);
@@ -154,19 +163,20 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
         
         auto meshData = chunk_data.mesh;
         
-        M->pushMatrix();
-        M->translate(meshData.translation);
-        M->scale(meshData.scale);
-        glUniformMatrix4fv(program->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
-        M->popMatrix();
-        
-        // Bind the vertex array for the current mesh
-        CHECKED_GL_CALL( glBindVertexArray(meshData.vertex_array_object) );
-        // Draw the mesh
-        CHECKED_GL_CALL( glDrawElements(GL_TRIANGLES, meshData.number_of_indices, meshData.index_type, 0) );
-        // Unbind the vertex array.
-        CHECKED_GL_CALL( glBindVertexArray(0) );
-        
+        if(meshData.clean_time >= 0.0f) { // -1.0f means not created yet
+            M->pushMatrix();
+            M->translate(meshData.translation);
+            M->scale(meshData.scale);
+            glUniformMatrix4fv(program->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
+            M->popMatrix();
+            
+            // Bind the vertex array for the current mesh
+            CHECKED_GL_CALL( glBindVertexArray(meshData.vertex_array_object) );
+            // Draw the mesh
+            CHECKED_GL_CALL( glDrawElements(GL_TRIANGLES, meshData.number_of_indices, meshData.index_type, 0) );
+            // Unbind the vertex array.
+            CHECKED_GL_CALL( glBindVertexArray(0) );
+        }
     }
     
     program->unbind();
@@ -225,7 +235,7 @@ void ChunkSystem::addLoader(double t, Entity_Id entity) {
     
     auto chunk_set = calculateChunkSetAroundCoord(chunk_loader.current_chunk_coord);
     for(auto chunk : chunk_set) {
-        addChunk(t, chunk);
+        addChunk(t, chunk, chunk_loader.current_chunk_coord);
     }
     
     std::pair<Entity_Id, ChunkLoader> element(entity, chunk_loader);
@@ -324,15 +334,22 @@ void ChunkSystem::recalculateAllMeshes() {
 /*
  * PRIVATE
  */
-void ChunkSystem::addChunk(double t, Vector3DInt32 chunk) {
+void ChunkSystem::addChunk(double t, Vector3DInt32 chunk, Vector3DInt32 loader) {
     if(chunks.count(chunk) > 0) {
         chunks.at(chunk).refs += 1;
     } else {
+        Vector3DInt32 distance_vector = chunk - Vector3DInt32(loader.getX() + 1, 0, loader.getZ() -1);
+        float length = abs( distance_vector.length() );
+        
+        //assuming 1 chunk away is roughly 0.1 seconds...
+        float extra_time = length * 0.1f;
+        
         ChunkData new_chunk_data;
         new_chunk_data.coords = chunk;
         new_chunk_data.refs = 1;
-        new_chunk_data.mesh = calculateMesh(t, chunk);
-        new_chunk_data.dirty_time = t;
+        new_chunk_data.mesh.clean_time = -1.0f;
+        //calculateMesh(t, chunk);
+        new_chunk_data.dirty_time = t + extra_time;
         
         std::pair<Vector3DInt32, ChunkData> element(chunk, new_chunk_data);
         chunks.insert(element);

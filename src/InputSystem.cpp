@@ -133,14 +133,15 @@ void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int 
 {
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
-    
-    if(button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
-        MouseClickEvent click(xpos, ypos, GLFW_MOUSE_BUTTON_1);
+    if((button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) && action == GLFW_PRESS) {
+        MouseClickEvent click(xpos, ypos, button);
         event_handler->emit(click);
     }
 }
 void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-{}
+{
+    printf("Mouse position: %lf %lf \n", xpos, ypos);
+}
 
 void InputSystem::resizeCallback(GLFWwindow *window, int width, int height)
 {

@@ -96,7 +96,7 @@ public:
     void recalculateAllMeshes();
 private:
     
-    void addChunk(double t, Vector3DInt32 chunk);
+    void addChunk(double t, Vector3DInt32 chunk, Vector3DInt32 center);
     void removeChunk(Vector3DInt32 chunk);
     
     void eraseMeshData(ChunkMeshData& mesh);
