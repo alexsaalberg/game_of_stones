@@ -84,6 +84,12 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     if (key == GLFW_KEY_D && action == GLFW_PRESS) {
         position->position += rightwardMove;
     }
+    if (key == GLFW_KEY_B && action == GLFW_PRESS) {
+        chunk_system->radius += 1;
+    }
+    if (key == GLFW_KEY_N && action == GLFW_PRESS) {
+        chunk_system->radius -= 1;
+    }
     
     if (key == GLFW_KEY_UP && action == GLFW_PRESS)
     {
@@ -140,7 +146,7 @@ void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int 
 }
 void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
-    printf("Mouse position: %lf %lf \n", xpos, ypos);
+    //printf("Mouse position: %lf %lf \n", xpos, ypos);
 }
 
 void InputSystem::resizeCallback(GLFWwindow *window, int width, int height)

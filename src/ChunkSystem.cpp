@@ -79,7 +79,7 @@ void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
     
     if(result.didHit) {
         printf("Setting at (%d %d %d)\n", result.hitVoxel.getX(), result.hitVoxel.getY(), result.hitVoxel.getZ());
-        const int radius = 3;
+        //const int radius = 5;
         for(int x = -radius; x < radius; x++) {
             for(int y = -radius; y < radius; y++) {
                 for(int z = -radius; z < radius; z++) {
@@ -91,7 +91,7 @@ void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
                         voxel_component->volume->setVoxel(locToSet, 0);
                         setDirtyTimeViaVoxel(t, locToSet);
                     }
-                    printf("Mouse button %d\n", click.button);
+                    //printf("Mouse button %d\n", click.button);
                 }
             }
         }
@@ -137,6 +137,9 @@ void ChunkSystem::update(double t) {
 }
 
 void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
+    const int max_mesh_gen_per_frame = 8;
+    int mesh_gen_this_frame = 0;
+    
     //printf("%lf: Rendering %d chunks\n", t, chunks.size());
     
     std::shared_ptr<MatrixStack> M = std::make_shared<MatrixStack>();
@@ -152,13 +155,18 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
         ChunkData& chunk_data = chunk_pair.second;
         
         //printf("%lf | %lf\n", chunk_data.dirty_time, chunk_data.mesh.clean_time);
-        if(chunk_data.dirty_time > t) {
-            //This is in the future, do nothing
-            printf("%lf in future (%lf)\n", chunk_data.dirty_time, t);
-        } else if(chunk_data.dirty_time > chunk_data.mesh.clean_time) {
-            //recalculate mesh
-            eraseMeshData(chunk_data.mesh);
-            chunk_data.mesh = calculateMesh(t, chunk);
+        if(mesh_gen_this_frame < max_mesh_gen_per_frame) {
+            if(chunk_data.dirty_time > t) {
+                //This is in the future, do nothing
+                //printf("%lf in future (%lf)\n", chunk_data.dirty_time, t);
+            } else if(chunk_data.dirty_time > chunk_data.mesh.clean_time) {
+                //recalculate mesh
+                printf("Recalculating Mesh of Chunk(%d %d %d)\n", chunk.getX(), chunk.getY(), chunk.getZ());
+                eraseMeshData(chunk_data.mesh);
+                chunk_data.mesh = calculateMesh(t, chunk);
+                
+                mesh_gen_this_frame++;
+            }
         }
         
         auto meshData = chunk_data.mesh;
@@ -255,11 +263,24 @@ Vector3DInt32 ChunkSystem::voxelCoordToChunkCoord(Vector3DInt32 voxel_coord) {
     //10/16 = 0
     //23/16 = 1
     //37/16 = 2
+    int32_t chunk_x = abs(voxel_coord.getX()) / Chunk_X_Length;
+    int32_t chunk_y = abs(voxel_coord.getY()) / Chunk_Y_Length;
+    int32_t chunk_z = abs(voxel_coord.getZ()) / Chunk_Z_Length;
     
-    Vector3DInt32 chunk_coord;
-    chunk_coord.setX(voxel_coord.getX() / Chunk_X_Length);
-    chunk_coord.setY(voxel_coord.getY() / Chunk_Y_Length);
-    chunk_coord.setZ(voxel_coord.getZ() / Chunk_Z_Length);
+    if(voxel_coord.getX() < 0) {
+        chunk_x *= -1;
+        chunk_x -= 1; //Because (-5,0,-6) should be in chunk (-1,0,-1) not (0,0,0)
+    }
+    if(voxel_coord.getY() < 0) {
+        chunk_y *= -1;
+        chunk_y -= 1;
+    }
+    if(voxel_coord.getZ() < 0) {
+        chunk_z *= -1;
+        chunk_z -= 1;
+    }
+    
+    Vector3DInt32 chunk_coord(chunk_x, chunk_y, chunk_z);
     
     return chunk_coord;
 }
@@ -293,24 +314,28 @@ Region ChunkSystem::chunkCoordToRegion(Vector3DInt32 chunk_coord) {
 void ChunkSystem::setDirtyTimeViaVoxel(double t, Vector3DInt32& voxel_coord) {
     Vector3DInt32 chunk_coord = voxelCoordToChunkCoord(voxel_coord);
     
-    if(voxel_coord.getX() % Chunk_X_Length == 0) {
+    printf("V(%d %d %d) C(%d %d %d) %lf.\n", voxel_coord.getX(), voxel_coord.getY(), voxel_coord.getZ(), chunk_coord.getX(), chunk_coord.getY(), chunk_coord.getZ(), t);
+    //printf("SetDirty Chunk (%d %d %d) %lf.\n", chunk_coord.getX(), chunk_coord.getY(), chunk_coord.getZ(), t);
+    
+    /*
+    if(abs(voxel_coord.getX()) % Chunk_X_Length == 0) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32(-1, 0, 0));
     }
-    if(voxel_coord.getX() % Chunk_X_Length == Chunk_X_Length - 1) {
+    if(abs(voxel_coord.getX()) % Chunk_X_Length == Chunk_X_Length - 1) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32( 1, 0, 0));
     }
-    if(voxel_coord.getY() % Chunk_Y_Length == 0) {
+    if(abs(voxel_coord.getY()) % Chunk_Y_Length == 0) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32( 0,-1, 0));
     }
-    if(voxel_coord.getY() % Chunk_Y_Length == Chunk_Y_Length - 1) {
+    if(abs(voxel_coord.getY()) % Chunk_Y_Length == Chunk_Y_Length - 1) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32( 0, 1, 0));
     }
-    if(voxel_coord.getZ() % Chunk_Z_Length == 0) {
+    if(abs(voxel_coord.getZ()) % Chunk_Z_Length == 0) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32( 0, 0,-1));
     }
-    if(voxel_coord.getZ() % Chunk_Z_Length == Chunk_Z_Length - 1) {
+    if(abs(voxel_coord.getZ()) % Chunk_Z_Length == Chunk_Z_Length - 1) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32( 0, 0, 1));
-    }
+    }*/
     
     setDirtyTimeViaChunk(t, chunk_coord);
 }

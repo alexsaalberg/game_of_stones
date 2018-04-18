@@ -68,6 +68,7 @@ static bool chunk_comp(const PolyVox::Vector3DInt32& left, const PolyVox::Vector
 class ChunkSystem : System, public Receiver<MouseClickEvent> {
 public:
 //Variables
+    int radius = 5;
     std::shared_ptr<EntityManager> entity_manager;
     WindowManager* window_manager;
     //std::set<ChunkLoader> entities;

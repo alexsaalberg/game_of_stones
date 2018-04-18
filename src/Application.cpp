@@ -22,6 +22,7 @@ void Application::init(double t, const std::string& resourceDirectory) {
     
     input_system.entity_manager = entity_manager;
     input_system.event_handler = event_handler;
+    input_system.chunk_system = &chunk_system;
     
     voxel_system.entity_manager = entity_manager;
     
@@ -184,7 +185,7 @@ void Application::initCamera() {
     Camera_Component* camera = entity_manager->add_component<Camera_Component>(camera_id);
     camera->distance = 500.0f;
     
-    position->position = vec3(500.0f, 120.0f, 500.0f);
+    position->position = vec3(0.0f, 120.0f, 0.0f);
     position->rotation = quat(1.0f, 0.0f, 0.0f, 0.0f);
     
     

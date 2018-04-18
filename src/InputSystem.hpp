@@ -13,11 +13,13 @@
 
 #include "EntityManager.hpp"
 #include "Messaging.h"
+#include "ChunkSystem.hpp"
 
 class InputSystem : System, public EventCallbacks {
 public:
     std::shared_ptr<EntityManager> entity_manager;
     std::shared_ptr<EventHandler> event_handler;
+    ChunkSystem* chunk_system;
     
     //Control Callbacks
     void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
