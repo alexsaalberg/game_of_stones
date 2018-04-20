@@ -317,7 +317,6 @@ void ChunkSystem::setDirtyTimeViaVoxel(double t, Vector3DInt32& voxel_coord) {
     printf("V(%d %d %d) C(%d %d %d) %lf.\n", voxel_coord.getX(), voxel_coord.getY(), voxel_coord.getZ(), chunk_coord.getX(), chunk_coord.getY(), chunk_coord.getZ(), t);
     //printf("SetDirty Chunk (%d %d %d) %lf.\n", chunk_coord.getX(), chunk_coord.getY(), chunk_coord.getZ(), t);
     
-    /*
     if(abs(voxel_coord.getX()) % Chunk_X_Length == 0) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32(-1, 0, 0));
     }
@@ -335,7 +334,7 @@ void ChunkSystem::setDirtyTimeViaVoxel(double t, Vector3DInt32& voxel_coord) {
     }
     if(abs(voxel_coord.getZ()) % Chunk_Z_Length == Chunk_Z_Length - 1) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32( 0, 0, 1));
-    }*/
+    }
     
     setDirtyTimeViaChunk(t, chunk_coord);
 }

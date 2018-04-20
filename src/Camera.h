@@ -95,6 +95,26 @@ public:
         P->pushMatrix();
         P->perspective(45.0f, aspect, 0.1f, 1000.0f);
         return P->topMatrix();
+        
+        /*
+        std::shared_ptr<MatrixStack> P = make_shared<MatrixStack>();
+        P->pushMatrix();
+        
+        float width = 400;
+        float left = width / -2.0f;
+        float right = width / 2.0f;
+        
+        float height = 800.0f;
+        float top = height / 2.0f;
+        float bottom = height / -2.0f;
+        
+        float near = 0.1f;
+        float far = 300.0f;
+        
+        P->ortho(left, right, bottom, top, near, far);
+        //P->perspective(45.0f, aspect, 0.1f, 1000.0f);
+        return P->topMatrix();
+         */
     }
     
     static void setMaterial(const std::shared_ptr<Program> prog, int i)
