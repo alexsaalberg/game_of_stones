@@ -14,4 +14,14 @@ class System {
     
 };
 
+///Systems which are updated every simulation
+class StepSystem {
+    virtual void step(double time, double delta_time);
+};
+
+///Systems which are updated each render frame
+class FrameSystem {
+    virtual void render(double time);
+};
+
 #endif /* System_h */
