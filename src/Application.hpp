@@ -28,9 +28,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-//PolyVox
-#include "PolyVoxOpenGL.hpp"
-
 //Entity-Component-System
 #include "EntityManager.hpp"
 
