@@ -24,8 +24,6 @@ void Application::init(double t, const std::string& resourceDirectory) {
     input_system.event_handler = event_handler;
     input_system.chunk_system = &chunk_system;
     
-    voxel_system.entity_manager = entity_manager;
-    
     render_system.entity_manager = entity_manager;
     chunk_system.entity_manager = entity_manager;
     
@@ -223,7 +221,6 @@ void Application::initHelicopter(glm::vec3 position) {
 void Application::integrate(double t, float dt) {
 	//previousState = make_shared<State>( *currentState );
     currentState->integrate(t, dt);
-    voxel_system.update(t);
     chunk_system.update(t);
 }
 
