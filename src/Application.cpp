@@ -28,6 +28,10 @@ void Application::init(double t, const std::string& resourceDirectory) {
     chunk_system.entity_manager = entity_manager;
     chunk_system.input_system = &input_system;
     
+    pick_system.input_system = &input_system;
+    pick_system.entity_manager = entity_manager;
+    pick_system.chunk_system = &chunk_system;
+    
     input_system.addMouseclickControl("mouse_left", GLFW_MOUSE_BUTTON_LEFT);
     input_system.addMouseclickControl("mouse_right", GLFW_MOUSE_BUTTON_RIGHT);
     input_system.addMouseposXControl("mouse_x");
@@ -43,6 +47,9 @@ void Application::init(double t, const std::string& resourceDirectory) {
     initCamera();
     initPlayer();
     initVoxels();
+    
+    
+    pick_system.cursor_id = player_id;
     
     /*
     vec3 base_pos = vec3(10.0f, 0.0f, 0.0f);

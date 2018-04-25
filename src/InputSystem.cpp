@@ -16,9 +16,9 @@ using namespace std;
 using namespace glm;
 
 void InputSystem::update(double t) {
-    for(auto map_entry : control_map) {
+    for(auto& map_entry : control_map) {
         map_entry.second.previousValue = map_entry.second.currentValue;
-        map_entry.second.currentValue = 0.0f;
+        //map_entry.second.currentValue = 0.0f;
         map_entry.second.pressedThisStep = false;
     }
     
@@ -108,9 +108,15 @@ float InputSystem::getPreviousControlValue(std::string name) {
     return control.previousValue;
 }
 
+bool InputSystem::wasControlPressedThisStep(std::string name) {
+    const Control& control = getControl(name);
+    
+    return control.pressedThisStep;
+}
+
 void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    for(auto map_entry : control_map) {
+    for(auto& map_entry : control_map) {
         if(map_entry.second.type == INPUT_KEYBOARD) {
             if(map_entry.second.key == key) {
                 if(action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -244,6 +250,10 @@ void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int 
                 if(action == GLFW_PRESS) {
                     map_entry.second.currentValue = 1.0f;
                     map_entry.second.pressedThisStep = true;
+                }
+                if(action == GLFW_RELEASE) {
+                    map_entry.second.currentValue = 0.0f;
+                    map_entry.second.pressedThisStep = false;
                 }
             }
         }

@@ -47,4 +47,13 @@ template<> Voxel_Component* Component_Manager::get_component<Voxel_Component>(in
     return voxel_components.get_component(entity_id);
 }
 
+template<> Selection_Component* Component_Manager::add_component<Selection_Component>(int entity_id) {
+    return selection_components.add_component(entity_id);
+}
+
+template<> Selection_Component* Component_Manager::get_component<Selection_Component>(int entity_id) {
+    return selection_components.get_component(entity_id);
+}
+
+
 

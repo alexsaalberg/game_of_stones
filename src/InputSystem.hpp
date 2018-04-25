@@ -62,6 +62,7 @@ public:
     
     bool isControlDownThisStep(std::string name);
     bool wasControlDownLastStep(std::string name);
+    bool wasControlPressedThisStep(std::string name);
     float getCurrentControlValue(std::string name);
     float getPreviousControlValue(std::string name);
     

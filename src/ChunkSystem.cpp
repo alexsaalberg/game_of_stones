@@ -91,7 +91,7 @@ void ChunkSystem::update(double t) {
         MouseClickEvent click(input_system->getCurrentControlValue("mouse_x"),
                               input_system->getCurrentControlValue("mouse_y"),
                               GLFW_MOUSE_BUTTON_LEFT);
-        processClickEvent(t, click);
+        //processClickEvent(t, click);
     }
     
     for(MouseClickEvent& click : click_events) {
@@ -313,7 +313,7 @@ Region ChunkSystem::chunkCoordToRegion(Vector3DInt32 chunk_coord) {
 void ChunkSystem::setDirtyTimeViaVoxel(double t, Vector3DInt32& voxel_coord) {
     Vector3DInt32 chunk_coord = voxelCoordToChunkCoord(voxel_coord);
     
-    printf("V(%d %d %d) C(%d %d %d) %lf.\n", voxel_coord.getX(), voxel_coord.getY(), voxel_coord.getZ(), chunk_coord.getX(), chunk_coord.getY(), chunk_coord.getZ(), t);
+    //printf("V(%d %d %d) C(%d %d %d) %lf.\n", voxel_coord.getX(), voxel_coord.getY(), voxel_coord.getZ(), chunk_coord.getX(), chunk_coord.getY(), chunk_coord.getZ(), t);
     //printf("SetDirty Chunk (%d %d %d) %lf.\n", chunk_coord.getX(), chunk_coord.getY(), chunk_coord.getZ(), t);
     
     if(abs(voxel_coord.getX()) % Chunk_X_Length == 0) {

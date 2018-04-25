@@ -87,6 +87,8 @@ public:
             return MAP;
         if(std::is_same<Component_Type, Voxel_Component>::value)
             return MAP;
+        if(std::is_same<Component_Type, Selection_Component>::value)
+            return MAP;
         return NO_DATA;
     }
     

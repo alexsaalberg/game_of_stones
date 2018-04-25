@@ -18,6 +18,7 @@ public:
     Component_Storage<Model_Component> renderable_components;
     Component_Storage<Camera_Component> camera_components;
     Component_Storage<Voxel_Component> voxel_components;
+    Component_Storage<Selection_Component> selection_components;
     
     template<class Component_Type>
     Component_Type* add_component(int entity_id);

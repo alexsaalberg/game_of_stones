@@ -16,6 +16,7 @@
 #include "PolyVox/PagedVolume.h"
 #include "PolyVox/FilePager.h"
 #include "NoisePager.h"
+#include "Selection.hpp"
 
 class Component {
 };
@@ -53,4 +54,10 @@ class Camera_Component : Component {
 public:
     float distance = 50.0f; //Distance from view to character (think 2.5d view)
 };
+
+class Selection_Component : Component {
+public:
+    Vector3DInt32 point;
+};
+
 #endif /* Component_hpp */
