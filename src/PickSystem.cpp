@@ -47,7 +47,12 @@ void PickSystem::update(double t) {
         float screenx = input_system->getCurrentControlValue("mouse_x");
         float screeny = input_system->getCurrentControlValue("mouse_y");
         
-        Vector3DInt32 point = pickScreen(screenx, screeny, true);
+        Vector3DInt32 point;
+        if(input_system->isControlDownThisStep("key_x")) {
+             point = pickScreen(screenx, screeny, false);
+        } else {
+             point = pickScreen(screenx, screeny, true);
+        }
         glm::vec3 new_cursor_position = vec3((float)point.getX(), (float)point.getY(), (float)point.getZ());
         //new_cursor_position += 0.5f; //center of cube
         

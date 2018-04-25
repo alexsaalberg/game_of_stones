@@ -32,6 +32,7 @@ void Application::init(double t, const std::string& resourceDirectory) {
     pick_system.entity_manager = entity_manager;
     pick_system.chunk_system = &chunk_system;
     
+    input_system.addKeyControl("key_x", GLFW_KEY_X);
     input_system.addMouseclickControl("mouse_left", GLFW_MOUSE_BUTTON_LEFT);
     input_system.addMouseclickControl("mouse_right", GLFW_MOUSE_BUTTON_RIGHT);
     input_system.addMouseposXControl("mouse_x");

@@ -40,6 +40,7 @@ struct Control {
     //bool downThisStep;
     //bool downLastStep;
     bool pressedThisStep;
+    bool pressedLastStep;
 };
 
 class InputSystem : System, public EventCallbacks {
@@ -63,6 +64,7 @@ public:
     bool isControlDownThisStep(std::string name);
     bool wasControlDownLastStep(std::string name);
     bool wasControlPressedThisStep(std::string name);
+    bool wasControlPressedLastStep(std::string name);
     float getCurrentControlValue(std::string name);
     float getPreviousControlValue(std::string name);
     
