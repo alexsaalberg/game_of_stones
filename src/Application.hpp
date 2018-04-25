@@ -37,6 +37,7 @@
 #include "InputSystem.hpp"
 #include "RenderSystem.hpp"
 #include "ChunkSystem.hpp"
+#include "PickSystem.hpp"
 
 
 class Application
@@ -55,6 +56,7 @@ public:
     RenderSystem render_system;
     InputSystem input_system;
     ChunkSystem chunk_system;
+    PickSystem pick_system;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;

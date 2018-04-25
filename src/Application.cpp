@@ -27,7 +27,6 @@ void Application::init(double t, const std::string& resourceDirectory) {
     render_system.entity_manager = entity_manager;
     chunk_system.entity_manager = entity_manager;
     
-    
     //render_system.initVoxels();
     
 	initShaders(resourceDirectory+"/shaders");
@@ -222,6 +221,7 @@ void Application::integrate(double t, float dt) {
 	//previousState = make_shared<State>( *currentState );
     currentState->integrate(t, dt);
     chunk_system.update(t);
+    pick_system.update(t);
 }
 
 void Application::render(double t, float alpha) {

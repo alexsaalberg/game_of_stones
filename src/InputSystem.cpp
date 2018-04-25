@@ -15,8 +15,64 @@
 using namespace std;
 using namespace glm;
 
+void InputSystem::update(double t) {
+    for(auto map_entry : control_map) {
+        map_entry.second.mods = 0;
+        map_entry.second.downLastStep = map_entry.second.downThisStep;
+        map_entry.second.downThisStep = false;
+        map_entry.second.pressedThisStep = false;
+    }
+    
+    glfwPollEvents();
+}
+
+void InputSystem::addControl(string name, int key) {
+    Control control;
+    control.key = key;
+    control.downThisStep = false;
+    
+    std::pair<string, Control> element(name, control);
+    control_map.insert(element);
+}
+
+Control InputSystem::getControl(std::string name) {
+    Control control;
+    
+    auto iterator = control_map.find(name);
+    if(iterator != control_map.end()) {
+        control = control_map.at(name);
+    } else {
+        //Control doesn't exist....
+        control.key = GLFW_KEY_UNKNOWN;
+        printf("Unknown control: %s\n", name.c_str());
+    }
+    return control;
+}
+
+bool InputSystem::isControlDownThisStep(std::string name) {
+    const Control& control = getControl(name);
+    return control.downThisStep;
+}
+
+bool InputSystem::wasControlDownLastStep(std::string name) {
+    const Control& control = getControl(name);
+    return control.downLastStep;
+}
+
 void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
+    for(auto map_entry : control_map) {
+        if(map_entry.second.key == key) {
+            if(action == GLFW_PRESS || action == GLFW_REPEAT) {
+                map_entry.second.downThisStep = true;
+            }
+            if(action == GLFW_PRESS) {
+                map_entry.second.pressedThisStep = true;
+            }
+        }
+    }
+    
+    
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, GL_TRUE);

@@ -102,8 +102,6 @@ int main(int argc, char **argv)
         
         // Swap front and back buffers.
         glfwSwapBuffers(windowManager->getHandle());
-        // Poll for and process events.
-        glfwPollEvents();
     }
     
     // Quit program.
