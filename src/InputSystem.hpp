@@ -30,17 +30,25 @@
  
  */
 
+enum INPUT_TYPE{INPUT_KEYBOARD, INPUT_MOUSE_BUTTON, INPUT_MOUSE_POSITION_X, INPUT_MOUSE_POSITION_Y, INPUT_MOUSE_SCROLL};
 
 struct Control {
+    INPUT_TYPE type;
     int key;
     int mods;
-    bool downThisStep;
-    bool downLastStep;
+    float currentValue;
+    float previousValue;
+    //bool downThisStep;
+    //bool downLastStep;
     bool pressedThisStep;
 };
 
 class InputSystem : System, public EventCallbacks {
 public:
+    const float press_threshold = 0.9f;
+    
+    WindowManager* window_manager;
+    
     std::shared_ptr<EntityManager> entity_manager;
     std::shared_ptr<EventHandler> event_handler;
     ChunkSystem* chunk_system;
@@ -48,11 +56,16 @@ public:
     std::map<std::string, Control> control_map;
     
     //Controls
-    void addControl(std::string name, int key);
+    void addKeyControl(std::string name, int key);
+    void addMouseclickControl(std::string name, int button);
+    void addMouseposXControl(std::string name);
+    void addMouseposYControl(std::string name);
     Control getControl(std::string name);
     
     bool isControlDownThisStep(std::string name);
     bool wasControlDownLastStep(std::string name);
+    float getCurrentControlValue(std::string name);
+    float getPreviousControlValue(std::string name);
     
     //Update
     void update(double t);

@@ -17,19 +17,46 @@ using namespace glm;
 
 void InputSystem::update(double t) {
     for(auto map_entry : control_map) {
-        map_entry.second.mods = 0;
-        map_entry.second.downLastStep = map_entry.second.downThisStep;
-        map_entry.second.downThisStep = false;
+        map_entry.second.previousValue = map_entry.second.currentValue;
+        map_entry.second.currentValue = 0.0f;
         map_entry.second.pressedThisStep = false;
     }
     
     glfwPollEvents();
 }
 
-void InputSystem::addControl(string name, int key) {
+void InputSystem::addKeyControl(string name, int key) {
     Control control;
+    control.type = INPUT_KEYBOARD;
     control.key = key;
-    control.downThisStep = false;
+    control.currentValue = 0.0f;
+    
+    std::pair<string, Control> element(name, control);
+    control_map.insert(element);
+}
+
+void InputSystem::addMouseclickControl(string name, int button) {
+    Control control;
+    control.type = INPUT_MOUSE_BUTTON;
+    control.key = button;
+    control.currentValue = 0.0f;
+    
+    std::pair<string, Control> element(name, control);
+    control_map.insert(element);
+}
+void InputSystem::addMouseposXControl(string name) {
+    Control control;
+    control.type = INPUT_MOUSE_POSITION_X;
+    control.currentValue = 0.0f;
+    
+    std::pair<string, Control> element(name, control);
+    control_map.insert(element);
+}
+
+void InputSystem::addMouseposYControl(string name) {
+    Control control;
+    control.type = INPUT_MOUSE_POSITION_Y;
+    control.currentValue = 0.0f;
     
     std::pair<string, Control> element(name, control);
     control_map.insert(element);
@@ -51,23 +78,47 @@ Control InputSystem::getControl(std::string name) {
 
 bool InputSystem::isControlDownThisStep(std::string name) {
     const Control& control = getControl(name);
-    return control.downThisStep;
+    
+    if(control.currentValue > press_threshold) {
+        return true;
+    }
+    
+    return false;
 }
 
 bool InputSystem::wasControlDownLastStep(std::string name) {
     const Control& control = getControl(name);
-    return control.downLastStep;
+    
+    if(control.previousValue > press_threshold) {
+        return true;
+    }
+    
+    return false;
+}
+
+float InputSystem::getCurrentControlValue(std::string name) {
+    const Control& control = getControl(name);
+    
+    return control.currentValue;
+}
+
+float InputSystem::getPreviousControlValue(std::string name) {
+    const Control& control = getControl(name);
+    
+    return control.previousValue;
 }
 
 void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     for(auto map_entry : control_map) {
-        if(map_entry.second.key == key) {
-            if(action == GLFW_PRESS || action == GLFW_REPEAT) {
-                map_entry.second.downThisStep = true;
-            }
-            if(action == GLFW_PRESS) {
-                map_entry.second.pressedThisStep = true;
+        if(map_entry.second.type == INPUT_KEYBOARD) {
+            if(map_entry.second.key == key) {
+                if(action == GLFW_PRESS || action == GLFW_REPEAT) {
+                    map_entry.second.currentValue = 1.0f;
+                }
+                if(action == GLFW_PRESS) {
+                    map_entry.second.pressedThisStep = true;
+                }
             }
         }
     }
@@ -193,6 +244,17 @@ void InputSystem::scrollCallback(GLFWwindow* window, double deltaX, double delta
 {}
 void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int mods)
 {
+    for(auto map_entry : control_map) {
+        if(map_entry.second.type == INPUT_MOUSE_BUTTON) {
+            if(map_entry.second.key == button) {
+                if(action == GLFW_PRESS) {
+                    map_entry.second.currentValue = 1.0f;
+                    map_entry.second.pressedThisStep = true;
+                }
+            }
+        }
+    }
+    
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
     if((button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) && action == GLFW_PRESS) {
@@ -202,7 +264,21 @@ void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int 
 }
 void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
-    //printf("Mouse position: %lf %lf \n", xpos, ypos);
+    int windowWidth, windowHeight;
+    glfwGetWindowSize(window_manager->getHandle(), &windowWidth, &windowHeight);
+    glViewport(0, 0, windowWidth, windowHeight);
+    
+    float xPercent = xpos / windowWidth;
+    float yPercent = ypos / windowHeight;
+    
+    for(auto map_entry : control_map) {
+        if(map_entry.second.type == INPUT_MOUSE_POSITION_X) {
+            map_entry.second.currentValue = xPercent;
+        }
+        if(map_entry.second.type == INPUT_MOUSE_POSITION_Y) {
+            map_entry.second.currentValue = yPercent;
+        }
+    }
 }
 
 void InputSystem::resizeCallback(GLFWwindow *window, int width, int height)
