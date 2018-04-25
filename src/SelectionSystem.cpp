@@ -13,6 +13,8 @@ void SelectionSystem::draw(double t, std::shared_ptr<Program> program) {
     program->bind();
     
     //setMVPE(t, program);
+    // Render a cube
+    
     
     //draw_entities(t, program);
     

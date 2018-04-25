@@ -18,6 +18,7 @@ using namespace PolyVox;
 
 void PickSystem::update(double t) {
     if(input_system->wasControlPressedThisStep("mouse_left")) {
+        
         float screenx = input_system->getCurrentControlValue("mouse_x");
         float screeny = input_system->getCurrentControlValue("mouse_y");
         
@@ -48,7 +49,7 @@ void PickSystem::update(double t) {
         
         Vector3DInt32 point = pickScreen(screenx, screeny, true);
         glm::vec3 new_cursor_position = vec3((float)point.getX(), (float)point.getY(), (float)point.getZ());
-        new_cursor_position += 0.5f; //center of cube
+        //new_cursor_position += 0.5f; //center of cube
         
         Position_Component* position_component = entity_manager->get_component<Position_Component>(cursor_id);
         position_component->position = new_cursor_position;

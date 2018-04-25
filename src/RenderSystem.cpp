@@ -43,6 +43,9 @@ void RenderSystem::draw_entities(double t, std::shared_ptr<Program> program) {
     Model_Component* renderable_component;
     Position_Component* position_component;
     
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glLineWidth( 16.0f );
+    
     for(Entity_Id id : id_list) {
         renderable_component = entity_manager->get_component<Model_Component>(id);
         position_component = entity_manager->get_component<Position_Component>(id);
@@ -61,6 +64,7 @@ void RenderSystem::draw_entities(double t, std::shared_ptr<Program> program) {
         
         M->popMatrix();
     }
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void RenderSystem::setMVPE(double t, std::shared_ptr<Program> program) {

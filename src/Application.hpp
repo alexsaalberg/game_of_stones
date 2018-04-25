@@ -37,6 +37,7 @@
 #include "InputSystem.hpp"
 #include "RenderSystem.hpp"
 #include "ChunkSystem.hpp"
+#include "SelectionSystem.hpp"
 #include "PickSystem.hpp"
 
 
@@ -57,6 +58,7 @@ public:
     InputSystem input_system;
     ChunkSystem chunk_system;
     PickSystem pick_system;
+    SelectionSystem selection_system;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;
@@ -69,6 +71,7 @@ public:
     
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
+    std::shared_ptr<Model> cubeModel;
     std::shared_ptr<Model> helicopterModel;
     
 //Functions

@@ -68,7 +68,7 @@ public:
     }
     
     static void setLight(shared_ptr<Program> program) {
-        vec3 directionFromLight = vec3(0.0f) - vec3(-5.0f, 50.0f, 10.0f); //from X to origin
+        vec3 directionFromLight = vec3(0.0f) - vec3(50.0f, 60.0f, 90.0f); //from X to origin
         vec3 directionTowardsLight = -directionFromLight;
         CHECKED_GL_CALL( glUniform3f(program->getUniform("directionTowardsLight"), directionTowardsLight.x, directionTowardsLight.y, directionTowardsLight.z) );
     }
@@ -120,7 +120,7 @@ public:
     static void setMaterial(const std::shared_ptr<Program> prog, int i)
     {
         CHECKED_GL_CALL( glUniform3f(prog->getUniform("mSpecularCoefficient"), 0.3f, 0.2f, 0.1f) );
-        CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 1.0f) );
+        CHECKED_GL_CALL( glUniform1f(prog->getUniform("mSpecularAlpha"), 5.0f) );
         
         switch (i)
         {
@@ -145,8 +145,8 @@ public:
                 glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.038f, 0.048f, 0.028f);
                 break;
             case 5: //radiation
-                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.7, 0.7735f, 0.225f);
-                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.7038f, 0.27048f, 0.0828f);
+                glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.4f, 0.7735f, 0.225f);
+                glUniform3f(prog->getUniform("mDiffusionCoefficient"), 0.4038f, 0.57048f, 0.3828f);
                 break;
             case 6: //stone
                 glUniform3f(prog->getUniform("mAmbientCoefficient"), 0.0913f, 0.1735f, 0.1225f);

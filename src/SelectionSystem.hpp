@@ -13,6 +13,7 @@
 #include "Program.h"
 
 class SelectionSystem {
+public:
     void draw(double t, std::shared_ptr<Program> program);
 };
 

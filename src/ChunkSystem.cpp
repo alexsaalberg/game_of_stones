@@ -147,7 +147,7 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
     program->bind();
     
     Camera::setMVPE(t, window_manager, entity_manager.get(), program);
-    Camera::setMaterial(program, 6);
+    Camera::setMaterial(program, 2);
     
     for(auto& chunk_pair : chunks) {
         Vector3DInt32 chunk = chunk_pair.first;

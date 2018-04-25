@@ -187,6 +187,19 @@ void Application::initGeom(const std::string& resourceDirectory) {
         helicopterModel->scale *= 2.0f;
         printf("Helicopter Model!\n");
     }
+    
+    rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                            (resourceDirectory + "/cube.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        cubeModel = make_shared<Model>();
+        cubeModel->createModel(TOshapes, objMaterials);
+        cubeModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
+        cubeModel->scale *= 0.51f;
+        printf("Cube Model!\n");
+    }
 }
 
 void Application::initCamera() {
@@ -212,7 +225,7 @@ void Application::initPlayer() {
     Model_Component* renderable = entity_manager->add_component<Model_Component>(player_id);
     
     position->position = vec3(1.0f);
-    renderable->model = helicopterModel;
+    renderable->model = cubeModel;
 }
 
 void Application::initVoxels() {
@@ -249,6 +262,7 @@ void Application::renderState(State& state, double t) {
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
     
     render_system.draw(t, mainProgram);
+    selection_system.draw(t, mainProgram);
     
     //render_system.draw_voxels(t, voxelProgram);
     //chunk_system.recalculateAllMeshes();
