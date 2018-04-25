@@ -191,12 +191,6 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     if (key == GLFW_KEY_D && action == GLFW_PRESS) {
         position->position += rightwardMove;
     }
-    if (key == GLFW_KEY_B && action == GLFW_PRESS) {
-        chunk_system->radius += 1;
-    }
-    if (key == GLFW_KEY_N && action == GLFW_PRESS) {
-        chunk_system->radius -= 1;
-    }
     
     if (key == GLFW_KEY_UP && action == GLFW_PRESS)
     {
@@ -244,7 +238,7 @@ void InputSystem::scrollCallback(GLFWwindow* window, double deltaX, double delta
 {}
 void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int mods)
 {
-    for(auto map_entry : control_map) {
+    for(auto& map_entry : control_map) {
         if(map_entry.second.type == INPUT_MOUSE_BUTTON) {
             if(map_entry.second.key == button) {
                 if(action == GLFW_PRESS) {
@@ -270,8 +264,16 @@ void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos
     
     float xPercent = xpos / windowWidth;
     float yPercent = ypos / windowHeight;
+    //cur [0,1.0]
     
-    for(auto map_entry : control_map) {
+    xPercent = (xPercent * 2.0) - 1.0f;
+    yPercent = (yPercent * 2.0) - 1.0f;
+    //cur [-1.0, 1.0]
+    
+    yPercent *= -1.0f;
+    //y starts 0 at top
+    
+    for(auto& map_entry : control_map) {
         if(map_entry.second.type == INPUT_MOUSE_POSITION_X) {
             map_entry.second.currentValue = xPercent;
         }

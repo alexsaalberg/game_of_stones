@@ -15,7 +15,6 @@
 
 #include "EntityManager.hpp"
 #include "Messaging.h"
-#include "ChunkSystem.hpp"
 
 /*
  
@@ -51,7 +50,6 @@ public:
     
     std::shared_ptr<EntityManager> entity_manager;
     std::shared_ptr<EventHandler> event_handler;
-    ChunkSystem* chunk_system;
     
     std::map<std::string, Control> control_map;
     

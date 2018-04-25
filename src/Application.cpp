@@ -22,10 +22,17 @@ void Application::init(double t, const std::string& resourceDirectory) {
     
     input_system.entity_manager = entity_manager;
     input_system.event_handler = event_handler;
-    input_system.chunk_system = &chunk_system;
     
     render_system.entity_manager = entity_manager;
+    
     chunk_system.entity_manager = entity_manager;
+    chunk_system.input_system = &input_system;
+    
+    input_system.addMouseclickControl("mouse_left", GLFW_MOUSE_BUTTON_LEFT);
+    input_system.addMouseclickControl("mouse_right", GLFW_MOUSE_BUTTON_RIGHT);
+    input_system.addMouseposXControl("mouse_x");
+    input_system.addMouseposYControl("mouse_y");
+    
     
     //render_system.initVoxels();
     
@@ -218,6 +225,7 @@ void Application::initHelicopter(glm::vec3 position) {
 }
 
 void Application::integrate(double t, float dt) {
+    input_system.update(t);
 	//previousState = make_shared<State>( *currentState );
     currentState->integrate(t, dt);
     chunk_system.update(t);

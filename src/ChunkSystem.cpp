@@ -32,9 +32,6 @@ void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
         exit(-1);
     }
     
-    int windowWidth, windowHeight;
-    glfwGetWindowSize(window_manager->getHandle(), &windowWidth, &windowHeight);
-    glViewport(0, 0, windowWidth, windowHeight);
     
     mat4 V = Camera::getViewMatrix(camera, camera_position);
     mat4 P = Camera::getProjectionMatrix();
@@ -42,17 +39,8 @@ void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
     
     mat4 invPV = inverse( PV );
     
-    
-    float xpercent = click.x / windowWidth;
-    float ypercent = click.y / windowHeight;
-    //cur [0,1.0]
-    
-    xpercent = (xpercent * 2.0) - 1.0f;
-    ypercent = (ypercent * 2.0) - 1.0f;
-    //cur [-1.0, 1.0]
-    
-    ypercent *= -1.0f;
-    //y starts 0 at top
+    float xpercent = click.x;
+    float ypercent = click.y;
     
     vec4 start(xpercent, ypercent, 0.0f, 1.0f);
     vec4 end(xpercent, ypercent, 0.05f, 1.0f);
@@ -98,9 +86,20 @@ void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
     }
 }
 void ChunkSystem::update(double t) {
-    for(MouseClickEvent& click : click_events) {
+    
+    if(input_system->isControlDownThisStep("mouse_left")) {
+        MouseClickEvent click(input_system->getCurrentControlValue("mouse_x"),
+                              input_system->getCurrentControlValue("mouse_y"),
+                              GLFW_MOUSE_BUTTON_LEFT);
         processClickEvent(t, click);
     }
+    
+    for(MouseClickEvent& click : click_events) {
+        //processClickEvent(t, click);
+    }
+    
+    
+    
     click_events.clear();
     
     for(auto& chunk_loader_pair : chunk_loaders) {

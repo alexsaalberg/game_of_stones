@@ -22,6 +22,7 @@
 #include "Program.h"
 #include "Camera.h"
 #include "Messaging.h"
+#include "InputSystem.hpp"
 
 const int32_t Chunk_X_Length = 16; //x
 const int32_t Chunk_Y_Length = 128; //z
@@ -68,6 +69,8 @@ static bool chunk_comp(const PolyVox::Vector3DInt32& left, const PolyVox::Vector
 class ChunkSystem : System, public Receiver<MouseClickEvent> {
 public:
 //Variables
+    InputSystem* input_system;
+    
     int radius = 5;
     std::shared_ptr<EntityManager> entity_manager;
     WindowManager* window_manager;
