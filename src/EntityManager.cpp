@@ -30,6 +30,16 @@ void EntityManager::delete_entity(Entity_Id id) {
     remove_component<Active_Component>(id);
 }
 
+bool EntityManager::entityExists(Entity_Id id) {
+    if(id < 0 || id > entities.size()) {
+        return false; //entity id out of range
+    }
+    if(entity_has_component<Active_Component>(id)) {
+        return true; //entity is active, therefore exists
+    }
+    return false;
+}
+
 
 template <class ComponentType>
 void EntityManager::remove_component(Entity_Id id) {

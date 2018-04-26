@@ -27,9 +27,3 @@ Vector3DInt32 SimpleSampler::getTextureCoordinates(Region region, Vector3DInt32 
 }
 
 
-template <class VoxelType>
-VoxelType Selection<VoxelType>::samplePosition(PolyVox::Vector3DInt32 position) {
-    PolyVox::Vector3DInt32 textureCoordinates = sampler->getTextureCoordinates(region, position);
-    
-    return source->samplePosition(textureCoordinates);
-}

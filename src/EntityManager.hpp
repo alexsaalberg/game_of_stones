@@ -28,6 +28,8 @@ public:
     
     Entity_Id create_entity();
     
+    bool entityExists(Entity_Id id);
+    
     void delete_entity(Entity_Id id);
     
     template <class ComponentType>

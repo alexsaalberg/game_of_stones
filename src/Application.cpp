@@ -33,11 +33,13 @@ void Application::init(double t, const std::string& resourceDirectory) {
     pick_system.chunk_system = &chunk_system;
     
     input_system.addKeyControl("key_x", GLFW_KEY_X);
+    input_system.addKeyControl("key_space", GLFW_KEY_SPACE);
     input_system.addMouseclickControl("mouse_left", GLFW_MOUSE_BUTTON_LEFT);
     input_system.addMouseclickControl("mouse_right", GLFW_MOUSE_BUTTON_RIGHT);
     input_system.addMouseposXControl("mouse_x");
     input_system.addMouseposYControl("mouse_y");
     
+    pick_system.selection_id = -1;
     
     //render_system.initVoxels();
     
@@ -249,8 +251,8 @@ void Application::integrate(double t, float dt) {
     input_system.update(t);
 	//previousState = make_shared<State>( *currentState );
     currentState->integrate(t, dt);
-    chunk_system.update(t);
     pick_system.update(t);
+    chunk_system.update(t);
 }
 
 void Application::render(double t, float alpha) {

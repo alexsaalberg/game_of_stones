@@ -37,7 +37,7 @@ Component_Index get_component_index() {
     if(std::is_same<Component_Type, Voxel_Component>::value)
         return VOXEL_INDEX;
     if(std::is_same<Component_Type, Selection_Component>::value)
-        return VOXEL_INDEX;
+        return SELECTION_INDEX;
     
     return NUM_COMPONENTS;
 }

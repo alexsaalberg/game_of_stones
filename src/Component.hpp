@@ -18,6 +18,8 @@
 #include "NoisePager.h"
 #include "Selection.hpp"
 
+#include "CastleDef.h"
+
 class Component {
 };
 
@@ -57,7 +59,12 @@ public:
 
 class Selection_Component : Component {
 public:
-    Vector3DInt32 point;
+    Selection<CASTLE_VOXELTYPE> selection;
+    
+    Selection_Component() {
+    }
+    ~Selection_Component() {
+    }
 };
 
 #endif /* Component_hpp */

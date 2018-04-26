@@ -22,6 +22,7 @@ template <class VoxelType> class Selection; //forward declaration
 //SOURCE
 template <class VoxelType>
 class GenericSource {
+public:
     GenericSource(){}
     ~GenericSource(){}
     virtual VoxelType samplePosition(PolyVox::Vector3DInt32 position)=0;
@@ -61,8 +62,32 @@ public:
     std::shared_ptr<GenericSource<VoxelType>> source;
     PolyVox::Vector3DInt32 offset;
     
+    //Implicitly deleted stuff because templates
+    /*
+    Selection();
+    ~Selection();
+    Selection(const Selection<VoxelType> &selection); */
+    Selection() {
+        
+    }
+    ~Selection() {
+        
+    }
+    Selection(const Selection<VoxelType>& selection) {
+        region = selection.region;
+        sampler = selection.sampler;
+        source = selection.source;
+        offset = selection.offset;
+    }
+
+    VoxelType samplePosition(PolyVox::Vector3DInt32 position) {
+        PolyVox::Vector3DInt32 textureCoordinates = sampler->getTextureCoordinates(region, position);
+        
+        return source->samplePosition(textureCoordinates);
+    }
+
     //Generic Source Inheritance
-    VoxelType samplePosition(PolyVox::Vector3DInt32 position);
+    //VoxelType samplePosition(PolyVox::Vector3DInt32 position);
 };
 
 #endif /* Selection_hpp */
