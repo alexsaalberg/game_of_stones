@@ -32,6 +32,12 @@ public:
     std::shared_ptr<Model> model;
 };
 
+class RawVolume_Component: Component {
+public:
+    double dirty_time;
+    std::shared_ptr<PolyVox::RawVolume<uint8_t> > volume;
+};
+
 class PagedVolume_Component: Component {
 public:
     double dirty_time;
@@ -44,6 +50,7 @@ public:
 
 class Position_Component : Component {
 public:
+    float scale = 1.0f;
     glm::vec3 position;
     glm::quat rotation;
 };
