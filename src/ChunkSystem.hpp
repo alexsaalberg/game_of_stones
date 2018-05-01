@@ -14,11 +14,13 @@
 
 #include <set>
 
+#include "WindowManager.h"
+
 #include "PolyVox/Region.h"
 #include "PolyVox/Vector.h"
-#include "EntityManager.hpp"
-#include "WindowManager.h"
+
 #include "System.hpp"
+#include "EntityManager.hpp"
 #include "Program.h"
 #include "Camera.h"
 #include "Messaging.h"
@@ -66,7 +68,7 @@ static bool chunk_comp(const PolyVox::Vector3DInt32& left, const PolyVox::Vector
 //^^^
 
 
-class ChunkSystem : System, public Receiver<MouseClickEvent> {
+class ChunkSystem : StepSystem, public Receiver<MouseClickEvent> {
 public:
 //Variables
     InputSystem* input_system;
@@ -83,7 +85,8 @@ public:
     virtual void receive(const MouseClickEvent& collision);
     void processClickEvent(double t, MouseClickEvent& click);
     
-    void update(double t);
+    virtual void step(double time, double delta_time);
+    //void update(double t);
     void renderAllChunks(double t, std::shared_ptr<Program> program);
     
 //Function

@@ -19,7 +19,7 @@ class Position_Component;
 class Model_Component;
 class Player_Component;
 class Camera_Component;
-class Voxel_Component;
+class PagedVolume_Component;
 class Selection_Component;
 
 template<class Component_Type>
@@ -34,7 +34,7 @@ Component_Index get_component_index() {
         return PLAYER_INDEX;
     if(std::is_same<Component_Type, Camera_Component>::value)
         return CAMERA_INDEX;
-    if(std::is_same<Component_Type, Voxel_Component>::value)
+    if(std::is_same<Component_Type, PagedVolume_Component>::value)
         return VOXEL_INDEX;
     if(std::is_same<Component_Type, Selection_Component>::value)
         return SELECTION_INDEX;

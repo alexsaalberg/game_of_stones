@@ -9,7 +9,7 @@
 
 #include "Camera.h"
 
-void SelectionSystem::draw(double t, std::shared_ptr<Program> program) {
+void SelectionSystem::render(double t, std::shared_ptr<Program> program) {
     program->bind();
     
     //setMVPE(t, program);

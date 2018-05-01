@@ -8,9 +8,9 @@
 #ifndef RenderSystem_h
 #define RenderSystem_h
 
-#include "System.hpp"
-
 #include <memory> //shared_ptr
+
+#include "System.hpp"
 
 #include "EntityManager.hpp"
 #include "WindowManager.h" //WindowManager
@@ -28,12 +28,13 @@ struct VoxelMeshData
     double dirty_time;
 };
 
-class RenderSystem : System {
+class RenderSystem : FrameSystem {
 public:
     std::shared_ptr<EntityManager> entity_manager;
     WindowManager* window_manager;
     
-    void draw(double t, std::shared_ptr<Program> program);
+    virtual void render(double t, std::shared_ptr<Program> program);
+    //void draw(double t, std::shared_ptr<Program> program);
     void draw_entities(double t, std::shared_ptr<Program> program);
     
     //Camera Functions

@@ -16,7 +16,7 @@
 
 using namespace PolyVox;
 
-void PickSystem::update(double t) {
+void PickSystem::step(double t, double dt) {
     float screenx = input_system->getCurrentControlValue("mouse_x");
     float screeny = input_system->getCurrentControlValue("mouse_y");
     
@@ -106,9 +106,9 @@ void PickSystem::deleteRegion(double t, Region& region) {
     Region region_to_delete = createProperRegion(region);
     printf("Deleting Region: (%d %d %d)(%d %d %d)\n", region_to_delete.getLowerX(), region_to_delete.getLowerY(), region_to_delete.getLowerZ(), region_to_delete.getUpperX(), region_to_delete.getUpperY(), region_to_delete.getUpperZ());
     
-    std::vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<Voxel_Component>();
-    Voxel_Component* voxel_component;
-    voxel_component = entity_manager->get_component<Voxel_Component>(voxel_list.at(0));
+    std::vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
+    PagedVolume_Component* voxel_component;
+    voxel_component = entity_manager->get_component<PagedVolume_Component>(voxel_list.at(0));
     
     for(int x = region_to_delete.getLowerX(); x <= region_to_delete.getUpperX(); x++) {
         for(int y = region_to_delete.getLowerY(); y <= region_to_delete.getUpperY(); y++) {
@@ -123,10 +123,10 @@ void PickSystem::deleteRegion(double t, Region& region) {
 }
 
 Vector3DInt32 PickSystem::pickScreen(float xpercent, float ypercent, bool previous) {
-    std::vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<Voxel_Component>();
-    Voxel_Component* voxel_component;
+    std::vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
+    PagedVolume_Component* voxel_component;
     
-    voxel_component = entity_manager->get_component<Voxel_Component>(voxel_list.at(0));
+    voxel_component = entity_manager->get_component<PagedVolume_Component>(voxel_list.at(0));
     
     std::vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
     Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));

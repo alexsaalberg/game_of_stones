@@ -10,11 +10,13 @@
 
 #include <memory>
 
+#include "System.hpp"
+
 #include "Program.h"
 
-class SelectionSystem {
+class SelectionSystem : FrameSystem {
 public:
-    void draw(double t, std::shared_ptr<Program> program);
+    void render(double t, std::shared_ptr<Program> program);
 };
 
 #endif /* SelectionSystem_hpp */

@@ -45,7 +45,7 @@ class Application
 {
 public:
 //Variables
-    //Messaing
+    //Messaging
     std::shared_ptr<EventHandler> event_handler;
     std::shared_ptr<EntityManager> entity_manager;
     

@@ -15,7 +15,7 @@
 using namespace std;
 using namespace glm;
 
-void InputSystem::update(double t) {
+void InputSystem::step(double t, double dt) {
     for(auto& map_entry : control_map) {
         map_entry.second.previousValue = map_entry.second.currentValue;
         //map_entry.second.currentValue = 0.0f;

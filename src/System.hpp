@@ -8,6 +8,8 @@
 #ifndef System_h
 #define System_h
 
+#include <memory>
+
 #include "Program.h"
 
 class System {
@@ -15,13 +17,13 @@ class System {
 };
 
 ///Systems which are updated every simulation
-class StepSystem {
-    virtual void step(double time, double delta_time);
+class StepSystem : System {
+    virtual void step(double t, double dt) = 0;
 };
 
 ///Systems which are updated each render frame
-class FrameSystem {
-    virtual void render(double time);
+class FrameSystem : System {
+    virtual void render(double t, std::shared_ptr<Program> program) = 0;
 };
 
 #endif /* System_h */

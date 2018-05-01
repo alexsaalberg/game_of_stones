@@ -18,10 +18,10 @@ void ChunkSystem::receive(const MouseClickEvent& collision) {
 }
 
 void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
-    vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<Voxel_Component>();
-    Voxel_Component* voxel_component;
+    vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
+    PagedVolume_Component* voxel_component;
     
-    voxel_component = entity_manager->get_component<Voxel_Component>(voxel_list.at(0));
+    voxel_component = entity_manager->get_component<PagedVolume_Component>(voxel_list.at(0));
     
     vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
     Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
@@ -85,7 +85,7 @@ void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
         }
     }
 }
-void ChunkSystem::update(double t) {
+void ChunkSystem::step(double t, double dt) {
     
     if(input_system->isControlDownThisStep("mouse_left")) {
         MouseClickEvent click(input_system->getCurrentControlValue("mouse_x"),
@@ -415,7 +415,7 @@ ChunkMeshData ChunkSystem::calculateMesh(double t, Vector3DInt32 chunk) {
     //PolyVox::Region
     region = chunkCoordToRegion(chunk);
     
-    Voxel_Component* voxel_component = entity_manager->get_first_component_of_type<Voxel_Component>();
+    PagedVolume_Component* voxel_component = entity_manager->get_first_component_of_type<PagedVolume_Component>();
     
     
     // Perform the extraction for this region of the volume

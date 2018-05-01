@@ -234,7 +234,7 @@ void Application::initPlayer() {
 void Application::initVoxels() {
     voxel_id = entity_manager->create_entity();
     
-    Voxel_Component* voxels = entity_manager->add_component<Voxel_Component>(voxel_id);
+    PagedVolume_Component* voxels = entity_manager->add_component<PagedVolume_Component>(voxel_id);
     voxels->dirty_time = -1.0f;
 }
 
@@ -248,11 +248,11 @@ void Application::initHelicopter(glm::vec3 position) {
 }
 
 void Application::integrate(double t, float dt) {
-    input_system.update(t);
+    input_system.step(t, dt);
 	//previousState = make_shared<State>( *currentState );
     currentState->integrate(t, dt);
-    pick_system.update(t);
-    chunk_system.update(t);
+    pick_system.step(t, dt);
+    chunk_system.step(t, dt);
 }
 
 void Application::render(double t, float alpha) {
@@ -264,8 +264,8 @@ void Application::renderState(State& state, double t) {
     CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
     
-    render_system.draw(t, mainProgram);
-    selection_system.draw(t, mainProgram);
+    render_system.render(t, mainProgram);
+    selection_system.render(t, mainProgram);
     
     //render_system.draw_voxels(t, voxelProgram);
     //chunk_system.recalculateAllMeshes();

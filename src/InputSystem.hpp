@@ -43,7 +43,7 @@ struct Control {
     bool pressedLastStep;
 };
 
-class InputSystem : System, public EventCallbacks {
+class InputSystem : StepSystem, public EventCallbacks {
 public:
     const float press_threshold = 0.9f;
     
@@ -53,6 +53,8 @@ public:
     std::shared_ptr<EventHandler> event_handler;
     
     std::map<std::string, Control> control_map;
+    //Update
+    virtual void step(double time, double delta_time);
     
     //Controls
     void addKeyControl(std::string name, int key);
@@ -68,8 +70,7 @@ public:
     float getCurrentControlValue(std::string name);
     float getPreviousControlValue(std::string name);
     
-    //Update
-    void update(double t);
+
     
     //Input Callbacks
     void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);

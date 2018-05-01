@@ -32,12 +32,12 @@ public:
     std::shared_ptr<Model> model;
 };
 
-class Voxel_Component: Component {
+class PagedVolume_Component: Component {
 public:
     double dirty_time;
     std::shared_ptr<PolyVox::PagedVolume<uint8_t> > volume;
     
-    Voxel_Component() {
+    PagedVolume_Component() {
         volume = std::make_shared<PolyVox::PagedVolume<uint8_t>>(new NoisePager());
     }
 };

@@ -25,7 +25,7 @@ using namespace std;
 using namespace glm;
 using namespace PolyVox;
 
-void RenderSystem::draw(double t, std::shared_ptr<Program> program) {
+void RenderSystem::render(double t, std::shared_ptr<Program> program) {
     program->bind();
     
     setMVPE(t, program);

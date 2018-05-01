@@ -13,8 +13,9 @@
 #include "System.hpp"
 #include "EntityManager.hpp"
 
-class PhysicsSystem : System {
+class PhysicsSystem : StepSystem {
 public:
+    virtual void step(double time, double delta_time);
     std::shared_ptr<EntityManager> entity_manager;
 };
 
