@@ -27,10 +27,7 @@ public:
     std::shared_ptr<EntityManager> entity_manager;
     InputSystem* input_system;
     ChunkSystem* chunk_system;
-    
-    //Static Functions
-    static Region createProperRegion(Region& region); //creates a region where lowerXYZ is < upperXYZ
-    
+
     //Virtual Functions
     virtual void step(double t, double dt);
     

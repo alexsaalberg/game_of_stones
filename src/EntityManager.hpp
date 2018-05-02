@@ -104,15 +104,27 @@ public:
     }
     
 private:
-    Component_Manager component_manager;
-    
     bool entity_has_component(Entity_Entry* entity, Component_Index component);
     
     template <class Component_Type>
-    bool entity_has_component(Entity_Entry* entity);
+    bool entity_has_component(Entity_Entry* entity) {
+        Component_Index component_index = get_component_index<Component_Type>();
+        
+        return entity_has_component(entity, component_index);
+    }
+
+public:
     
     template <class Component_Type>
-    bool entity_has_component(Entity_Id entity);
+    bool entity_has_component(Entity_Id id) {
+        return entity_has_component<Component_Type>(get_entry_pointer_from_id(id));
+    }
+    
+private:
+    Component_Manager component_manager;
+    
+    
+    
     
     Entity_Entry get_entry_from_id(Entity_Id id);
     Entity_Entry* get_entry_pointer_from_id(Entity_Id id);

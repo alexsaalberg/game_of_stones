@@ -80,17 +80,7 @@ bool EntityManager::entity_has_component(Entity_Entry* entity, Component_Index c
     return false;
 }
 
-template <class Component_Type>
-bool EntityManager::entity_has_component(Entity_Entry* entity) {
-    Component_Index component_index = get_component_index<Component_Type>();
-   
-    return entity_has_component(entity, component_index);
-}
 
-template <class Component_Type>
-bool EntityManager::entity_has_component(Entity_Id id) {
-    return entity_has_component<Component_Type>(get_entry_pointer_from_id(id));
-}
 
 Entity_Entry EntityManager::get_entry_from_id(Entity_Id id) {
     return entities[id];

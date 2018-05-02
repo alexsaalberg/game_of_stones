@@ -30,14 +30,15 @@ struct VoxelMeshData
 
 class RenderSystem : FrameSystem {
 public:
+    //Variables
     std::shared_ptr<EntityManager> entity_manager;
     WindowManager* window_manager;
     
+    //Virtual Functions
     virtual void render(double t, std::shared_ptr<Program> program);
-    //void draw(double t, std::shared_ptr<Program> program);
-    void draw_entities(double t, std::shared_ptr<Program> program);
     
-    //Camera Functions
+private:
+    void draw_entities(double t, std::shared_ptr<Program> program);
     void setMVPE(double t, std::shared_ptr<Program> program);
     void renderGUI();
 };

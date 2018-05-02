@@ -21,6 +21,7 @@ public:
     void setThickness(int numerator, int divisor);
 private:
     PolyVox::Region region;
+    int resolution;
 };
 
 #endif /* SelectionOutline_hpp */

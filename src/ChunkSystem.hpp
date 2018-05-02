@@ -30,7 +30,7 @@ const int32_t Chunk_X_Length = 16; //x
 const int32_t Chunk_Y_Length = 128; //z
 const int32_t Chunk_Z_Length = 16; //y
 
-struct ChunkMeshData
+struct VolumeMeshData
 {
     GLuint number_of_indices;
     GLenum index_type;
@@ -45,7 +45,7 @@ struct ChunkMeshData
 struct ChunkData {
     PolyVox::Vector3DInt32 coords;
     int refs;
-    ChunkMeshData mesh;
+    VolumeMeshData mesh;
     double dirty_time;
 };
 
@@ -106,11 +106,11 @@ private:
     void addChunk(double t, Vector3DInt32 chunk, Vector3DInt32 center);
     void removeChunk(Vector3DInt32 chunk);
     
-    void eraseMeshData(ChunkMeshData& mesh);
+    void eraseMeshData(VolumeMeshData& mesh);
     
-    ChunkMeshData calculateMesh(double t, PolyVox::Vector3DInt32 chunk);
+    VolumeMeshData calculateMesh(double t, PolyVox::Vector3DInt32 chunk);
     template <typename MeshType>
-    ChunkMeshData bindMesh(double t, const MeshType& surfaceMesh,  const PolyVox::Vector3DInt32& translation = PolyVox::Vector3DInt32(0, 0, 0), float scale = 1.0f);
+    VolumeMeshData bindMesh(double t, const MeshType& surfaceMesh,  const PolyVox::Vector3DInt32& translation = PolyVox::Vector3DInt32(0, 0, 0), float scale = 1.0f);
     
 };
 

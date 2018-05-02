@@ -39,6 +39,7 @@
 #include "ChunkSystem.hpp"
 #include "SelectionSystem.hpp"
 #include "PickSystem.hpp"
+#include "VolumeRenderSystem.hpp"
 
 
 class Application
@@ -59,6 +60,7 @@ public:
     ChunkSystem chunk_system;
     PickSystem pick_system;
     SelectionSystem selection_system;
+    VolumeRenderSystem volume_render_system;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;

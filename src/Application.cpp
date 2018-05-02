@@ -39,6 +39,9 @@ void Application::init(double t, const std::string& resourceDirectory) {
     input_system.addMouseposXControl("mouse_x");
     input_system.addMouseposYControl("mouse_y");
     
+    volume_render_system.entity_manager = entity_manager;
+    selection_system.entity_manager = entity_manager;
+    
     pick_system.selection_id = -1;
     
     //render_system.initVoxels();
@@ -253,6 +256,7 @@ void Application::integrate(double t, float dt) {
     currentState->integrate(t, dt);
     pick_system.step(t, dt);
     chunk_system.step(t, dt);
+    selection_system.step(t, dt);
 }
 
 void Application::render(double t, float alpha) {
@@ -265,11 +269,13 @@ void Application::renderState(State& state, double t) {
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
     
     render_system.render(t, mainProgram);
-    selection_system.render(t, mainProgram);
+    //selection_system.render(t, mainProgram);
     
     //render_system.draw_voxels(t, voxelProgram);
     //chunk_system.recalculateAllMeshes();
     chunk_system.renderAllChunks(t, voxelProgram);
+    
+    volume_render_system.render(t, voxelProgram);
     //render_system.draw_voxels(entity_manager, t, mainProgram);
 }
 

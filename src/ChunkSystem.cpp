@@ -10,6 +10,9 @@
 #include "GLSL.h" //CHECK_GL_CALL, among others
 #include "PolyVox/Picking.h"
 
+
+#include "PolyVox/AmbientOcclusionCalculator.h"
+
 using namespace PolyVox;
 
 //Public
@@ -392,7 +395,7 @@ void ChunkSystem::removeChunk(Vector3DInt32 chunk) {
     }
 }
 
-void ChunkSystem::eraseMeshData(ChunkMeshData& mesh) {
+void ChunkSystem::eraseMeshData(VolumeMeshData& mesh) {
     CHECKED_GL_CALL( glDeleteVertexArrays(1, &mesh.vertex_array_object) );
     CHECKED_GL_CALL( glDeleteBuffers(1, &mesh.vertex_buffer) );
     CHECKED_GL_CALL( glDeleteBuffers(1, &mesh.index_buffer) );
@@ -400,7 +403,7 @@ void ChunkSystem::eraseMeshData(ChunkMeshData& mesh) {
     //printf("Deleting mesh: VAO#%d VB#%d IB#%d\n", mesh.vertex_array_object, mesh.vertex_buffer, mesh.index_buffer);
 }
 
-ChunkMeshData ChunkSystem::calculateMesh(double t, Vector3DInt32 chunk) {
+VolumeMeshData ChunkSystem::calculateMesh(double t, Vector3DInt32 chunk) {
     //0+16 = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 = 17 things
     //so need 0+16-1 = 16 things
     int32_t lower_x = chunk.getX() * Chunk_X_Length;
@@ -436,11 +439,11 @@ ChunkMeshData ChunkSystem::calculateMesh(double t, Vector3DInt32 chunk) {
 
 // Convert a PolyVox mesh to OpenGL index/vertex buffers. Inlined because it's templatised.
 template <typename MeshType>
-ChunkMeshData ChunkSystem::bindMesh(double t, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation, float scale)
+VolumeMeshData ChunkSystem::bindMesh(double t, const MeshType& surfaceMesh, const PolyVox::Vector3DInt32& translation, float scale)
 {
     // This struct holds the OpenGL properties (buffer handles, etc) which will be used
     // to render our mesh. We copy the data from the PolyVox mesh into this structure.
-    ChunkMeshData meshData;
+    VolumeMeshData meshData;
     
     // Create the VAO for the mesh
     CHECKED_GL_CALL( glGenVertexArrays(1, &(meshData.vertex_array_object)) );

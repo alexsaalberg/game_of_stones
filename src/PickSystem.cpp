@@ -14,6 +14,8 @@
 #include "PolyVox/Picking.h"
 #include "Camera.h"
 
+#include "RegionUtils.hpp"
+
 using namespace PolyVox;
 
 void PickSystem::step(double t, double dt) {
@@ -43,6 +45,8 @@ void PickSystem::step(double t, double dt) {
             
             region.setUpperCorner(point);
             
+            selection_component->dirty_time = t;
+            
             printf("Selection Finished: (%d %d %d)(%d %d %d)\n", region.getLowerX(), region.getLowerY(), region.getLowerZ(), region.getUpperX(), region.getUpperY(), region.getUpperZ());
             
         } else { //we're creating a new selection
@@ -55,6 +59,8 @@ void PickSystem::step(double t, double dt) {
             
             region.setLowerCorner(point);
             region.setUpperCorner(point);
+            
+            selection_component->dirty_time = t;
             
             
             printf("Selection Started: (%d %d %d)(%d %d %d)\n", region.getLowerX(), region.getLowerY(), region.getLowerZ(), region.getUpperX(), region.getUpperY(), region.getUpperZ());
@@ -71,39 +77,9 @@ void PickSystem::step(double t, double dt) {
     }
 }
 
-Region PickSystem::createProperRegion(Region &region) {
-    Region new_region;
-    
-    if(region.getLowerX() < region.getUpperX()) {
-        new_region.setLowerX(region.getLowerX());
-        new_region.setUpperX(region.getUpperX());
-    } else {
-        new_region.setLowerX(region.getUpperX());
-        new_region.setUpperX(region.getLowerX());
-    }
-    
-    if(region.getLowerY() < region.getUpperY()) {
-        new_region.setLowerY(region.getLowerY());
-        new_region.setUpperY(region.getUpperY());
-    } else {
-        new_region.setLowerY(region.getUpperY());
-        new_region.setUpperY(region.getLowerY());
-    }
-    
-    if(region.getLowerZ() < region.getUpperZ()) {
-        new_region.setLowerZ(region.getLowerZ());
-        new_region.setUpperZ(region.getUpperZ());
-    } else {
-        new_region.setLowerZ(region.getUpperZ());
-        new_region.setUpperZ(region.getLowerZ());
-    }
-    
-    return new_region;
-}
-
 void PickSystem::deleteRegion(double t, Region& region) {
     
-    Region region_to_delete = createProperRegion(region);
+    Region region_to_delete = PolyVoxExtensions::createProperRegion(region);
     printf("Deleting Region: (%d %d %d)(%d %d %d)\n", region_to_delete.getLowerX(), region_to_delete.getLowerY(), region_to_delete.getLowerZ(), region_to_delete.getUpperX(), region_to_delete.getUpperY(), region_to_delete.getUpperZ());
     
     std::vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();

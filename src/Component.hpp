@@ -35,7 +35,7 @@ public:
 class RawVolume_Component: Component {
 public:
     double dirty_time;
-    std::shared_ptr<PolyVox::RawVolume<uint8_t> > volume;
+    std::shared_ptr<PolyVox::RawVolume<CASTLE_VOXELTYPE> > volume;
 };
 
 class PagedVolume_Component: Component {
@@ -44,13 +44,13 @@ public:
     std::shared_ptr<PolyVox::PagedVolume<uint8_t> > volume;
     
     PagedVolume_Component() {
-        volume = std::make_shared<PolyVox::PagedVolume<uint8_t>>(new NoisePager());
+        volume = std::make_shared<PolyVox::PagedVolume<CASTLE_VOXELTYPE>>(new NoisePager());
     }
 };
 
 class Position_Component : Component {
 public:
-    float scale = 1.0f;
+    glm::vec3 scale = glm::vec3(1.0f);
     glm::vec3 position;
     glm::quat rotation;
 };
@@ -66,7 +66,9 @@ public:
 
 class Selection_Component : Component {
 public:
+    double dirty_time;
     Selection<CASTLE_VOXELTYPE> selection;
+    int outline_length;
     
     Selection_Component() {
     }
