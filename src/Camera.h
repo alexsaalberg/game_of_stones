@@ -18,6 +18,8 @@
 #include "EntityManager.hpp"
 #include "Component.hpp"
 
+#include "GLMUtils.h"
+
 using namespace std;
 using namespace glm;
 
@@ -55,7 +57,9 @@ public:
     static void setViewMatrix(Camera_Component* camera,  Position_Component* camera_position, std::shared_ptr<Program> program) {
         //std::shared_ptr<MatrixStack> V = Camera::getViewMatrix(camera, camera_position);
         glm::mat4 V = Camera::getViewMatrix(camera, camera_position);
+        glm::mat4 trans_inv_V = glm::transpose(glm::inverse(V));
         CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("V"), 1, GL_FALSE, value_ptr(V) ) );
+        CHECKED_GL_CALL( glUniformMatrix4fv(program->getUniform("trans_inv_V"), 1, GL_FALSE, value_ptr(V) ) );
     }
     
     static void setProjectionMatrix(shared_ptr<Program> program) {

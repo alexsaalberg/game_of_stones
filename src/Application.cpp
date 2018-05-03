@@ -32,7 +32,8 @@ void Application::init(double t, const std::string& resourceDirectory) {
     pick_system.entity_manager = entity_manager;
     pick_system.chunk_system = &chunk_system;
     
-    input_system.addKeyControl("key_x", GLFW_KEY_X);
+    input_system.addKeyControl("key_x", GLFW_KEY_C);
+    input_system.addKeyControl("key_b", GLFW_KEY_B);
     input_system.addKeyControl("key_space", GLFW_KEY_SPACE);
     input_system.addMouseclickControl("mouse_left", GLFW_MOUSE_BUTTON_LEFT);
     input_system.addMouseclickControl("mouse_right", GLFW_MOUSE_BUTTON_RIGHT);
@@ -105,6 +106,7 @@ void Application::initMainProgram(const std::string& resourceDirectory) {
     }
     mainProgram->addUniform("P");
     mainProgram->addUniform("V");
+    mainProgram->addUniform("trans_inv_V");
     mainProgram->addUniform("M");
     mainProgram->addUniform("mAmbientCoefficient");
     mainProgram->addUniform("mDiffusionCoefficient");
@@ -147,6 +149,7 @@ void Application::initVoxelProgram(const std::string& resourceDirectory) {
     //Transformation Matrices
     voxelProgram->addUniform("P");
     voxelProgram->addUniform("V");
+    voxelProgram->addUniform("trans_inv_V");
     voxelProgram->addUniform("M");
     //Material constants
     voxelProgram->addUniform("mAmbientCoefficient");

@@ -32,7 +32,7 @@ public:
     virtual void step(double t, double dt);
     
     //Member Functions
-    void deleteRegion(double t, Region& region);
+    void fillRegion(double t, Region& region, CASTLE_VOXELTYPE voxel_type);
     Vector3DInt32 pickScreen(float screenX, float screenY, bool previous);
     
 };

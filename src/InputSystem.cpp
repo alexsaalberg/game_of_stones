@@ -12,6 +12,8 @@
 #include "MatrixStack.h"
 #include "PolyVox/Picking.h"
 
+#include "GLMUtils.h"
+
 using namespace std;
 using namespace glm;
 
@@ -147,21 +149,29 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     //Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
     Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
     
-    static float move_scale = 1.0f;
+    static float move_scale = 8.0f;
     static float rotate_scale = 1.0f;
     float delta_angle = 5.0;
     float delta_distance = 0.25f * move_scale;
     
     //positive z is forward (default orientation of camera)
+    //positive x is rightward
     vec3 forwardMove = position->rotation * vec3(0.0f, 0.0f, 1.0f);
     vec3 rightwardMove = position->rotation * vec3(1.0f, 0.0f, 0.0f);
-    
-    forwardMove = normalize(forwardMove) * delta_distance;
-    rightwardMove = normalize(rightwardMove) * delta_distance;
     
     forwardMove = vec3(forwardMove.x, 0.0f, forwardMove.z);
     rightwardMove = vec3(rightwardMove.x, 0.0f, rightwardMove.z);
     
+    forwardMove = normalize(forwardMove) * delta_distance;
+    rightwardMove = normalize(rightwardMove) * delta_distance;
+    
+    float dot_product = glm::dot(forwardMove, rightwardMove);
+    if(dot_product > 0.001f) {
+        printQuatRotationAsAngles(position->rotation);
+        printf("Weird Dot: %f\n", dot_product);
+    }
+    
+    rightwardMove = cross(forwardMove, vec3(0.0f, 1.0f, 0.0f));
     //printf("F(%f %f %f) R(%f %f %f)\n", forwardMove.x, forwardMove.y, forwardMove.z, rightwardMove.x, rightwardMove.y, rightwardMove.z);
     
     delta_angle = glm::radians(delta_angle);
@@ -207,31 +217,55 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     if (key == GLFW_KEY_UP && action == GLFW_PRESS)
     {
         glm::quat deltaRotation;
-        //deltaRotation = glm::quat( glm::vec3(glm::radians(-1.0f * delta_angle), 0.0f, 0.0f) );
-        deltaRotation = glm::angleAxis(-1.0f * delta_angle, glm::vec3(1.0f, 0.0f, 0.0f));
-        //position->rotation.x -= delta_angle;
-        position->rotation *= deltaRotation;
-        //camera->phi += delta_angle;
+        
+        vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
+        
+        printf("---\n");
+        
+        printf("rot: "); printQuatRotationAsAngles(position->rotation); printf("\n");
+        
+        printf("relX: "); printVec3(relative_x_axis); printf("\n");
+        printf("norX: "); printVec3(normalize(relative_x_axis)); printf("\n");
+        
+        deltaRotation = glm::angleAxis(-1.0f * delta_angle, relative_x_axis);
+        printf("delta: "); printQuatRotationAsAngles(deltaRotation);
+        printf("\n");
+        
+        //deltaRotation = position->rotation * deltaRotation; //need to rotate around X axis relative to current rot
+        printf("delta: "); printQuatRotationAsAngles(deltaRotation);
+        printf("\n");
+        
+        position->rotation = deltaRotation * position->rotation;
+        printf("rot: ");printQuatRotationAsAngles(position->rotation);
+        printf("\n");
+        
+        printf("---\n");
+        
     }
     if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
     {
         glm::quat deltaRotation;
-        deltaRotation = glm::angleAxis(1.0f * delta_angle, glm::vec3(1.0f, 0.0f, 0.0f));
-        position->rotation *= deltaRotation;
-        //camera->phi -= delta_angle;
+        vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
+        deltaRotation = glm::angleAxis(1.0f * delta_angle, relative_x_axis);
+        
+        position->rotation = deltaRotation * position->rotation;
     }
     
     if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
     {
         glm::quat deltaRotation;
+        
         deltaRotation = glm::angleAxis(1.0f * delta_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-        position->rotation *= deltaRotation;
+        
+        position->rotation = deltaRotation * position->rotation;
     }
     if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
     {
         glm::quat deltaRotation;
-        deltaRotation = glm::angleAxis(-1.0f * delta_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-        position->rotation *= deltaRotation;
+        
+        deltaRotation = glm::angleAxis(-1.0f * delta_angle, normalize(glm::vec3(0.0f, 1.0f, 0.0f)));
+        
+        position->rotation = deltaRotation * position->rotation;
     }
     
     if (key == GLFW_KEY_R && action == GLFW_PRESS)

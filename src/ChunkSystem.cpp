@@ -163,7 +163,7 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
                 //printf("%lf in future (%lf)\n", chunk_data.dirty_time, t);
             } else if(chunk_data.dirty_time > chunk_data.mesh.clean_time) {
                 //recalculate mesh
-                printf("Recalculating Mesh of Chunk(%d %d %d)\n", chunk.getX(), chunk.getY(), chunk.getZ());
+                //printf("Recalculating Mesh of Chunk(%d %d %d)\n", chunk.getX(), chunk.getY(), chunk.getZ());
                 eraseMeshData(chunk_data.mesh);
                 chunk_data.mesh = calculateMesh(t, chunk);
                 

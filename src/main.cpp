@@ -7,6 +7,8 @@
 
 #include "WindowManager.h"
 
+#define GLM_FORCE_RADIANS
+
 const int windowWidth = 800;
 const int windowHeight = 420;
 
@@ -85,9 +87,9 @@ int main(int argc, char **argv)
             numSimulationsThisFrame++;
         }
         
-        const float low_frame_rate = 20.0f; //seconds
+        const float low_frame_rate = 10.0f; //m seconds
         if((1.0f / frameTime) < low_frame_rate) { //Long frame
-            printf("/ #%d Long Frame! (>%.01fs)\n",frame, low_frame_rate);
+            printf("/ #%d Long Frame! (<%f framerate)\n",frame, low_frame_rate);
             printf("| Frame Rate: %f\tTime: %f\n", 1.0f / frameTime, frameTime);
             printf("\\ Num Simulations: %d\tTTime: %lf\n", numSimulationsThisFrame, t);
         }

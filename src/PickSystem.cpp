@@ -72,12 +72,21 @@ void PickSystem::step(double t, double dt) {
         Region& region = selection_component->selection.region;
         
         printf("Deleting Region: (%d %d %d)(%d %d %d)\n", region.getLowerX(), region.getLowerY(), region.getLowerZ(), region.getUpperX(), region.getUpperY(), region.getUpperZ());
-        deleteRegion(t, region);
+        fillRegion(t, region, 0);
+        entity_manager->delete_entity(selection_id);
+    }
+    if(input_system->wasControlPressedThisStep("key_b")) {
+        Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
+        Region& region = selection_component->selection.region;
+        
+        printf("Deleting Region: (%d %d %d)(%d %d %d)\n", region.getLowerX(), region.getLowerY(), region.getLowerZ(), region.getUpperX(), region.getUpperY(), region.getUpperZ());
+        
+        fillRegion(t, region, 2);
         entity_manager->delete_entity(selection_id);
     }
 }
 
-void PickSystem::deleteRegion(double t, Region& region) {
+void PickSystem::fillRegion(double t, Region& region, CASTLE_VOXELTYPE voxel_type) {
     
     Region region_to_delete = PolyVoxExtensions::createProperRegion(region);
     printf("Deleting Region: (%d %d %d)(%d %d %d)\n", region_to_delete.getLowerX(), region_to_delete.getLowerY(), region_to_delete.getLowerZ(), region_to_delete.getUpperX(), region_to_delete.getUpperY(), region_to_delete.getUpperZ());
@@ -91,7 +100,7 @@ void PickSystem::deleteRegion(double t, Region& region) {
             for(int z = region_to_delete.getLowerZ(); z <= region_to_delete.getUpperZ(); z++) {
                 Vector3DInt32 point(x, y, z);
                 
-                voxel_component->volume->setVoxel(point, 0);
+                voxel_component->volume->setVoxel(point, voxel_type);
                 chunk_system->setDirtyTimeViaVoxel(t, point);
             }
         }
