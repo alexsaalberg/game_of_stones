@@ -95,6 +95,16 @@ endif()
 message(STATUS "=====> END GLFW <=====")
 message(STATUS "")
 
+message(STATUS "=====> START BULLET <=====")
+find_package(bullet)
+if(BULLET_FOUND)
+	message(STATUS ${BULLET_LIBRARIES})
+	target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
+	target_link_libraries(${CMAKE_PROJECT_NAME} ${BULLET_LIBRARIES})
+	message(STATUS "FOUND BULLET YAY!")
+endif()
+message(STATUS "=====> END BULLET <=====")
+
 # OS specific options and libraries
 if(WIN32)
 	# c++0x is enabled by default.

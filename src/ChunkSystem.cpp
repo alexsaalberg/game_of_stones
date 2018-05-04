@@ -10,6 +10,10 @@
 #include "GLSL.h" //CHECK_GL_CALL, among others
 #include "PolyVox/Picking.h"
 
+#include <btStridingMeshInterface.h>
+#include <btDefaultMotionState.h>
+#include <btTriangleMesh.h>
+#include <btRigidBody.h>
 
 #include "PolyVox/AmbientOcclusionCalculator.h"
 
@@ -165,7 +169,12 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
                 //recalculate mesh
                 //printf("Recalculating Mesh of Chunk(%d %d %d)\n", chunk.getX(), chunk.getY(), chunk.getZ());
                 eraseMeshData(chunk_data.mesh);
-                chunk_data.mesh = calculateMesh(t, chunk);
+                
+                calculateMeshAndShape(t, chunk_data);
+                
+                //chunk_data.mesh = bindMesh(t, decodedMesh);
+                
+                //chunk_data.mesh = calculateMesh(t, chunk);
                 
                 mesh_gen_this_frame++;
             }
@@ -194,6 +203,8 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
 
 std::set<Vector3DInt32, ChunkCompare> ChunkSystem::calculateChunkSetAroundCoord(Vector3DInt32 chunk_coord) {
     const float radius = 20.1f;
+    const float vert_distance = 5.0f;
+    const float horz_distance = 20.0f;
     const int max_chunks = 5000;
     
     std::set<Vector3DInt32, ChunkCompare> return_chunks;
@@ -220,6 +231,7 @@ std::set<Vector3DInt32, ChunkCompare> ChunkSystem::calculateChunkSetAroundCoord(
                 if(return_chunks.count(adjacent_chunk) == 0) { //Only check this chunk if we haven't already
                     Vector3DInt32 difference_vec = chunk_coord - adjacent_chunk;
                     if(difference_vec.length() < radius) {
+                    //if(difference_vec.getY() < vert_distance && difference_vec.getX() < horz_distance && difference_vec.getZ() < horz_distance) {
                         return_chunks.insert(adjacent_chunk);
                         next_chunks.insert(adjacent_chunk);
                     }
@@ -403,9 +415,11 @@ void ChunkSystem::eraseMeshData(VolumeMeshData& mesh) {
     //printf("Deleting mesh: VAO#%d VB#%d IB#%d\n", mesh.vertex_array_object, mesh.vertex_buffer, mesh.index_buffer);
 }
 
-VolumeMeshData ChunkSystem::calculateMesh(double t, Vector3DInt32 chunk) {
+void ChunkSystem::calculateMeshAndShape(double t, ChunkData& chunk_data) {
     //0+16 = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 = 17 things
     //so need 0+16-1 = 16 things
+    Vector3DInt32 chunk = chunk_data.coords;
+    
     int32_t lower_x = chunk.getX() * Chunk_X_Length;
     int32_t lower_y = chunk.getY() * Chunk_Y_Length;
     int32_t lower_z = chunk.getZ() * Chunk_Z_Length;
@@ -431,10 +445,43 @@ VolumeMeshData ChunkSystem::calculateMesh(double t, Vector3DInt32 chunk) {
     if(decodedMesh.getNoOfIndices() > 0) {
     //printf("Calculating mesh for (%d %d %d)(%d %d %d). %zu indices.\n", lower_x, lower_y, lower_z, upper_x, upper_y, upper_z, decodedMesh.getNoOfIndices());
     }
-    
     // Pass the surface to the OpenGL window. Note that we are also passing an offset in this multi-mesh example. This is because
     // the surface extractors return a mesh with 'local space' positions to reduce storage requirements and precision problems.
-    return bindMesh(t, decodedMesh, decodedMesh.getOffset());
+    createRigidBody(decodedMesh);
+    chunk_data.mesh = bindMesh(t, decodedMesh, decodedMesh.getOffset());
+  
+}
+
+template <typename MeshType>
+void ChunkSystem::createRigidBody(MeshType& surfaceMesh) {    //Create Bullet Shape
+    int sizeof_one_index = sizeof(typename MeshType::IndexType);
+    int sizeof_one_vertex = sizeof(typename MeshType::VertexType);
+    
+    //btTriangleMesh bullet_triangles;
+    /*
+    unsigned char* vertex_pointer = surfaceMesh.getRawVertexData();
+    unsigned char* index_pointer = surfaceMesh.getRawIndexData();*/
+    /*
+    for(int i = 0; i < surfaceMesh.getNoOfIndices(); i++) {
+        btVector3 v1 = * (float*) triangle_pointer;
+        triangle_pointer += sizeof_one_
+        bullet_triangles.
+    }*/
+    
+    
+    
+    btTriangleIndexVertexArray bullet_triangles(surfaceMesh.getNoOfIndices()/3, (int *)surfaceMesh.getRawIndexData(), sizeof_one_index * 3, surfaceMesh.getNoOfVertices(), (float *)surfaceMesh.getRawVertexData(), sizeof_one_vertex * 3);
+    
+    btBvhTriangleMeshShape* triangle_mesh_shape = new btBvhTriangleMeshShape(&bullet_triangles, true);
+    
+    btCollisionShape* collisionShapeTerrain = triangle_mesh_shape;
+    btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, -15, 0)));
+    
+    btRigidBody::btRigidBodyConstructionInfo rigidBodyConstructionInfo(0.0f, motionState, collisionShapeTerrain, btVector3(0, 0, 0));
+    
+    btRigidBody* rigidBodyTerrain = new btRigidBody(rigidBodyConstructionInfo);
+    
+    rigidBodyTerrain->setFriction(btScalar(0.9));
 }
 
 // Convert a PolyVox mesh to OpenGL index/vertex buffers. Inlined because it's templatised.

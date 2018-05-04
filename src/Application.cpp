@@ -27,6 +27,7 @@ void Application::init(double t, const std::string& resourceDirectory) {
     
     chunk_system.entity_manager = entity_manager;
     chunk_system.input_system = &input_system;
+    chunk_system.bullet_dynamics_world = bullet_dynamics_world;
     
     pick_system.input_system = &input_system;
     pick_system.entity_manager = entity_manager;
@@ -55,6 +56,7 @@ void Application::init(double t, const std::string& resourceDirectory) {
     initPlayer();
     initVoxels();
     
+    initBullet();
     
     pick_system.cursor_id = player_id;
     
@@ -77,6 +79,22 @@ void Application::init(double t, const std::string& resourceDirectory) {
     chunk_system.addLoader(t, camera_id);
 }
 
+void Application::initBullet() {
+    // Build the broadphase
+    broadphase = new btDbvtBroadphase();
+    
+    // Set up the collision configuration and dispatcher
+    collisionConfiguration = new btDefaultCollisionConfiguration();
+    dispatcher = new btCollisionDispatcher(collisionConfiguration);
+    
+    // The actual physics solver
+    solver = new btSequentialImpulseConstraintSolver;
+    
+    // The world.
+    bullet_dynamics_world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+    
+    bullet_dynamics_world->setGravity(btVector3(0, -10, 0));
+}
 
 void Application::initShaders(const std::string& resourceDirectory)
 {

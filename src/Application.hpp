@@ -8,6 +8,9 @@
 #ifndef Application_hpp
 #define Application_hpp
 
+//Bullet Physics
+#include <btBulletDynamicsCommon.h>
+#include <btTriangleIndexVertexArray.h>
 
 //Messaging System
 #include "Messaging.h"
@@ -46,6 +49,13 @@ class Application
 {
 public:
 //Variables
+    //Bullet Physics
+    btBroadphaseInterface* broadphase;
+    btDefaultCollisionConfiguration* collisionConfiguration;
+    btCollisionDispatcher* dispatcher;
+    btSequentialImpulseConstraintSolver* solver;
+    btDiscreteDynamicsWorld* bullet_dynamics_world;
+    
     //Messaging
     std::shared_ptr<EventHandler> event_handler;
     std::shared_ptr<EntityManager> entity_manager;
@@ -79,6 +89,8 @@ public:
 //Functions
     /* Initilizations */
     void init(double t, const std::string& resourceDirectory);
+    
+    void initBullet();
     
     void initCamera();
     void initPlayer();

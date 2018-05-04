@@ -8,16 +8,24 @@
 #ifndef ChunkSystem_hpp
 #define ChunkSystem_hpp
 
+//GL
 #include <glad/glad.h>
-
 #include <glm/gtc/type_ptr.hpp>
 
+//STD
 #include <set>
 
-#include "WindowManager.h"
+//Bullet Physics
+#include <btBvhTriangleMeshShape.h>
+#include <btTriangleIndexVertexArray.h>
+#include <btDiscreteDynamicsWorld.h>
 
+//PolyVox
 #include "PolyVox/Region.h"
 #include "PolyVox/Vector.h"
+
+//Castle
+#include "WindowManager.h"
 
 #include "System.hpp"
 #include "EntityManager.hpp"
@@ -46,6 +54,7 @@ struct ChunkData {
     PolyVox::Vector3DInt32 coords;
     int refs;
     VolumeMeshData mesh;
+    btBvhTriangleMeshShape* shape;
     double dirty_time;
 };
 
@@ -76,6 +85,8 @@ public:
     int radius = 5;
     std::shared_ptr<EntityManager> entity_manager;
     WindowManager* window_manager;
+    btDiscreteDynamicsWorld* bullet_dynamics_world;
+    
     //std::set<ChunkLoader> entities;
     std::multimap<Entity_Id, ChunkLoader> chunk_loaders;
     std::map<Vector3DInt32, ChunkData, ChunkCompare> chunks;
@@ -108,7 +119,11 @@ private:
     
     void eraseMeshData(VolumeMeshData& mesh);
     
-    VolumeMeshData calculateMesh(double t, PolyVox::Vector3DInt32 chunk);
+    void calculateMeshAndShape(double t, ChunkData& chunk_data);
+    
+    template <typename MeshType>
+    void createRigidBody(MeshType& surfaceMesh);
+    
     template <typename MeshType>
     VolumeMeshData bindMesh(double t, const MeshType& surfaceMesh,  const PolyVox::Vector3DInt32& translation = PolyVox::Vector3DInt32(0, 0, 0), float scale = 1.0f);
     
