@@ -55,6 +55,8 @@ public:
     btCollisionDispatcher* dispatcher;
     btSequentialImpulseConstraintSolver* solver;
     btDiscreteDynamicsWorld* bullet_dynamics_world;
+    btRigidBody* camera_body;
+    btMotionState* camera_motion_state;
     
     //Messaging
     std::shared_ptr<EventHandler> event_handler;

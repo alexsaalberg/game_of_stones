@@ -4,16 +4,13 @@
 //
 //  Created by Alex Saalberg on 4/16/18.
 //
+#include <btTriangleMesh.h>
 
 #include "ChunkSystem.hpp"
 
 #include "GLSL.h" //CHECK_GL_CALL, among others
 #include "PolyVox/Picking.h"
 
-#include <btStridingMeshInterface.h>
-#include <btDefaultMotionState.h>
-#include <btTriangleMesh.h>
-#include <btRigidBody.h>
 
 #include "PolyVox/AmbientOcclusionCalculator.h"
 
@@ -140,6 +137,28 @@ void ChunkSystem::step(double t, double dt) {
         }
     }
     
+    const int max_mesh_gen_per_step = 6;
+    int mesh_gen_this_step = 0;
+    
+    for(auto& chunk_pair : chunks) {
+        Vector3DInt32 chunk = chunk_pair.first;
+        ChunkData& chunk_data = chunk_pair.second;
+        
+        //printf("%lf | %lf\n", chunk_data.dirty_time, chunk_data.mesh.clean_time);
+        if(mesh_gen_this_step < max_mesh_gen_per_step) {
+            if(chunk_data.dirty_time > t) {
+                //This is in the future, do nothing
+                //printf("%lf in future (%lf)\n", chunk_data.dirty_time, t);
+            } else if(chunk_data.dirty_time > chunk_data.mesh_data.clean_time) {
+                //recalculate mesh
+                //printf("Recalculating Mesh of Chunk(%d %d %d)\n", chunk.getX(), chunk.getY(), chunk.getZ());
+                eraseMeshData(chunk_data.mesh_data);
+                
+                calculateMeshAndShape(t, chunk_data);
+                mesh_gen_this_step++;
+            }
+        }
+    }
 }
 
 void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
@@ -160,27 +179,7 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
         Vector3DInt32 chunk = chunk_pair.first;
         ChunkData& chunk_data = chunk_pair.second;
         
-        //printf("%lf | %lf\n", chunk_data.dirty_time, chunk_data.mesh.clean_time);
-        if(mesh_gen_this_frame < max_mesh_gen_per_frame) {
-            if(chunk_data.dirty_time > t) {
-                //This is in the future, do nothing
-                //printf("%lf in future (%lf)\n", chunk_data.dirty_time, t);
-            } else if(chunk_data.dirty_time > chunk_data.mesh.clean_time) {
-                //recalculate mesh
-                //printf("Recalculating Mesh of Chunk(%d %d %d)\n", chunk.getX(), chunk.getY(), chunk.getZ());
-                eraseMeshData(chunk_data.mesh);
-                
-                calculateMeshAndShape(t, chunk_data);
-                
-                //chunk_data.mesh = bindMesh(t, decodedMesh);
-                
-                //chunk_data.mesh = calculateMesh(t, chunk);
-                
-                mesh_gen_this_frame++;
-            }
-        }
-        
-        auto meshData = chunk_data.mesh;
+        auto meshData = chunk_data.mesh_data;
         
         if(meshData.clean_time >= 0.0f) { // -1.0f means not created yet
             M->pushMatrix();
@@ -202,10 +201,10 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
 }
 
 std::set<Vector3DInt32, ChunkCompare> ChunkSystem::calculateChunkSetAroundCoord(Vector3DInt32 chunk_coord) {
-    const float radius = 20.1f;
+    const float radius = 10.1f;
     const float vert_distance = 5.0f;
     const float horz_distance = 20.0f;
-    const int max_chunks = 5000;
+    const int max_chunks = 1000;
     
     std::set<Vector3DInt32, ChunkCompare> return_chunks;
     std::set<Vector3DInt32, ChunkCompare> current_chunks;
@@ -365,7 +364,7 @@ void ChunkSystem::setDirtyTimeViaChunk(double t, Vector3DInt32 chunk_coord) {
 
 void ChunkSystem::recalculateAllMeshes() {
     for(auto& chunk : chunks) {
-        chunk.second.mesh.clean_time = -1.0f;
+        chunk.second.mesh_data.clean_time = -1.0f;
     }
 }
 
@@ -385,9 +384,15 @@ void ChunkSystem::addChunk(double t, Vector3DInt32 chunk, Vector3DInt32 loader) 
         ChunkData new_chunk_data;
         new_chunk_data.coords = chunk;
         new_chunk_data.refs = 1;
-        new_chunk_data.mesh.clean_time = -1.0f;
+        new_chunk_data.mesh_data.clean_time = -1.0f;
         //calculateMesh(t, chunk);
         new_chunk_data.dirty_time = t + extra_time;
+        
+        new_chunk_data.physics_data.chunk_body = nullptr;
+        new_chunk_data.physics_data.collision_shape = nullptr;
+        new_chunk_data.physics_data.motion_state = nullptr;
+        new_chunk_data.physics_data.triangle_array = nullptr;
+        new_chunk_data.physics_data.triangle_mesh_shape = nullptr;
         
         std::pair<Vector3DInt32, ChunkData> element(chunk, new_chunk_data);
         chunks.insert(element);
@@ -397,9 +402,12 @@ void ChunkSystem::addChunk(double t, Vector3DInt32 chunk, Vector3DInt32 loader) 
 void ChunkSystem::removeChunk(Vector3DInt32 chunk) {
     auto iterator = chunks.find(chunk);
     if(iterator != chunks.end()) {
-        ChunkData chunk_data = chunks.at(chunk);
+        ChunkData& chunk_data = chunks.at(chunk);
         chunk_data.refs -= 1;
         if(chunk_data.refs <= 0) {
+            if(chunk_data.physics_data.chunk_body != nullptr) {
+                bullet_dynamics_world->removeRigidBody(chunk_data.physics_data.chunk_body);
+            }
             chunks.erase(chunk);
         }
     } else {
@@ -442,46 +450,121 @@ void ChunkSystem::calculateMeshAndShape(double t, ChunkData& chunk_data) {
     // The returned mesh needs to be decoded to be appropriate for GPU rendering.
     auto decodedMesh = decodeMesh(mesh);
     
-    if(decodedMesh.getNoOfIndices() > 0) {
     //printf("Calculating mesh for (%d %d %d)(%d %d %d). %zu indices.\n", lower_x, lower_y, lower_z, upper_x, upper_y, upper_z, decodedMesh.getNoOfIndices());
-    }
     // Pass the surface to the OpenGL window. Note that we are also passing an offset in this multi-mesh example. This is because
     // the surface extractors return a mesh with 'local space' positions to reduce storage requirements and precision problems.
-    createRigidBody(decodedMesh);
-    chunk_data.mesh = bindMesh(t, decodedMesh, decodedMesh.getOffset());
-  
+    chunk_data.mesh = decodedMesh;
+    if(decodedMesh.getNoOfIndices() > 0) {
+        chunk_data.physics_data = createRigidBodyManually(chunk_data.mesh);
+    }
+    chunk_data.mesh_data = bindMesh(t, decodedMesh, decodedMesh.getOffset());
+}
+
+btVector3 getVertexAtIndex(uint8_t* raw_vertex_pointer, int stride, int index) {
+    float* vertex_pointer = (float*) (raw_vertex_pointer + stride*index);
+    btVector3 returnVec(*vertex_pointer, *(vertex_pointer+1), *(vertex_pointer+2));
+    return returnVec;
+}
+
+void printBtVector3(btVector3 vec) {
+    printf("(%f %f %f)", vec.getX(), vec.getY(), vec.getZ());
 }
 
 template <typename MeshType>
-void ChunkSystem::createRigidBody(MeshType& surfaceMesh) {    //Create Bullet Shape
-    int sizeof_one_index = sizeof(typename MeshType::IndexType);
-    int sizeof_one_vertex = sizeof(typename MeshType::VertexType);
+BulletPhysicsChunkData ChunkSystem::createRigidBodyManually(MeshType& surfaceMesh) {
+    btTriangleMesh* triangle_mesh = new btTriangleMesh();
     
-    //btTriangleMesh bullet_triangles;
-    /*
-    unsigned char* vertex_pointer = surfaceMesh.getRawVertexData();
-    unsigned char* index_pointer = surfaceMesh.getRawIndexData();*/
-    /*
-    for(int i = 0; i < surfaceMesh.getNoOfIndices(); i++) {
-        btVector3 v1 = * (float*) triangle_pointer;
-        triangle_pointer += sizeof_one_
-        bullet_triangles.
-    }*/
+    int sizeof_one_vertex_and_material = sizeof(typename MeshType::VertexType);
+    int sizeof_one_vertex = sizeof(float) * 3;
+    uint8_t* raw_vertex_pointer = (uint8_t*) surfaceMesh.getRawVertexData();
     
+    for(int i = 0; i < surfaceMesh.getNoOfIndices(); i+=3) {
+        int index1 = surfaceMesh.getIndex(i);
+        int index2 = surfaceMesh.getIndex(i+1);
+        int index3 = surfaceMesh.getIndex(i+2);
+        
+       
+        btVector3 bVertex1 = getVertexAtIndex(raw_vertex_pointer, sizeof_one_vertex_and_material, index1);
+        btVector3 bVertex2 = getVertexAtIndex(raw_vertex_pointer, sizeof_one_vertex_and_material, index2);
+        btVector3 bVertex3 = getVertexAtIndex(raw_vertex_pointer, sizeof_one_vertex_and_material, index3);
+        
+        /*
+        printf("Vectors %d %d %d: ", index1, index2, index3);
+        printBtVector3(bVertex1);
+        printBtVector3(bVertex2);
+        printBtVector3(bVertex3);
+        printf("\n");
+        */
+        triangle_mesh->addTriangle(bVertex1, bVertex2, bVertex3);
+    }
     
+    btBvhTriangleMeshShape* triangle_mesh_shape = new btBvhTriangleMeshShape(triangle_mesh, true);
     
-    btTriangleIndexVertexArray bullet_triangles(surfaceMesh.getNoOfIndices()/3, (int *)surfaceMesh.getRawIndexData(), sizeof_one_index * 3, surfaceMesh.getNoOfVertices(), (float *)surfaceMesh.getRawVertexData(), sizeof_one_vertex * 3);
-    
-    btBvhTriangleMeshShape* triangle_mesh_shape = new btBvhTriangleMeshShape(&bullet_triangles, true);
+    Vector3DInt32 int_position = surfaceMesh.getOffset();
+    btVector3 float_position = btVector3(int_position.getX(), int_position.getY(), int_position.getZ());
     
     btCollisionShape* collisionShapeTerrain = triangle_mesh_shape;
-    btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, -15, 0)));
+    btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), float_position));
     
-    btRigidBody::btRigidBodyConstructionInfo rigidBodyConstructionInfo(0.0f, motionState, collisionShapeTerrain, btVector3(0, 0, 0));
+    btRigidBody::btRigidBodyConstructionInfo rigidBodyConstructionInfo(0.0f, motionState, collisionShapeTerrain, btVector3(0.0f,0.0f,0.0f));
+    
+    btRigidBody* rigidBodyTerrain = new btRigidBody(rigidBodyConstructionInfo);
+    
+    rigidBodyTerrain->setFriction(btScalar(0.1));
+    
+    bullet_dynamics_world->addRigidBody(rigidBodyTerrain);
+    
+    BulletPhysicsChunkData physics_data;
+    physics_data.triangle_array = triangle_mesh;
+    physics_data.triangle_mesh_shape = triangle_mesh_shape;
+    physics_data.collision_shape = collisionShapeTerrain;
+    physics_data.motion_state = motionState;
+    physics_data.chunk_body = rigidBodyTerrain;
+    
+    return physics_data;
+
+
+}
+
+
+template <typename MeshType>
+BulletPhysicsChunkData ChunkSystem::createRigidBody(MeshType& surfaceMesh) {    //Create Bullet Shape
+    int sizeof_one_index = sizeof(typename MeshType::IndexType);
+    int sizeof_one_vertex_and_material = sizeof(typename MeshType::VertexType);
+    //int sizeof_one_vertex = sizeof(float) * 3;
+    //int sizeof_one_material = sizeof_one_vertex_and_material;
+    
+    btTriangleIndexVertexArray* bullet_triangles = new btTriangleIndexVertexArray(surfaceMesh.getNoOfIndices()/3, (int *)surfaceMesh.getRawIndexData(), sizeof_one_index * 3, surfaceMesh.getNoOfVertices(), (float *)surfaceMesh.getRawVertexData(), sizeof_one_vertex_and_material * 3);
+    //btTriangleIndexVertexMaterialArray*
+    //bullet_triangles = new btTriangleIndexVertexMaterialArray(
+        //surfaceMesh.getNoOfIndices()/3, (int *)surfaceMesh.getRawIndexData(), sizeof_one_index * 3,
+        //surfaceMesh.getNoOfVertices(), (float *)surfaceMesh.getRawVertexData(), sizeof_one_vertex * 3),
+    
+    
+    btBvhTriangleMeshShape* triangle_mesh_shape = new btBvhTriangleMeshShape(bullet_triangles, true);
+    
+    Vector3DInt32 int_position = surfaceMesh.getOffset();
+    btVector3 float_position = btVector3(int_position.getX(), int_position.getY(), int_position.getZ());
+    
+    btCollisionShape* collisionShapeTerrain = triangle_mesh_shape;
+    btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), float_position));
+    
+    btRigidBody::btRigidBodyConstructionInfo rigidBodyConstructionInfo(0.0f, motionState, collisionShapeTerrain, btVector3(0.0f,0.0f,0.0f));
     
     btRigidBody* rigidBodyTerrain = new btRigidBody(rigidBodyConstructionInfo);
     
     rigidBodyTerrain->setFriction(btScalar(0.9));
+    
+    bullet_dynamics_world->addRigidBody(rigidBodyTerrain);
+    
+    BulletPhysicsChunkData physics_data;
+    physics_data.triangle_array = bullet_triangles;
+    physics_data.triangle_mesh_shape = triangle_mesh_shape;
+    physics_data.collision_shape = collisionShapeTerrain;
+    physics_data.motion_state = motionState;
+    physics_data.chunk_body = rigidBodyTerrain;
+    
+    return physics_data;
 }
 
 // Convert a PolyVox mesh to OpenGL index/vertex buffers. Inlined because it's templatised.

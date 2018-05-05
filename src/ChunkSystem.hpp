@@ -18,7 +18,11 @@
 //Bullet Physics
 #include <btBvhTriangleMeshShape.h>
 #include <btTriangleIndexVertexArray.h>
+#include <btTriangleIndexVertexMaterialArray.h>
 #include <btDiscreteDynamicsWorld.h>
+#include <btStridingMeshInterface.h>
+#include <btDefaultMotionState.h>
+#include <btRigidBody.h>
 
 //PolyVox
 #include "PolyVox/Region.h"
@@ -50,11 +54,21 @@ struct VolumeMeshData
     double clean_time;
 };
 
+struct BulletPhysicsChunkData {
+    btTriangleIndexVertexArray* triangle_array;
+    btBvhTriangleMeshShape* triangle_mesh_shape;
+    btCollisionShape* collision_shape;
+    btDefaultMotionState* motion_state;
+    btRigidBody* chunk_body;
+};
+
+
 struct ChunkData {
     PolyVox::Vector3DInt32 coords;
     int refs;
-    VolumeMeshData mesh;
-    btBvhTriangleMeshShape* shape;
+    VolumeMeshData mesh_data;
+    BulletPhysicsChunkData physics_data;
+    PolyVox::Mesh<PolyVox::Vertex<unsigned char>, unsigned int> mesh;
     double dirty_time;
 };
 
@@ -122,7 +136,10 @@ private:
     void calculateMeshAndShape(double t, ChunkData& chunk_data);
     
     template <typename MeshType>
-    void createRigidBody(MeshType& surfaceMesh);
+    BulletPhysicsChunkData createRigidBodyManually(MeshType& surfaceMesh);
+    
+    template <typename MeshType>
+    BulletPhysicsChunkData createRigidBody(MeshType& surfaceMesh);
     
     template <typename MeshType>
     VolumeMeshData bindMesh(double t, const MeshType& surfaceMesh,  const PolyVox::Vector3DInt32& translation = PolyVox::Vector3DInt32(0, 0, 0), float scale = 1.0f);

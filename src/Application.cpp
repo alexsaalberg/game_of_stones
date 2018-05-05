@@ -5,6 +5,8 @@
 //  Created by Alex Saalberg on 1/25/18.
 //
 
+#include <btBoxShape.h>
+
 #include "Application.hpp"
 #include "stb_image.h"
 
@@ -16,6 +18,7 @@ void Application::init(double t, const std::string& resourceDirectory) {
 	currentState = make_shared<State>();
 	previousState = make_shared<State>();
     
+    initBullet();
     
     entity_manager = make_shared<EntityManager>();
     event_handler = make_shared<EventHandler>();
@@ -35,6 +38,17 @@ void Application::init(double t, const std::string& resourceDirectory) {
     
     input_system.addKeyControl("key_x", GLFW_KEY_C);
     input_system.addKeyControl("key_b", GLFW_KEY_B);
+    input_system.addKeyControl("key_p", GLFW_KEY_P);
+    input_system.addKeyControl("key_v", GLFW_KEY_V);
+    
+    input_system.addKeyControl("key_w", GLFW_KEY_W);
+    input_system.addKeyControl("key_a", GLFW_KEY_A);
+    input_system.addKeyControl("key_s", GLFW_KEY_S);
+    input_system.addKeyControl("key_d", GLFW_KEY_D);
+    
+    input_system.addKeyControl("key_q", GLFW_KEY_Q);
+    
+    
     input_system.addKeyControl("key_space", GLFW_KEY_SPACE);
     input_system.addMouseclickControl("mouse_left", GLFW_MOUSE_BUTTON_LEFT);
     input_system.addMouseclickControl("mouse_right", GLFW_MOUSE_BUTTON_RIGHT);
@@ -56,7 +70,6 @@ void Application::init(double t, const std::string& resourceDirectory) {
     initPlayer();
     initVoxels();
     
-    initBullet();
     
     pick_system.cursor_id = player_id;
     
@@ -94,6 +107,24 @@ void Application::initBullet() {
     bullet_dynamics_world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
     
     bullet_dynamics_world->setGravity(btVector3(0, -10, 0));
+    
+    //Init camera
+    btCollisionShape* fallShape = new btBoxShape( btVector3(0.25, 0.25, 0.8) );
+    btDefaultMotionState* fallMotionState =
+    new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 50, 0)));
+    btScalar mass = 10.0f;
+    btVector3 fallInertia(0, 0, 0);
+    fallShape->calculateLocalInertia(mass, fallInertia);
+    btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(mass, fallMotionState, fallShape, fallInertia);
+    btRigidBody* fallRigidBody = new btRigidBody(fallRigidBodyCI);
+    fallRigidBody->setDamping(0.5, 0.1);
+    bullet_dynamics_world->addRigidBody(fallRigidBody);
+    camera_body = fallRigidBody;
+    camera_motion_state = fallMotionState;
+    
+    //delete fallMotionState;
+    //delete fallShape;
+
 }
 
 void Application::initShaders(const std::string& resourceDirectory)
@@ -272,12 +303,69 @@ void Application::initHelicopter(glm::vec3 position) {
 }
 
 void Application::integrate(double t, float dt) {
+    btScalar timestep = dt;
+    bullet_dynamics_world->stepSimulation(timestep, 100);
+    
     input_system.step(t, dt);
 	//previousState = make_shared<State>( *currentState );
     currentState->integrate(t, dt);
     pick_system.step(t, dt);
     chunk_system.step(t, dt);
     selection_system.step(t, dt);
+    
+    if(input_system.isControlDownThisStep("key_space")) {
+        printf("Jump\n");
+        camera_body->applyCentralImpulse(btVector3(0.0, dt * 500.0, 0.0));
+    }
+    
+    btTransform trans;
+    camera_body->getMotionState()->getWorldTransform(trans);
+    Position_Component *camera_position_component = entity_manager->get_component<Position_Component>(camera_id);
+
+    if(t < 2.0f) {
+        btTransform motion;
+        motion.setIdentity();
+        
+        trans.setOrigin(btVector3(camera_position_component->position.x, 120.0f, camera_position_component->position.z));
+        camera_motion_state->setWorldTransform(motion);
+        camera_body->setWorldTransform(trans);
+    }
+    camera_position_component->position.x = trans.getOrigin().getX()+0.25f;
+    camera_position_component->position.y = trans.getOrigin().getY()+1.6f;
+    camera_position_component->position.z = trans.getOrigin().getZ()+0.25f;;
+    
+    if(input_system.isControlDownThisStep("key_p")) {
+        printf("Pos: "); printVec3(camera_position_component->position); printf("\n");
+    }
+    
+    
+    vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+    Entity_Id camera_id = camera_ids.at(0);
+    
+    Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
+    
+    vec3 forwardMove = position->rotation * vec3(0.0f, 0.0f, 1.0f);
+    forwardMove = vec3(forwardMove.x, 0.0f, forwardMove.z);
+    
+    vec3 rightwardMove = cross(forwardMove, vec3(0.0f, 1.0f, 0.0f));
+    
+    float force_scalar = 100.0f;
+    if(input_system.isControlDownThisStep("key_w")) {
+        printf("W\n");
+        camera_body->applyCentralImpulse( dt * force_scalar * btVector3(forwardMove.x, forwardMove.y, forwardMove.z));
+    }
+    if(input_system.isControlDownThisStep("key_s")) {
+        printf("S\n");
+        camera_body->applyCentralImpulse(-dt * force_scalar * btVector3(forwardMove.x, forwardMove.y, forwardMove.z));
+    }
+    if(input_system.isControlDownThisStep("key_d")) {
+        printf("D\n");
+        camera_body->applyCentralImpulse( dt * force_scalar * btVector3(rightwardMove.x, rightwardMove.y, rightwardMove.z));
+    }
+    if(input_system.isControlDownThisStep("key_a")) {
+        printf("A\n");
+        camera_body->applyCentralImpulse(-dt * force_scalar * btVector3(rightwardMove.x, rightwardMove.y, rightwardMove.z));
+    }
 }
 
 void Application::render(double t, float alpha) {

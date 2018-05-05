@@ -67,7 +67,7 @@ void PickSystem::step(double t, double dt) {
             
         }
     }
-    if(input_system->wasControlPressedThisStep("key_space")) {
+    if(input_system->wasControlPressedThisStep("key_v")) {
         Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
         Region& region = selection_component->selection.region;
         

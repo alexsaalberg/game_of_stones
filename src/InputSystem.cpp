@@ -176,6 +176,7 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     
     delta_angle = glm::radians(delta_angle);
     
+    /*
     if (key == GLFW_KEY_Z && action == GLFW_PRESS)
     {
         move_scale *= 2.0f;
@@ -213,45 +214,29 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     if (key == GLFW_KEY_D && action == GLFW_PRESS) {
         position->position += rightwardMove;
     }
-    
-    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+    */
+    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
         glm::quat deltaRotation;
         
         vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
-        
-        printf("---\n");
-        
-        printf("rot: "); printQuatRotationAsAngles(position->rotation); printf("\n");
-        
-        printf("relX: "); printVec3(relative_x_axis); printf("\n");
-        printf("norX: "); printVec3(normalize(relative_x_axis)); printf("\n");
         
         deltaRotation = glm::angleAxis(-1.0f * delta_angle, relative_x_axis);
-        printf("delta: "); printQuatRotationAsAngles(deltaRotation);
-        printf("\n");
-        
-        //deltaRotation = position->rotation * deltaRotation; //need to rotate around X axis relative to current rot
-        printf("delta: "); printQuatRotationAsAngles(deltaRotation);
-        printf("\n");
-        
         position->rotation = deltaRotation * position->rotation;
-        printf("rot: ");printQuatRotationAsAngles(position->rotation);
-        printf("\n");
-        
-        printf("---\n");
         
     }
-    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
         glm::quat deltaRotation;
+        
         vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
+        
         deltaRotation = glm::angleAxis(1.0f * delta_angle, relative_x_axis);
         
         position->rotation = deltaRotation * position->rotation;
     }
     
-    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
         glm::quat deltaRotation;
         
@@ -259,7 +244,7 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
         
         position->rotation = deltaRotation * position->rotation;
     }
-    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+    if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
         glm::quat deltaRotation;
         
@@ -267,7 +252,7 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
         
         position->rotation = deltaRotation * position->rotation;
     }
-    
+    /*
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
         position->position.y += delta_distance;
@@ -276,6 +261,7 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     {
         position->position.y -= delta_distance;
     }
+     */
 }
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully
