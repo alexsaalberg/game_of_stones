@@ -40,12 +40,14 @@ void Application::init(double t, const std::string& resourceDirectory) {
     input_system.addKeyControl("key_b", GLFW_KEY_B);
     input_system.addKeyControl("key_p", GLFW_KEY_P);
     input_system.addKeyControl("key_v", GLFW_KEY_V);
+    input_system.addKeyControl("key_y", GLFW_KEY_Y);
     
     input_system.addKeyControl("key_w", GLFW_KEY_W);
     input_system.addKeyControl("key_a", GLFW_KEY_A);
     input_system.addKeyControl("key_s", GLFW_KEY_S);
     input_system.addKeyControl("key_d", GLFW_KEY_D);
     
+    input_system.addKeyControl("key_i", GLFW_KEY_I);
     input_system.addKeyControl("key_q", GLFW_KEY_Q);
     
     
@@ -109,7 +111,7 @@ void Application::initBullet() {
     bullet_dynamics_world->setGravity(btVector3(0, -10, 0));
     
     //Init camera
-    btCollisionShape* fallShape = new btBoxShape( btVector3(0.25, 0.25, 0.8) );
+    btCollisionShape* fallShape = new btBoxShape( btVector3(0.25, 0.8, 0.25) );
     btDefaultMotionState* fallMotionState =
     new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 50, 0)));
     btScalar mass = 10.0f;
@@ -117,14 +119,20 @@ void Application::initBullet() {
     fallShape->calculateLocalInertia(mass, fallInertia);
     btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(mass, fallMotionState, fallShape, fallInertia);
     btRigidBody* fallRigidBody = new btRigidBody(fallRigidBodyCI);
-    fallRigidBody->setDamping(0.5, 0.1);
+    fallRigidBody->setDamping(0.1, 0.1);
     bullet_dynamics_world->addRigidBody(fallRigidBody);
     camera_body = fallRigidBody;
     camera_motion_state = fallMotionState;
     
     //delete fallMotionState;
     //delete fallShape;
+    
+    //Init debug draw
+    bullet_draw = new BulletDraw();
+    bullet_draw->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+    bullet_draw->setDebugMode(1);
 
+    bullet_dynamics_world->setDebugDrawer(bullet_draw);
 }
 
 void Application::initShaders(const std::string& resourceDirectory)
@@ -136,6 +144,9 @@ void Application::initShaders(const std::string& resourceDirectory)
     GLSL::checkVersion();
     glClearColor(.5f, .5f, .5f, 1.0f); // Set background color.
     glEnable(GL_DEPTH_TEST); // Enable z-buffer test.
+    
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     initMainProgram(resourceDirectory);
     initSimpleProgram(resourceDirectory);
@@ -183,6 +194,7 @@ void Application::initSimpleProgram(const std::string& resourceDirectory) {
     }
     simpleProgram->addUniform("P");
     simpleProgram->addUniform("V");
+    simpleProgram->addAttribute("vPosition");
 }
 
 void Application::initVoxelProgram(const std::string& resourceDirectory) {
@@ -304,7 +316,8 @@ void Application::initHelicopter(glm::vec3 position) {
 
 void Application::integrate(double t, float dt) {
     btScalar timestep = dt;
-    bullet_dynamics_world->stepSimulation(timestep, 100);
+    //printf("timestep: %f\n", timestep);
+    bullet_dynamics_world->stepSimulation(timestep);
     
     input_system.step(t, dt);
 	//previousState = make_shared<State>( *currentState );
@@ -366,6 +379,13 @@ void Application::integrate(double t, float dt) {
         printf("A\n");
         camera_body->applyCentralImpulse(-dt * force_scalar * btVector3(rightwardMove.x, rightwardMove.y, rightwardMove.z));
     }
+    
+    if(input_system.isControlDownThisStep("key_y")) {
+        trans.setOrigin(btVector3(trans.getOrigin() + btVector3(0.0f, 5.0f, 0.0f)));
+        camera_body->setWorldTransform(trans);
+        
+        printf("getting unstuck!\n");
+    }
 }
 
 void Application::render(double t, float alpha) {
@@ -377,14 +397,31 @@ void Application::renderState(State& state, double t) {
     CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
     
-    render_system.render(t, mainProgram);
-    //selection_system.render(t, mainProgram);
+    if( !input_system.isControlDownThisStep("key_i") ) {
+        
+        render_system.render(t, mainProgram);
+        //selection_system.render(t, mainProgram);
+        
+        //render_system.draw_voxels(t, voxelProgram);
+        //chunk_system.recalculateAllMeshes();
+        chunk_system.renderAllChunks(t, voxelProgram);
+        
+        volume_render_system.render(t, voxelProgram);
+    } else {
+        simpleProgram->bind();
+        
+        vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+        Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
+        Position_Component* position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
+        
+        Camera::setViewMatrix(camera, position, simpleProgram);
+        Camera::setProjectionMatrix(simpleProgram);
+        
+        bullet_dynamics_world->debugDrawWorld();
+        bullet_draw->drawAllLines(simpleProgram);
+        simpleProgram->unbind();
+    }
     
-    //render_system.draw_voxels(t, voxelProgram);
-    //chunk_system.recalculateAllMeshes();
-    chunk_system.renderAllChunks(t, voxelProgram);
-    
-    volume_render_system.render(t, voxelProgram);
     //render_system.draw_voxels(entity_manager, t, mainProgram);
 }
 

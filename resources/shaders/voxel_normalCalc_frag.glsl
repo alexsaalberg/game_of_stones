@@ -1,7 +1,7 @@
 #version 330 core
 
 in vec3 fPosition_World;
-in vec3 block_color;
+in vec4 block_color;
 
 //to send the color to a frame buffer
 layout(location = 0) out vec4 color;
@@ -42,12 +42,12 @@ void main()
     vec3 lightColor = vec3(0.0f);
     
     vec3 ambientLight = mAmbientCoefficient;
-    vec3 diffusionLight = block_color * clamp(dot(N, L), 0.0, 1.0);
+    vec3 diffusionLight = block_color.xyz * clamp(dot(N, L), 0.0, 1.0);
     vec3 specularLight = mSpecularCoefficient * pow( clamp(dot(H, N), 0.0, 1.0), mSpecularAlpha);
     
     lightColor = ambientLight + diffusionLight + specularLight;
     
-    color = vec4(lightColor, 1.0);
+    color = vec4(lightColor, block_color.w);
     //color = (vec4(lightColor, 1.0) + vec4(abs(fNormal_world), 1.0f)) / 2.0f;
     //color = vec4(fNormal_world, 1.0);
     //color = vec4(abs(fNormal_camera), 1.0);

@@ -11,6 +11,7 @@
 #include "GLSL.h" //CHECK_GL_CALL, among others
 #include "PolyVox/Picking.h"
 
+#include "CastleDef.h"
 
 #include "PolyVox/AmbientOcclusionCalculator.h"
 
@@ -153,6 +154,7 @@ void ChunkSystem::step(double t, double dt) {
                 //recalculate mesh
                 //printf("Recalculating Mesh of Chunk(%d %d %d)\n", chunk.getX(), chunk.getY(), chunk.getZ());
                 eraseMeshData(chunk_data.mesh_data);
+                erasePhysicsData(chunk_data.physics_data);
                 
                 calculateMeshAndShape(t, chunk_data);
                 mesh_gen_this_step++;
@@ -201,8 +203,8 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
 }
 
 std::set<Vector3DInt32, ChunkCompare> ChunkSystem::calculateChunkSetAroundCoord(Vector3DInt32 chunk_coord) {
-    const float radius = 10.1f;
-    const float vert_distance = 5.0f;
+    const float radius = 8.1f;
+    const float max_vert_distance = 4.0f;
     const float horz_distance = 20.0f;
     const int max_chunks = 1000;
     
@@ -210,15 +212,14 @@ std::set<Vector3DInt32, ChunkCompare> ChunkSystem::calculateChunkSetAroundCoord(
     std::set<Vector3DInt32, ChunkCompare> current_chunks;
     std::set<Vector3DInt32, ChunkCompare> next_chunks;
     
-    
     return_chunks.insert(chunk_coord);
     current_chunks.insert(chunk_coord);
     
     std::set<Vector3DInt32, ChunkCompare> delta_chunks;
     delta_chunks.insert(Vector3DInt32( 1, 0, 0));
     delta_chunks.insert(Vector3DInt32(-1, 0, 0));
-    //delta_chunks.insert(Vector3DInt32( 0, 1, 0));
-    //delta_chunks.insert(Vector3DInt32( 0,-1, 0));
+    delta_chunks.insert(Vector3DInt32( 0, 1, 0));
+    delta_chunks.insert(Vector3DInt32( 0,-1, 0));
     delta_chunks.insert(Vector3DInt32( 0, 0, 1));
     delta_chunks.insert(Vector3DInt32( 0, 0,-1));
     
@@ -229,7 +230,7 @@ std::set<Vector3DInt32, ChunkCompare> ChunkSystem::calculateChunkSetAroundCoord(
                 Vector3DInt32 adjacent_chunk = chunk + delta_chunk;
                 if(return_chunks.count(adjacent_chunk) == 0) { //Only check this chunk if we haven't already
                     Vector3DInt32 difference_vec = chunk_coord - adjacent_chunk;
-                    if(difference_vec.length() < radius) {
+                    if(difference_vec.length() < radius && abs(difference_vec.getY()) < max_vert_distance) {
                     //if(difference_vec.getY() < vert_distance && difference_vec.getX() < horz_distance && difference_vec.getZ() < horz_distance) {
                         return_chunks.insert(adjacent_chunk);
                         next_chunks.insert(adjacent_chunk);
@@ -423,11 +424,23 @@ void ChunkSystem::eraseMeshData(VolumeMeshData& mesh) {
     //printf("Deleting mesh: VAO#%d VB#%d IB#%d\n", mesh.vertex_array_object, mesh.vertex_buffer, mesh.index_buffer);
 }
 
+void ChunkSystem::erasePhysicsData(BulletPhysicsChunkData& physics_data) {
+    if(physics_data.chunk_body != nullptr) {
+        bullet_dynamics_world->removeRigidBody(physics_data.chunk_body);
+    
+    delete physics_data.chunk_body;
+    delete physics_data.collision_shape;
+    delete physics_data.motion_state;
+    //delete physics_data.triangle_mesh_shape;
+    delete physics_data.triangle_array;
+    }
+}
+
 void ChunkSystem::calculateMeshAndShape(double t, ChunkData& chunk_data) {
     //0+16 = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 = 17 things
     //so need 0+16-1 = 16 things
     Vector3DInt32 chunk = chunk_data.coords;
-    
+    /*
     int32_t lower_x = chunk.getX() * Chunk_X_Length;
     int32_t lower_y = chunk.getY() * Chunk_Y_Length;
     int32_t lower_z = chunk.getZ() * Chunk_Z_Length;
@@ -437,14 +450,15 @@ void ChunkSystem::calculateMeshAndShape(double t, ChunkData& chunk_data) {
     
     PolyVox::Region region(lower_x, lower_y, lower_z, upper_x, upper_y, upper_z);
     //regToExtract.shrink(1);
-    //PolyVox::Region
+    //PolyVox::Region*/
+    
+    PolyVox::Region region;
     region = chunkCoordToRegion(chunk);
     
     PagedVolume_Component* voxel_component = entity_manager->get_first_component_of_type<PagedVolume_Component>();
     
-    
     // Perform the extraction for this region of the volume
-    auto mesh = extractCubicMesh(voxel_component->volume.get(), region);
+    auto mesh = extractCubicMesh(voxel_component->volume.get(), region, CastleIsQuadNeeded(), false);
     //auto mesh = extractMarchingCubesMesh(pagedData.get(), regToExtract);
     
     // The returned mesh needs to be decoded to be appropriate for GPU rendering.
@@ -510,7 +524,7 @@ BulletPhysicsChunkData ChunkSystem::createRigidBodyManually(MeshType& surfaceMes
     
     btRigidBody* rigidBodyTerrain = new btRigidBody(rigidBodyConstructionInfo);
     
-    rigidBodyTerrain->setFriction(btScalar(0.1));
+    rigidBodyTerrain->setFriction(btScalar(0.5));
     
     bullet_dynamics_world->addRigidBody(rigidBodyTerrain);
     

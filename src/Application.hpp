@@ -44,6 +44,7 @@
 #include "PickSystem.hpp"
 #include "VolumeRenderSystem.hpp"
 
+#include "BulletDraw.hpp"
 
 class Application
 {
@@ -57,6 +58,8 @@ public:
     btDiscreteDynamicsWorld* bullet_dynamics_world;
     btRigidBody* camera_body;
     btMotionState* camera_motion_state;
+    
+    BulletDraw* bullet_draw;
     
     //Messaging
     std::shared_ptr<EventHandler> event_handler;

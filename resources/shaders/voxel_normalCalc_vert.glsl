@@ -8,18 +8,18 @@ layout(location = 0) in vec3 vPosition;
 layout(location = 2) in int block_type;
 
 out vec3 fPosition_World;
-out vec3 block_color;
+out vec4 block_color;
 
 void main()
 {
     gl_Position = P * V * M * vec4(vPosition, 1.0); //Move position to camera space
     fPosition_World = (M * vec4(vPosition, 1.0f)).xyz;
     if(block_type == 1) {
-        block_color = vec3(0.0f, 0.0f, 1.0f);
+        block_color = vec4(0.0f, 0.0f, 1.0f, 1.0f);
     } else if (block_type == 255-128) {
-        block_color = vec3(0.0f, 1.0f, 0.0f);
+        block_color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
     } else {
-        block_color = vec3(1.0f, 0.0, 0.0f);
+        block_color = vec4(1.0f, 0.0, 0.0f, 0.5f);
     }
 }
 

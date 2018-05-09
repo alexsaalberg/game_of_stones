@@ -39,8 +39,8 @@
 #include "InputSystem.hpp"
 
 const int32_t Chunk_X_Length = 16; //x
-const int32_t Chunk_Y_Length = 128; //z
-const int32_t Chunk_Z_Length = 16; //y
+const int32_t Chunk_Y_Length = 64; //y
+const int32_t Chunk_Z_Length = 16; //z
 
 struct VolumeMeshData
 {
@@ -89,6 +89,53 @@ static bool chunk_comp(const PolyVox::Vector3DInt32& left, const PolyVox::Vector
     return hasher(left) < hasher(right);
 }
 //^^^
+class CastleIsQuadNeeded {
+public:
+    bool operator()(CASTLE_VOXELTYPE back, CASTLE_VOXELTYPE front, CASTLE_VOXELTYPE& materialToUse)
+    {
+        if ((back > 0) && (front == 0))
+        {
+            materialToUse = static_cast<CASTLE_VOXELTYPE>(back);
+            return true;
+        }
+        else if(front != 2 && back == 2)
+        {
+            materialToUse = static_cast<CASTLE_VOXELTYPE>(back);
+            return true;
+        }
+        else if(front == 2 && back != 2)
+        {
+            materialToUse = static_cast<CASTLE_VOXELTYPE>(back);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+};
+/*
+template <typename VoxelType>
+class CastleIsQuadNeeded {
+public:
+    bool operator()(VoxelType back, VoxelType front, VoxelType& materialToUse)
+    {
+        if ((back > 0) && (front == 0))
+        {
+            materialToUse = static_cast<VoxelType>(back);
+            return true;
+        }
+        else if(front == 1 && back != 1)
+        {
+            materialToUse = static_cast<VoxelType>(back);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+};*/
 
 
 class ChunkSystem : StepSystem, public Receiver<MouseClickEvent> {
@@ -132,6 +179,7 @@ private:
     void removeChunk(Vector3DInt32 chunk);
     
     void eraseMeshData(VolumeMeshData& mesh);
+    void erasePhysicsData(BulletPhysicsChunkData& mesh);
     
     void calculateMeshAndShape(double t, ChunkData& chunk_data);
     

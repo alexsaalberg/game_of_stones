@@ -9,8 +9,8 @@
 
 #define GLM_FORCE_RADIANS
 
-const int windowWidth = 800;
-const int windowHeight = 420;
+const int windowWidth = 900;
+const int windowHeight = 620;
 
 int main(int argc, char **argv)
 {
