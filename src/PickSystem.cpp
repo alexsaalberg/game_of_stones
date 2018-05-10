@@ -67,7 +67,7 @@ void PickSystem::step(double t, double dt) {
             
         }
     }
-    if(input_system->wasControlPressedThisStep("key_v")) {
+    else if(input_system->wasControlPressedThisStep("key_v")) {
         Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
         Region& region = selection_component->selection.region;
         
@@ -75,13 +75,27 @@ void PickSystem::step(double t, double dt) {
         fillRegion(t, region, 0);
         entity_manager->delete_entity(selection_id);
     }
-    if(input_system->wasControlPressedThisStep("key_b")) {
+    else if(input_system->wasControlPressedThisStep("key_b")) {
+        Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
+        Region& region = selection_component->selection.region;
+        
+        printf("Deleting Region: (%d %d %d)(%d %d %d)\n", region.getLowerX(), region.getLowerY(), region.getLowerZ(), region.getUpperX(), region.getUpperY(), region.getUpperZ());
+        
+        fillRegion(t, region, 3);
+        entity_manager->delete_entity(selection_id);
+    }
+    else if(input_system->wasControlPressedThisStep("key_g")) {
         Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
         Region& region = selection_component->selection.region;
         
         printf("Deleting Region: (%d %d %d)(%d %d %d)\n", region.getLowerX(), region.getLowerY(), region.getLowerZ(), region.getUpperX(), region.getUpperY(), region.getUpperZ());
         
         fillRegion(t, region, 2);
+        entity_manager->delete_entity(selection_id);
+    }
+    else if(input_system->wasControlPressedThisStep("key_c")) {
+        Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
+        
         entity_manager->delete_entity(selection_id);
     }
 }

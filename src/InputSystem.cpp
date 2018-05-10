@@ -267,7 +267,27 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
 //Todo: Remove these (Idk if they're being optimized out, but hopefully
 //                    they're not being called every time the mouse moves)
 void InputSystem::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-{}
+{
+    double scroll_degree_ratio = 1.0f;
+    float x_radians = radians(scroll_degree_ratio * deltaX);
+    float y_radians = radians(scroll_degree_ratio * deltaY);
+    
+    
+    vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+    Entity_Id camera_id = camera_ids.at(0);
+    
+    //Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
+    Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
+    
+    vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
+    vec3 relative_y_axis = (vec3(0.0f, 1.0f, 0.0f));
+    
+    glm::quat deltaRotationX = glm::angleAxis(1.0f * x_radians, relative_y_axis);
+    glm::quat deltaRotationY = glm::angleAxis(1.0f * -y_radians, relative_x_axis);
+        
+    position->rotation = deltaRotationY * deltaRotationX * position->rotation;
+    
+}
 void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int mods)
 {
     for(auto& map_entry : control_map) {
@@ -294,6 +314,7 @@ void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int 
 }
 void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
+    
     int windowWidth, windowHeight;
     glfwGetWindowSize(window_manager->getHandle(), &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
@@ -308,7 +329,6 @@ void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos
     
     yPercent *= -1.0f;
     //y starts 0 at top
-    
     for(auto& map_entry : control_map) {
         if(map_entry.second.type == INPUT_MOUSE_POSITION_X) {
             map_entry.second.currentValue = xPercent;

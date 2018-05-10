@@ -203,10 +203,10 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
 }
 
 std::set<Vector3DInt32, ChunkCompare> ChunkSystem::calculateChunkSetAroundCoord(Vector3DInt32 chunk_coord) {
-    const float radius = 8.1f;
+    const float radius = 15.1f;
     const float max_vert_distance = 4.0f;
     const float horz_distance = 20.0f;
-    const int max_chunks = 1000;
+    const int max_chunks = 2000;
     
     std::set<Vector3DInt32, ChunkCompare> return_chunks;
     std::set<Vector3DInt32, ChunkCompare> current_chunks;
@@ -458,7 +458,7 @@ void ChunkSystem::calculateMeshAndShape(double t, ChunkData& chunk_data) {
     PagedVolume_Component* voxel_component = entity_manager->get_first_component_of_type<PagedVolume_Component>();
     
     // Perform the extraction for this region of the volume
-    auto mesh = extractCubicMesh(voxel_component->volume.get(), region, CastleIsQuadNeeded(), false);
+    auto mesh = extractCubicMesh(voxel_component->volume.get(), region, CastleIsQuadNeeded(), true);
     //auto mesh = extractMarchingCubesMesh(pagedData.get(), regToExtract);
     
     // The returned mesh needs to be decoded to be appropriate for GPU rendering.

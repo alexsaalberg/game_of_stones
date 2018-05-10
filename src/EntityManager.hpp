@@ -55,11 +55,14 @@ public:
         std::vector<Entity_Id> return_list;
         
         Component_Index index = get_component_index<ComponentType>();
+        Component_Index active_index = get_component_index<Active_Component>();
         
         for(std::vector<Entity_Entry>::size_type i = 0; i != entities.size(); i++) {
             Entity_Entry* entity = &entities[i];
             
-            if(entity_has_component(entity, index)) {
+            
+            
+            if(entity_has_component(entity, active_index) && entity_has_component(entity, index)) {
                 return_list.push_back(i);
             }
         }

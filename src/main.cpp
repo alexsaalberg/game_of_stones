@@ -36,6 +36,7 @@ int main(int argc, char **argv)
     application->render_system.window_manager = windowManager;
     application->chunk_system.window_manager = windowManager;
     application->input_system.window_manager = windowManager;
+    application->window_manager = windowManager;
     
     
     double t = 0.0;

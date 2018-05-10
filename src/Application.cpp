@@ -6,6 +6,7 @@
 //
 
 #include <btBoxShape.h>
+#include <btSphereShape.h>
 
 #include "Application.hpp"
 #include "stb_image.h"
@@ -36,11 +37,13 @@ void Application::init(double t, const std::string& resourceDirectory) {
     pick_system.entity_manager = entity_manager;
     pick_system.chunk_system = &chunk_system;
     
-    input_system.addKeyControl("key_x", GLFW_KEY_C);
+    input_system.addKeyControl("key_x", GLFW_KEY_X);
     input_system.addKeyControl("key_b", GLFW_KEY_B);
     input_system.addKeyControl("key_p", GLFW_KEY_P);
     input_system.addKeyControl("key_v", GLFW_KEY_V);
     input_system.addKeyControl("key_y", GLFW_KEY_Y);
+    input_system.addKeyControl("key_g", GLFW_KEY_G);
+    input_system.addKeyControl("key_c", GLFW_KEY_C);
     
     input_system.addKeyControl("key_w", GLFW_KEY_W);
     input_system.addKeyControl("key_a", GLFW_KEY_A);
@@ -108,18 +111,20 @@ void Application::initBullet() {
     // The world.
     bullet_dynamics_world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
     
-    bullet_dynamics_world->setGravity(btVector3(0, -10, 0));
+    bullet_dynamics_world->setGravity(btVector3(0, -16, 0));
     
     //Init camera
     btCollisionShape* fallShape = new btBoxShape( btVector3(0.25, 0.8, 0.25) );
+    //btCollisionShape* fallShape = new btSphereShape(0.4f);
     btDefaultMotionState* fallMotionState =
     new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 50, 0)));
-    btScalar mass = 10.0f;
+    btScalar mass = 5.0f;
     btVector3 fallInertia(0, 0, 0);
     fallShape->calculateLocalInertia(mass, fallInertia);
     btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(mass, fallMotionState, fallShape, fallInertia);
     btRigidBody* fallRigidBody = new btRigidBody(fallRigidBodyCI);
-    fallRigidBody->setDamping(0.1, 0.1);
+    fallRigidBody->setDamping(0.2, 0.5);
+    fallRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
     bullet_dynamics_world->addRigidBody(fallRigidBody);
     camera_body = fallRigidBody;
     camera_motion_state = fallMotionState;
@@ -142,7 +147,7 @@ void Application::initShaders(const std::string& resourceDirectory)
     glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
      */
     GLSL::checkVersion();
-    glClearColor(.5f, .5f, .5f, 1.0f); // Set background color.
+    glClearColor(.9f, .9f, 1.0f, 1.0f); // Set background color.
     glEnable(GL_DEPTH_TEST); // Enable z-buffer test.
     
     glEnable (GL_BLEND);
@@ -317,7 +322,7 @@ void Application::initHelicopter(glm::vec3 position) {
 void Application::integrate(double t, float dt) {
     btScalar timestep = dt;
     //printf("timestep: %f\n", timestep);
-    bullet_dynamics_world->stepSimulation(timestep);
+    bullet_dynamics_world->stepSimulation(timestep, 10);
     
     input_system.step(t, dt);
 	//previousState = make_shared<State>( *currentState );
@@ -326,16 +331,19 @@ void Application::integrate(double t, float dt) {
     chunk_system.step(t, dt);
     selection_system.step(t, dt);
     
+    camera_body->activate();
+    
     if(input_system.isControlDownThisStep("key_space")) {
-        printf("Jump\n");
-        camera_body->applyCentralImpulse(btVector3(0.0, dt * 500.0, 0.0));
+        if(abs(camera_body->getLinearVelocity().getY()) < 0.01f) {
+            camera_body->applyCentralImpulse(btVector3(0.0, dt * (550.0f / camera_body->getInvMass()), 0.0));
+        }
     }
     
     btTransform trans;
     camera_body->getMotionState()->getWorldTransform(trans);
     Position_Component *camera_position_component = entity_manager->get_component<Position_Component>(camera_id);
 
-    if(t < 2.0f) {
+    if(t < 8.0f) {
         btTransform motion;
         motion.setIdentity();
         
@@ -362,21 +370,17 @@ void Application::integrate(double t, float dt) {
     
     vec3 rightwardMove = cross(forwardMove, vec3(0.0f, 1.0f, 0.0f));
     
-    float force_scalar = 100.0f;
+    float force_scalar = 50.0f;
     if(input_system.isControlDownThisStep("key_w")) {
-        printf("W\n");
         camera_body->applyCentralImpulse( dt * force_scalar * btVector3(forwardMove.x, forwardMove.y, forwardMove.z));
     }
     if(input_system.isControlDownThisStep("key_s")) {
-        printf("S\n");
         camera_body->applyCentralImpulse(-dt * force_scalar * btVector3(forwardMove.x, forwardMove.y, forwardMove.z));
     }
     if(input_system.isControlDownThisStep("key_d")) {
-        printf("D\n");
         camera_body->applyCentralImpulse( dt * force_scalar * btVector3(rightwardMove.x, rightwardMove.y, rightwardMove.z));
     }
     if(input_system.isControlDownThisStep("key_a")) {
-        printf("A\n");
         camera_body->applyCentralImpulse(-dt * force_scalar * btVector3(rightwardMove.x, rightwardMove.y, rightwardMove.z));
     }
     
@@ -386,6 +390,32 @@ void Application::integrate(double t, float dt) {
         
         printf("getting unstuck!\n");
     }
+    
+    if(input_system.isControlDownThisStep("mouse_right")) {
+        float scroll_degree_ratio = 5.0f;
+        
+        float deltaX = input_system.getCurrentControlValue("mouse_x") - input_system.getPreviousControlValue("mouse_x");
+        float deltaY = input_system.getCurrentControlValue("mouse_y") - input_system.getPreviousControlValue("mouse_y");
+        float x_radians = radians(scroll_degree_ratio * deltaX);
+        float y_radians = radians(scroll_degree_ratio * deltaY);
+        vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+        Entity_Id camera_id = camera_ids.at(0);
+        
+        //Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
+        Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
+        
+        vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
+        vec3 relative_y_axis = (vec3(0.0f, 1.0f, 0.0f));
+        
+        glm::quat deltaRotationX = glm::angleAxis(1.0f * x_radians, relative_y_axis);
+        glm::quat deltaRotationY = glm::angleAxis(1.0f * -y_radians, relative_x_axis);
+        
+        position->rotation = deltaRotationY * deltaRotationX * position->rotation;
+        glfwSetInputMode(window_manager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    } else {
+        glfwSetInputMode(window_manager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    
 }
 
 void Application::render(double t, float alpha) {
@@ -396,6 +426,7 @@ void Application::renderState(State& state, double t) {
     CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
     CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
+    CHECKED_GL_CALL( glCullFace(GL_BACK) );
     
     if( !input_system.isControlDownThisStep("key_i") ) {
         

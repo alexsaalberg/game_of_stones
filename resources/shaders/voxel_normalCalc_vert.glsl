@@ -17,9 +17,11 @@ void main()
     if(block_type == 1) {
         block_color = vec4(0.0f, 0.0f, 1.0f, 1.0f);
     } else if (block_type == 255-128) {
-        block_color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-    } else {
+        block_color = vec4(0.2f, 0.9f, 0.2f, 1.0f);
+    } else if (block_type == 2) {
         block_color = vec4(1.0f, 0.0, 0.0f, 0.5f);
+    } else {
+        block_color = vec4(0.2f, 0.3f, 0.3f, 1.0f);
     }
 }
 

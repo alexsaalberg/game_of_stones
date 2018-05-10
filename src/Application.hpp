@@ -33,6 +33,7 @@
 
 //Entity-Component-System
 #include "EntityManager.hpp"
+#include "WindowManager.h" //WindowManager
 
 #include "Component.hpp"
 
@@ -90,6 +91,9 @@ public:
     std::shared_ptr<Model> sphereModel;
     std::shared_ptr<Model> cubeModel;
     std::shared_ptr<Model> helicopterModel;
+    
+    //Window
+    WindowManager* window_manager;
     
 //Functions
     /* Initilizations */

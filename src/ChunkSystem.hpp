@@ -105,8 +105,8 @@ public:
         }
         else if(front == 2 && back != 2)
         {
-            materialToUse = static_cast<CASTLE_VOXELTYPE>(back);
-            return true;
+            materialToUse = static_cast<CASTLE_VOXELTYPE>(front);
+            return true; 
         }
         else
         {

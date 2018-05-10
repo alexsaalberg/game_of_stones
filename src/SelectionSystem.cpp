@@ -9,6 +9,7 @@
 
 #include "Camera.h"
 #include "PolyVox/RawVolume.h"
+#include "PolyVox/PagedVolume.h"
 #include "CastleDef.h"
 
 #include "RegionUtils.hpp"
@@ -42,9 +43,31 @@ static std::shared_ptr<PolyVox::RawVolume<CASTLE_VOXELTYPE>> makeOutlineVolume(i
     
     return model_volume;
 }
+static std::shared_ptr<PolyVox::RawVolume<CASTLE_VOXELTYPE>> makeFilledVolume(CASTLE_VOXELTYPE voxel_type, std::shared_ptr<PolyVox::PagedVolume<CASTLE_VOXELTYPE>> world_volume, Vector3DInt32 edge_lengths, Vector3DInt32 offset) {
+    PolyVox::Region model_region(0, 0, 0, edge_lengths.getX(), edge_lengths.getY(), edge_lengths.getZ());
+    //model_region.grow(1);
+    
+    auto model_volume = make_shared<PolyVox::RawVolume<CASTLE_VOXELTYPE>> (model_region);
+    
+    for(int x = 0; x < edge_lengths.getX(); x++) {
+        for(int y = 0; y < edge_lengths.getY(); y++) {
+            for(int z = 0; z < edge_lengths.getZ(); z++) {
+                Vector3DInt32 point(x, y, z);
+                if(world_volume->getVoxel(offset + point) == 0) {
+                    model_volume->setVoxel(point, voxel_type);
+                }
+            }
+        }
+    }
+    
+    return model_volume;
+}
 
 void SelectionSystem::step(double t, double dt) {
     vector<Entity_Id> ids = entity_manager->get_ids_with_component<Selection_Component>();
+    
+    PagedVolume_Component* pagedVolume_component = entity_manager->get_first_component_of_type<PagedVolume_Component>();
+    //PagedVolume_Component* pagedVolume_component = entity_manager->get_component<PagedVolume_Component>(world_volume_id);
     
     const int resolution_ratio = 1;
     const int thickness = 1;
@@ -64,7 +87,7 @@ void SelectionSystem::step(double t, double dt) {
         
         if( !entity_manager->entity_has_component<RawVolume_Component>(id) ) {
             rawVolume_component = entity_manager->add_component<RawVolume_Component>(id);
-            rawVolume_component->volume = makeOutlineVolume(thickness, edge_lengths);
+            rawVolume_component->volume = makeFilledVolume(2, pagedVolume_component->volume, edge_lengths, properRegion.getLowerCorner());
             rawVolume_component->dirty_time = t;
         } else {
             rawVolume_component = entity_manager->get_component<RawVolume_Component>(id);
@@ -81,7 +104,7 @@ void SelectionSystem::step(double t, double dt) {
         
         //This will only happen when completing selections
         if(selection_component->dirty_time > rawVolume_component->dirty_time) {
-            rawVolume_component->volume = makeOutlineVolume(thickness, edge_lengths);
+            rawVolume_component->volume = makeFilledVolume(2, pagedVolume_component->volume, edge_lengths, properRegion.getLowerCorner());
             rawVolume_component->dirty_time = t;
             
             position_component->scale = vec3(1.0f / (float) resolution_ratio);
