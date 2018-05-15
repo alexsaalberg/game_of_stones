@@ -21,7 +21,6 @@ public:
     std::shared_ptr<EntityManager> entity_manager;
     
     virtual void step(double t, double dt);
-    //void render(double t, std::shared_ptr<Program> program);
 };
 
 #endif /* SelectionSystem_hpp */

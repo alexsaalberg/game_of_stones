@@ -16,7 +16,6 @@
 
 static std::shared_ptr<PolyVox::RawVolume<CASTLE_VOXELTYPE>> makeOutlineVolume(int thickness, Vector3DInt32 edge_lengths) {
     PolyVox::Region model_region(0, 0, 0, edge_lengths.getX(), edge_lengths.getY(), edge_lengths.getZ());
-    //model_region.grow(1);
     
     auto model_volume = make_shared<PolyVox::RawVolume<CASTLE_VOXELTYPE>> (model_region);
     
@@ -44,8 +43,8 @@ static std::shared_ptr<PolyVox::RawVolume<CASTLE_VOXELTYPE>> makeOutlineVolume(i
     return model_volume;
 }
 static std::shared_ptr<PolyVox::RawVolume<CASTLE_VOXELTYPE>> makeFilledVolume(CASTLE_VOXELTYPE voxel_type, std::shared_ptr<PolyVox::PagedVolume<CASTLE_VOXELTYPE>> world_volume, Vector3DInt32 edge_lengths, Vector3DInt32 offset) {
+    
     PolyVox::Region model_region(0, 0, 0, edge_lengths.getX(), edge_lengths.getY(), edge_lengths.getZ());
-    //model_region.grow(1);
     
     auto model_volume = make_shared<PolyVox::RawVolume<CASTLE_VOXELTYPE>> (model_region);
     
@@ -63,14 +62,11 @@ static std::shared_ptr<PolyVox::RawVolume<CASTLE_VOXELTYPE>> makeFilledVolume(CA
     return model_volume;
 }
 
+
 void SelectionSystem::step(double t, double dt) {
     vector<Entity_Id> ids = entity_manager->get_ids_with_component<Selection_Component>();
     
     PagedVolume_Component* pagedVolume_component = entity_manager->get_first_component_of_type<PagedVolume_Component>();
-    //PagedVolume_Component* pagedVolume_component = entity_manager->get_component<PagedVolume_Component>(world_volume_id);
-    
-    const int resolution_ratio = 1;
-    const int thickness = 1;
     
     for(auto id : ids) {
         Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(id);
@@ -79,12 +75,11 @@ void SelectionSystem::step(double t, double dt) {
         Region properRegion = PolyVoxExtensions::createProperRegion(region);
         Vector3DInt32 edge_lengths = properRegion.getUpperCorner() - properRegion.getLowerCorner();
         edge_lengths += 1;
-        edge_lengths *= resolution_ratio;
-        //edge_lengths += resolution_ratio;
         
         RawVolume_Component* rawVolume_component;
         Position_Component* position_component;
         
+        //Get pointer to this selections rawVolumeComponent (create one if it doesn't exist)
         if( !entity_manager->entity_has_component<RawVolume_Component>(id) ) {
             rawVolume_component = entity_manager->add_component<RawVolume_Component>(id);
             rawVolume_component->volume = makeFilledVolume(2, pagedVolume_component->volume, edge_lengths, properRegion.getLowerCorner());
@@ -93,36 +88,21 @@ void SelectionSystem::step(double t, double dt) {
             rawVolume_component = entity_manager->get_component<RawVolume_Component>(id);
         }
         
+        //Get pointer to this selections positionComponent (create one if it doesn't exist)
         if( !entity_manager->entity_has_component<Position_Component>(id)) {
             position_component = entity_manager->add_component<Position_Component>(id);
-            
             position_component->position = glm::vec3(properRegion.getLowerX(), properRegion.getLowerY(), properRegion.getLowerZ());
-            
         } else {
             position_component = entity_manager->get_component<Position_Component>(id);
         }
         
-        //This will only happen when completing selections
+        //Update volume and position if selection has changed
         if(selection_component->dirty_time > rawVolume_component->dirty_time) {
             rawVolume_component->volume = makeFilledVolume(2, pagedVolume_component->volume, edge_lengths, properRegion.getLowerCorner());
             rawVolume_component->dirty_time = t;
             
-            position_component->scale = vec3(1.0f / (float) resolution_ratio);
-            
+            position_component->scale = vec3(1.0f);
             position_component->position = glm::vec3(properRegion.getLowerX(), properRegion.getLowerY(), properRegion.getLowerZ());
         }
     }
 }
-/*
-void SelectionSystem::render(double t, std::shared_ptr<Program> program) {
-    program->bind();
-    
-    //setMVPE(t, program);
-    // Render a cube
-    
-    
-    //draw_entities(t, program);
-    
-    program->unbind();
-}
-*/

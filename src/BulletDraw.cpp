@@ -41,18 +41,7 @@ void BulletDraw::draw3dText(const btVector3& location,const char* textString) {
 }
 
 void BulletDraw::drawAllLines(std::shared_ptr<Program> program) {
-    /*
-    unsigned int posBuf;
-    
-    // Send the position array to the GPU
-    CHECKED_GL_CALL(glGenBuffers(1, &posBuf) );
-    CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, posBuf) );
-    CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, lines.size()*sizeof(float)*4, (GLfloat*)&(lines[0]), GL_STATIC_DRAW) );
-     */
-    //load the vertex data info
     GLuint vbo, vao;
-    int x = sizeof(DebugLine);
-    unsigned int y = program->getAttribute("vPosition");
     CHECKED_GL_CALL(glGenBuffers(1, &vbo));
     CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
     CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(DebugLine) * lines.size(), &lines[0],  GL_STATIC_DRAW));
@@ -61,20 +50,10 @@ void BulletDraw::drawAllLines(std::shared_ptr<Program> program) {
     CHECKED_GL_CALL(glBindVertexArray(vao));
     CHECKED_GL_CALL(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0));
     CHECKED_GL_CALL(glEnableVertexAttribArray(0));
-    /*
-                                          CHECKED_GL_CALL(glVertexAttribPointer(program->getAttribute("vPosition"),  // the handle for the a_position shader attrib
-                          3,    // there are 3 values xyz
-                          GL_FLOAT, // they a float
-                          GL_FALSE, // don't need to be normalised
-                          4*sizeof(float),  // how many floats to the next one(be aware btVector3 uses 4 floats)
-                          (GLfloat*)&this->lines[0]  // where do they start as an index); // use 3 values, but add stride each time to get to the next
-                          ));*/
-    
 
     CHECKED_GL_CALL(glDrawArrays(GL_LINES, 0, lines.size()*2));
     CHECKED_GL_CALL(glDeleteBuffers(1, &vbo));
     CHECKED_GL_CALL(glDeleteVertexArrays(1, &vao));
-    //CHECKED_GL_CALL(glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, 0));
     
     lines.clear();
 }
