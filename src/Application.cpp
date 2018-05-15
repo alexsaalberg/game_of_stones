@@ -322,7 +322,7 @@ void Application::initHelicopter(glm::vec3 position) {
 void Application::integrate(double t, float dt) {
     btScalar timestep = dt;
     //printf("timestep: %f\n", timestep);
-    bullet_dynamics_world->stepSimulation(timestep, 10);
+    bullet_dynamics_world->stepSimulation(timestep, 20);
     
     input_system.step(t, dt);
 	//previousState = make_shared<State>( *currentState );
@@ -350,6 +350,7 @@ void Application::integrate(double t, float dt) {
         trans.setOrigin(btVector3(camera_position_component->position.x, 120.0f, camera_position_component->position.z));
         camera_motion_state->setWorldTransform(motion);
         camera_body->setWorldTransform(trans);
+        //camera_body->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
     }
     camera_position_component->position.x = trans.getOrigin().getX()+0.25f;
     camera_position_component->position.y = trans.getOrigin().getY()+1.6f;

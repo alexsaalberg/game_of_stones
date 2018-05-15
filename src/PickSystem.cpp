@@ -18,13 +18,27 @@
 
 using namespace PolyVox;
 
+int differenceToClampBounds(int value, int min, int max) {
+    if(value > max) {
+        return max - value;
+    }
+    if(value < min) {
+        return min - value;
+    }
+    return 0;
+}
+
+Vector3DInt32 limitSelectionToMax(int max, Vector3DInt32 origin, Vector3DInt32 point) {
+
+}
+
 void PickSystem::step(double t, double dt) {
     float screenx = input_system->getCurrentControlValue("mouse_x");
     float screeny = input_system->getCurrentControlValue("mouse_y");
     
     bool onTop = true;
     
-    if(input_system->isControlDownThisStep("key_x")) {
+    if(input_system->isControlDownThisStep("key_x")) { 
         onTop = false; //select the existing block, not the air block on top
     }
     
@@ -37,17 +51,30 @@ void PickSystem::step(double t, double dt) {
     position_component->position = new_cursor_position;
     
     if(input_system->wasControlPressedThisStep("mouse_left")) {
+        entity_manager->delete_entity(selection_id);
+    }
+    if(input_system->isControlDownThisStep("mouse_left")) {
         if(entity_manager->entityExists(selection_id)) { //we're completing a selection region
             
             Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
             
             Region& region = selection_component->selection.region;
             
+            //Vector3DInt32 lower_corner = region.getLowerCorner();
+            //Vector3DInt32 distance = point - lower_corner;
+            
+            //make it no bigger than maximum
+            //int max_distance = 250;
+            //point.setX(point.getX() + differenceToClampBounds(distance.getX(), -max_distance, max_distance));
+            //point.setY(point.getY() + differenceToClampBounds(distance.getY(), -max_distance, max_distance));
+            //point.setZ(point.getZ() + differenceToClampBounds(distance.getZ(), -max_distance, max_distance));
+            
             region.setUpperCorner(point);
             
             selection_component->dirty_time = t;
             
-            printf("Selection Finished: (%d %d %d)(%d %d %d)\n", region.getLowerX(), region.getLowerY(), region.getLowerZ(), region.getUpperX(), region.getUpperY(), region.getUpperZ());
+            
+            //printf("Selection Finished: (%d %d %d)(%d %d %d)\n", region.getLowerX(), region.getLowerY(), region.getLowerZ(), region.getUpperX(), region.getUpperY(), region.getUpperZ());
             
         } else { //we're creating a new selection
             Vector3DInt32 point = pickScreen(screenx, screeny, onTop);
@@ -67,7 +94,8 @@ void PickSystem::step(double t, double dt) {
             
         }
     }
-    else if(input_system->wasControlPressedThisStep("key_v")) {
+    
+    if(input_system->wasControlPressedThisStep("key_v")) {
         Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
         Region& region = selection_component->selection.region;
         

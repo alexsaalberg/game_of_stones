@@ -36,5 +36,7 @@ Region PolyVoxExtensions::createProperRegion(Region& region) {
         new_region.setUpperZ(region.getLowerZ());
     }
     
+    
+    
     return new_region;
 }
