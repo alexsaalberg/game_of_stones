@@ -18,10 +18,10 @@
 #include <iostream>
 #include <glad/glad.h>
 
-#include "GLSL.h" //CHECK_GL_CALL, among others
+#include "GLSL.hpp" //CHECK_GL_CALL, among others
 
 //Rendering Related Stuff
-#include "Program.h"
+#include "Program.hpp"
 #include "Shape.hpp"
 
 //State
@@ -33,7 +33,7 @@
 
 //Entity-Component-System
 #include "EntityManager.hpp"
-#include "WindowManager.h" //WindowManager
+#include "WindowManager.hpp" //WindowManager
 
 #include "Component.hpp"
 

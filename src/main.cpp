@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "WindowManager.h"
+#include "WindowManager.hpp"
 
 #define GLM_FORCE_RADIANS
 

@@ -11,10 +11,10 @@
 #include <memory>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "GLSL.h" //CHECK_GL_CALL, among others
+#include "GLSL.hpp" //CHECK_GL_CALL, among others
 
 #include "MatrixStack.h"
-#include "WindowManager.h"
+#include "WindowManager.hpp"
 #include "EntityManager.hpp"
 #include "Component.hpp"
 

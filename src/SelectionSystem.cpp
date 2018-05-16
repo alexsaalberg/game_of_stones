@@ -7,7 +7,7 @@
 
 #include "SelectionSystem.hpp"
 
-#include "Camera.h"
+#include "Camera.hpp"
 #include "PolyVox/RawVolume.h"
 #include "PolyVox/PagedVolume.h"
 #include "CastleDef.h"

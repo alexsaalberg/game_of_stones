@@ -7,7 +7,7 @@
 
 #include <glad/glad.h>
 
-#include "GLSL.h" //CHECK_GL_CALL, among others
+#include "GLSL.hpp" //CHECK_GL_CALL, among others
 
 #include "BulletDraw.hpp"
 

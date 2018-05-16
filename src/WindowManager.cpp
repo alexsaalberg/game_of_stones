@@ -1,6 +1,6 @@
 
-#include "WindowManager.h"
-#include "GLSL.h"
+#include "WindowManager.hpp"
+#include "GLSL.hpp"
 
 #include <iostream>
 

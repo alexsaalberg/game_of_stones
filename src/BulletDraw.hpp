@@ -11,7 +11,7 @@
 #include <btIDebugDraw.h>
 #include <vector>
 #include <memory>
-#include "Program.h"
+#include "Program.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
 

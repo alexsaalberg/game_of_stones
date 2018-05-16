@@ -7,13 +7,13 @@
 #include "RenderSystem.hpp"
 
 
-#include "GLSL.h" //CHECK_GL_CALL, among others
+#include "GLSL.hpp" //CHECK_GL_CALL, among others
 //imgui
 
 #include "FastNoise.h"
 #include "NoisePager.h"
 
-#include "Camera.h"
+#include "Camera.hpp"
 
 //value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>

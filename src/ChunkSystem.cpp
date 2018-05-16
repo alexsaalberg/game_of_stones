@@ -8,7 +8,7 @@
 
 #include "ChunkSystem.hpp"
 
-#include "GLSL.h" //CHECK_GL_CALL, among others
+#include "GLSL.hpp" //CHECK_GL_CALL, among others
 #include "PolyVox/Picking.h"
 
 #include "CastleDef.h"

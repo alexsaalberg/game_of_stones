@@ -12,7 +12,7 @@
 
 #include "System.hpp"
 
-#include "Program.h"
+#include "Program.hpp"
 
 #include "EntityManager.hpp"
 

@@ -12,7 +12,7 @@
 #include <glm/gtc/type_ptr.hpp> //mat4
 
 #include "PolyVox/Picking.h"
-#include "Camera.h"
+#include "Camera.hpp"
 
 #include "RegionUtils.hpp"
 

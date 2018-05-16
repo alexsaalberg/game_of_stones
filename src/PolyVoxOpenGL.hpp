@@ -11,10 +11,10 @@
 #include <memory>
 #include <glad/glad.h>
 
-#include "Program.h"
+#include "Program.hpp"
 #include "MatrixStack.h"
 
-#include "GLSL.h" //CHECK_GL_CALL, among others
+#include "GLSL.hpp" //CHECK_GL_CALL, among others
 
 namespace PolyVoxExtensions {
 

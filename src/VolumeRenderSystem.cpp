@@ -14,7 +14,7 @@
 #include <glm/gtx/quaternion.hpp> //quat stuff
 #include <glm/gtc/quaternion.hpp> //quat stuff
 
-#include "Camera.h"
+#include "Camera.hpp"
 
 using namespace std;
 using namespace PolyVoxExtensions;

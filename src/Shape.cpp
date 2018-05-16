@@ -3,8 +3,8 @@
 #include <iostream>
 #include <cassert>
 
-#include "GLSL.h"
-#include "Program.h"
+#include "GLSL.hpp"
+#include "Program.hpp"
 
 using namespace std;
 

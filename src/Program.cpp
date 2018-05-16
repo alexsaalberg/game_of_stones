@@ -1,10 +1,10 @@
 
-#include "Program.h"
+#include "Program.hpp"
 #include <iostream>
 #include <cassert>
 #include <fstream>
 
-#include "GLSL.h"
+#include "GLSL.hpp"
 
 
 std::string readFileAsString(const std::string &fileName)

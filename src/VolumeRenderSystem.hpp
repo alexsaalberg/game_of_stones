@@ -11,7 +11,7 @@
 #include <memory> //shared_ptr
 
 #include "System.hpp"
-#include "Program.h"
+#include "Program.hpp"
 #include "EntityManager.hpp"
 #include "PolyVoxOpenGL.hpp"
 

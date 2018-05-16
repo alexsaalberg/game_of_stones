@@ -13,8 +13,8 @@
 #include "System.hpp"
 
 #include "EntityManager.hpp"
-#include "WindowManager.h" //WindowManager
-#include "Program.h"
+#include "WindowManager.hpp" //WindowManager
+#include "Program.hpp"
 
 struct VoxelMeshData
 {

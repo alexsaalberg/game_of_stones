@@ -29,12 +29,12 @@
 #include "PolyVox/Vector.h"
 
 //Castle
-#include "WindowManager.h"
+#include "WindowManager.hpp"
 
 #include "System.hpp"
 #include "EntityManager.hpp"
-#include "Program.h"
-#include "Camera.h"
+#include "Program.hpp"
+#include "Camera.hpp"
 #include "Messaging.h"
 #include "InputSystem.hpp"
 
