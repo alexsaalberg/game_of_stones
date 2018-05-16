@@ -64,7 +64,7 @@ static std::shared_ptr<PolyVox::RawVolume<CASTLE_VOXELTYPE>> makeFilledVolume(CA
 
 
 void SelectionSystem::step(double t, double dt) {
-    vector<Entity_Id> ids = entity_manager->get_ids_with_component<Selection_Component>();
+    vector<EntityId> ids = entity_manager->get_ids_with_component<Selection_Component>();
     
     PagedVolume_Component* pagedVolume_component = entity_manager->get_first_component_of_type<PagedVolume_Component>();
     

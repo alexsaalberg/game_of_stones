@@ -149,7 +149,7 @@ public:
     btDiscreteDynamicsWorld* bullet_dynamics_world;
     
     //std::set<ChunkLoader> entities;
-    std::multimap<Entity_Id, ChunkLoader> chunk_loaders;
+    std::multimap<EntityId, ChunkLoader> chunk_loaders;
     std::map<Vector3DInt32, ChunkData, ChunkCompare> chunks;
     std::vector<MouseClickEvent> click_events;
     //std::vector<Entity_Id> entities;
@@ -167,8 +167,8 @@ public:
     static PolyVox::Vector3DInt32 positionToChunkCoord(glm::vec3 position);
     static PolyVox::Region chunkCoordToRegion(PolyVox::Vector3DInt32 chunk_coord);
     
-    void addLoader(double t, Entity_Id entity);
-    void removeLoader(Entity_Id entity);
+    void addLoader(double t, EntityId entity);
+    void removeLoader(EntityId entity);
     
     void setDirtyTimeViaVoxel(double t, Vector3DInt32& voxel_coord);
     void setDirtyTimeViaChunk(double t, Vector3DInt32 chunk_coord);

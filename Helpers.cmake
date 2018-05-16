@@ -22,8 +22,14 @@ function(prepend_filepath files_var_name prefix)
     set(${files_var_name} "${prepended_files}" PARENT_SCOPE)
 endfunction(prepend_filepath)
 
+macro(prepend_listdir)
+	foreach(var_name ${ARGN})
+		prepend_filepath(${var_name} ${CMAKE_CURRENT_LIST_DIR})
+	endforeach(var_name)
+endmacro(prepend_listdir)
+
 set(debug_output ON)
-set(debug_output_var OFF)
+set(debug_output_var ON)
 set(debug_output_sourcevar OFF)
 
 function(debug_print str)

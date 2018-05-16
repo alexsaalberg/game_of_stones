@@ -21,9 +21,9 @@ using namespace PolyVoxExtensions;
 
 void VolumeRenderSystem::render(double t, std::shared_ptr<Program> program) {
     //Get list of RawVolume_Component entity ids
-    vector<Entity_Id> actual_ids = entity_manager->get_ids_with_component<RawVolume_Component>();
+    vector<EntityId> actual_ids = entity_manager->get_ids_with_component<RawVolume_Component>();
     
-    set<Entity_Id> current_ids_in_map;
+    set<EntityId> current_ids_in_map;
     for(auto const &pair : model_map) {
         current_ids_in_map.insert(pair.first);
     }
@@ -48,7 +48,7 @@ void VolumeRenderSystem::render(double t, std::shared_ptr<Program> program) {
             //id is not in map, gen mesh and add
             VolumeMeshData mesh_data = genMeshForRawVolume(t, rawVolume_component->volume);
             
-            std::pair<Entity_Id, VolumeMeshData> element(id, mesh_data);
+            std::pair<EntityId, VolumeMeshData> element(id, mesh_data);
             model_map.insert(element);
         }
     }
@@ -66,7 +66,7 @@ void VolumeRenderSystem::render(double t, std::shared_ptr<Program> program) {
     M->loadIdentity();
     //Render ids
     for(auto& iterator : model_map) {
-        const Entity_Id& id = iterator.first;
+        const EntityId& id = iterator.first;
         VolumeMeshData& mesh_data = iterator.second;
         Position_Component* position_component = entity_manager->get_component<Position_Component>(id);
         

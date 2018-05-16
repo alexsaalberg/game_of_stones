@@ -133,7 +133,7 @@ void PickSystem::fillRegion(double t, Region& region, CASTLE_VOXELTYPE voxel_typ
     Region region_to_delete = PolyVoxExtensions::createProperRegion(region);
     printf("Deleting Region: (%d %d %d)(%d %d %d)\n", region_to_delete.getLowerX(), region_to_delete.getLowerY(), region_to_delete.getLowerZ(), region_to_delete.getUpperX(), region_to_delete.getUpperY(), region_to_delete.getUpperZ());
     
-    std::vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
+    std::vector<EntityId> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
     PagedVolume_Component* voxel_component;
     voxel_component = entity_manager->get_component<PagedVolume_Component>(voxel_list.at(0));
     
@@ -150,12 +150,12 @@ void PickSystem::fillRegion(double t, Region& region, CASTLE_VOXELTYPE voxel_typ
 }
 
 Vector3DInt32 PickSystem::pickScreen(float xpercent, float ypercent, bool previous) {
-    std::vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
+    std::vector<EntityId> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
     PagedVolume_Component* voxel_component;
     
     voxel_component = entity_manager->get_component<PagedVolume_Component>(voxel_list.at(0));
     
-    std::vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+    std::vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
     Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
     Position_Component* camera_position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
     

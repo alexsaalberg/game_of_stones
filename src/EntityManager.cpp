@@ -10,8 +10,8 @@
 using namespace std;
 
 /* PUBLIC */
-Entity_Id EntityManager::create_entity() {
-    Entity_Id new_index = find_free_id();
+EntityId EntityManager::create_entity() {
+    EntityId new_index = find_free_id();
    
     Entity_Entry new_entity;
     
@@ -26,11 +26,11 @@ Entity_Id EntityManager::create_entity() {
     return new_index;
 }
 
-void EntityManager::delete_entity(Entity_Id id) {
+void EntityManager::delete_entity(EntityId id) {
     remove_component<Active_Component>(id);
 }
 
-bool EntityManager::entityExists(Entity_Id id) {
+bool EntityManager::entityExists(EntityId id) {
     if(id < 0 || id > entities.size()) {
         return false; //entity id out of range
     }
@@ -42,7 +42,7 @@ bool EntityManager::entityExists(Entity_Id id) {
 
 
 template <class ComponentType>
-void EntityManager::remove_component(Entity_Id id) {
+void EntityManager::remove_component(EntityId id) {
     Entity_Entry* entry = get_entry_pointer_from_id(id);
     Component_Index index = get_component_index<ComponentType>();
     
@@ -82,18 +82,18 @@ bool EntityManager::entity_has_component(Entity_Entry* entity, Component_Index c
 
 
 
-Entity_Entry EntityManager::get_entry_from_id(Entity_Id id) {
+Entity_Entry EntityManager::get_entry_from_id(EntityId id) {
     return entities[id];
 }
 
-Entity_Entry* EntityManager::get_entry_pointer_from_id(Entity_Id id) {
+Entity_Entry* EntityManager::get_entry_pointer_from_id(EntityId id) {
     return &entities[id];
 }
 
-Entity_Id EntityManager::find_free_id() {
-    Entity_Id num_entities = entities.size();
+EntityId EntityManager::find_free_id() {
+    EntityId num_entities = entities.size();
     
-    for(Entity_Id entity = 0; entity < num_entities; entity++) {
+    for(EntityId entity = 0; entity < num_entities; entity++) {
         if( !entity_has_component<Active_Component>(entity) ) {
             //Reuse entity
             return entity;

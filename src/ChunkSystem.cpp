@@ -23,12 +23,12 @@ void ChunkSystem::receive(const MouseClickEvent& collision) {
 }
 
 void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
-    vector<Entity_Id> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
+    vector<EntityId> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
     PagedVolume_Component* voxel_component;
     
     voxel_component = entity_manager->get_component<PagedVolume_Component>(voxel_list.at(0));
     
-    vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+    vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
     Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
     Position_Component* camera_position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
     
@@ -108,7 +108,7 @@ void ChunkSystem::step(double t, double dt) {
     click_events.clear();
     
     for(auto& chunk_loader_pair : chunk_loaders) {
-        Entity_Id id = chunk_loader_pair.first;
+        EntityId id = chunk_loader_pair.first;
         ChunkLoader& loader = chunk_loader_pair.second;
         
         Position_Component* position_component = entity_manager->get_component<Position_Component>(id);
@@ -245,7 +245,7 @@ std::set<Vector3DInt32, ChunkCompare> ChunkSystem::calculateChunkSetAroundCoord(
     return return_chunks;
 }
 
-void ChunkSystem::addLoader(double t, Entity_Id entity) {
+void ChunkSystem::addLoader(double t, EntityId entity) {
     ChunkLoader chunk_loader;
     
     Position_Component* position_component = entity_manager->get_component<Position_Component>(entity);
@@ -260,12 +260,12 @@ void ChunkSystem::addLoader(double t, Entity_Id entity) {
         addChunk(t, chunk, chunk_loader.current_chunk_coord);
     }
     
-    std::pair<Entity_Id, ChunkLoader> element(entity, chunk_loader);
+    std::pair<EntityId, ChunkLoader> element(entity, chunk_loader);
     chunk_loaders.insert(element);
 }
 
 
-void ChunkSystem::removeLoader(Entity_Id entity) {
+void ChunkSystem::removeLoader(EntityId entity) {
     chunk_loaders.erase(entity);
     //Remove references
 }

@@ -143,8 +143,8 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
     
-    vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
-    Entity_Id camera_id = camera_ids.at(0);
+    vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+    EntityId camera_id = camera_ids.at(0);
     
     //Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
     Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
@@ -273,8 +273,8 @@ void InputSystem::scrollCallback(GLFWwindow* window, double deltaX, double delta
     float y_radians = radians(scroll_degree_ratio * deltaY);
     
     
-    vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
-    Entity_Id camera_id = camera_ids.at(0);
+    vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+    EntityId camera_id = camera_ids.at(0);
     
     //Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
     Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);

@@ -35,7 +35,7 @@ public:
         float aspect = windowWidth/(float)windowHeight;
         Camera::aspect = aspect;
         
-        vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+        vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
         Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
         Position_Component* position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
         

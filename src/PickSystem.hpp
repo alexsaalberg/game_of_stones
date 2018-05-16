@@ -22,8 +22,8 @@
 class PickSystem : StepSystem {
 public:
     //Variables
-    Entity_Id cursor_id;
-    Entity_Id selection_id;
+    EntityId cursor_id;
+    EntityId selection_id;
     std::shared_ptr<EntityManager> entity_manager;
     InputSystem* input_system;
     ChunkSystem* chunk_system;

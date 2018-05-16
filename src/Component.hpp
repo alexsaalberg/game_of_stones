@@ -20,6 +20,8 @@
 
 #include "CastleDef.h"
 
+typedef int32_t EntityId;
+
 class Component {
 };
 
@@ -56,12 +58,10 @@ public:
 };
 
 class Player_Component : Component {
-    
+    EntityId seeing_stone = -1;
 };
 
 class Camera_Component : Component {
-public:
-    float distance = 50.0f; //Distance from view to character (think 2.5d view)
 };
 
 class Selection_Component : Component {

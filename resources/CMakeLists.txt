@@ -5,8 +5,8 @@ prepend_filepath("VERTEX_SHADERS" "${CMAKE_CURRENT_LIST_DIR}/shaders")
 prepend_filepath("FRGMNT_SHADERS" "${CMAKE_CURRENT_LIST_DIR}/shaders")
 
 #print these vars if boolval in Helpers.cmake is set
-debug_print_var("VERTEX_SHADERS")
-debug_print_var("FRGMNT_SHADERS")
+debug_print_sourcevar("VERTEX_SHADERS")
+debug_print_sourcevar("FRGMNT_SHADERS")
 
 source_group("glsl" FILES ${VERTEX_SHADERS})
 source_group("glsl" FILES ${FRGMNT_SHADERS})

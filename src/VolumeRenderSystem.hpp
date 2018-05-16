@@ -22,7 +22,7 @@ public:
     virtual void render(double t, std::shared_ptr<Program> program);
 private:
     
-    std::map<Entity_Id, PolyVoxExtensions::VolumeMeshData> model_map;
+    std::map<EntityId, PolyVoxExtensions::VolumeMeshData> model_map;
 };
 
 #endif /* VolumeRenderSystem_hpp */

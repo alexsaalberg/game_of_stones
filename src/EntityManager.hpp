@@ -17,23 +17,23 @@
 #include "ComponentManager.hpp"
 #include "Component.hpp"
 
-typedef int32_t Entity_Id;
+typedef int32_t EntityId;
 typedef std::bitset<NUM_COMPONENTS> Entity_Entry;
 
 class EntityManager {
 public:
     std::vector< Entity_Entry > entities;
     
-    Entity_Id last_found_id = 0;
+    EntityId last_found_id = 0;
     
-    Entity_Id create_entity();
+    EntityId create_entity();
     
-    bool entityExists(Entity_Id id);
+    bool entityExists(EntityId id);
     
-    void delete_entity(Entity_Id id);
+    void delete_entity(EntityId id);
     
     template <class ComponentType>
-    ComponentType* add_component(Entity_Id id) {
+    ComponentType* add_component(EntityId id) {
         Entity_Entry* entry = get_entry_pointer_from_id(id);
         Component_Index index = get_component_index<ComponentType>();
         entry->set(index);
@@ -42,17 +42,17 @@ public:
     }
     
     template <class ComponentType>
-    void remove_component(Entity_Id entity);
+    void remove_component(EntityId entity);
     
     template <class ComponentType>
-    ComponentType* get_component(Entity_Id id) {
+    ComponentType* get_component(EntityId id) {
         return component_manager.get_component<ComponentType>(id);
     }
     
     //Some functions have to be in header for template reasons
     template <class ComponentType>
-    std::vector<Entity_Id> get_ids_with_component() {
-        std::vector<Entity_Id> return_list;
+    std::vector<EntityId> get_ids_with_component() {
+        std::vector<EntityId> return_list;
         
         Component_Index index = get_component_index<ComponentType>();
         Component_Index active_index = get_component_index<Active_Component>();
@@ -71,8 +71,8 @@ public:
     }
     
     template <class ComponentTypeA, class ComponentTypeB>
-    std::vector<Entity_Id> get_ids_with_components() {
-        std::vector<Entity_Id> return_list;
+    std::vector<EntityId> get_ids_with_components() {
+        std::vector<EntityId> return_list;
         
         Component_Index a_index = get_component_index<ComponentTypeA>();
         Component_Index b_index = get_component_index<ComponentTypeB>();
@@ -119,7 +119,7 @@ private:
 public:
     
     template <class Component_Type>
-    bool entity_has_component(Entity_Id id) {
+    bool entity_has_component(EntityId id) {
         return entity_has_component<Component_Type>(get_entry_pointer_from_id(id));
     }
     
@@ -129,10 +129,10 @@ private:
     
     
     
-    Entity_Entry get_entry_from_id(Entity_Id id);
-    Entity_Entry* get_entry_pointer_from_id(Entity_Id id);
+    Entity_Entry get_entry_from_id(EntityId id);
+    Entity_Entry* get_entry_pointer_from_id(EntityId id);
     
-    Entity_Id find_free_id();
+    EntityId find_free_id();
 };
 
 

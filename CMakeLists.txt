@@ -15,9 +15,9 @@ link_directories("/usr/local/lib")
 #Sources are set via target_sources in add_subdirectorie(s)
 add_executable(${CMAKE_PROJECT_NAME} "") 
 
-add_subdirectory("ext")
-add_subdirectory("src")
-add_subdirectory("resources")
+include("src/CMakeLists.txt")
+include("ext/CMakeLists.txt")
+include("resources/CMakeLists.txt")
 
 #Libraries (could probably add to sub_directory CMakeLists.txt(s))
 

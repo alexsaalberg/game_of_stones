@@ -278,7 +278,6 @@ void Application::initCamera() {
     camera_id = entity_manager->create_entity();
     Position_Component* position = entity_manager->add_component<Position_Component>(camera_id);
     Camera_Component* camera = entity_manager->add_component<Camera_Component>(camera_id);
-    camera->distance = 500.0f;
     
     position->position = vec3(500.0f, 120.0f, 500.0f);
     position->rotation = quat(1.0f, 0.0f, 0.0f, 0.0f);
@@ -353,8 +352,8 @@ void Application::integrate(double t, float dt) {
     }
     
     
-    vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
-    Entity_Id camera_id = camera_ids.at(0);
+    vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+    EntityId camera_id = camera_ids.at(0);
     
     Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
     
@@ -391,8 +390,8 @@ void Application::integrate(double t, float dt) {
         float deltaY = input_system.getCurrentControlValue("mouse_y") - input_system.getPreviousControlValue("mouse_y");
         float x_radians = radians(scroll_degree_ratio * deltaX);
         float y_radians = radians(scroll_degree_ratio * deltaY);
-        vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
-        Entity_Id camera_id = camera_ids.at(0);
+        vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+        EntityId camera_id = camera_ids.at(0);
         
         //Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
         Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
@@ -430,7 +429,7 @@ void Application::render(double t, float alpha) {
     } else {
         simpleProgram->bind();
         
-        vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+        vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
         Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
         Position_Component* position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
         

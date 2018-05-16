@@ -63,9 +63,9 @@ public:
     std::shared_ptr<EventHandler> event_handler;
     std::shared_ptr<EntityManager> entity_manager;
     
-    Entity_Id player_id = -1;
-    Entity_Id camera_id = -1;
-    Entity_Id voxel_id = -1;
+    EntityId player_id = -1;
+    EntityId camera_id = -1;
+    EntityId voxel_id = -1;
     
     //Systems
     RenderSystem render_system;

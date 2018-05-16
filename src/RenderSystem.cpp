@@ -37,7 +37,7 @@ void RenderSystem::render(double t, std::shared_ptr<Program> program) {
 void RenderSystem::draw_entities(double t, std::shared_ptr<Program> program) {
     Camera::setMaterial(program, 6);
     
-    vector<Entity_Id> id_list = entity_manager->get_ids_with_components<Position_Component, Model_Component>();
+    vector<EntityId> id_list = entity_manager->get_ids_with_components<Position_Component, Model_Component>();
     
     Model_Component* renderable_component;
     Position_Component* position_component;
@@ -45,7 +45,7 @@ void RenderSystem::draw_entities(double t, std::shared_ptr<Program> program) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     //glLineWidth( 16.0f );
     
-    for(Entity_Id id : id_list) {
+    for(EntityId id : id_list) {
         renderable_component = entity_manager->get_component<Model_Component>(id);
         position_component = entity_manager->get_component<Position_Component>(id);
         
@@ -74,7 +74,7 @@ void RenderSystem::setMVPE(double t, std::shared_ptr<Program> program) {
     float aspect = windowWidth/(float)windowHeight;
     Camera::aspect = aspect;
     
-    vector<Entity_Id> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
+    vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
     Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_ids.at(0));
     Position_Component* position = entity_manager->get_component<Position_Component>(camera_ids.at(0));
     
