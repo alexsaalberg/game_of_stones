@@ -6,7 +6,7 @@
 //
 //
 
-#include "Model.h"
+#include "Model.hpp"
 
 using namespace std;
 using namespace glm;

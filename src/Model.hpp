@@ -15,7 +15,7 @@
 
 #include <glad/glad.h>
 
-#include "Shape.h"
+#include "Shape.hpp"
 #include "glm/glm.hpp"
 #include "tiny_obj_loader.h"
 #include "MatrixStack.h"

@@ -12,7 +12,7 @@
 
 #include <glm/gtc/type_ptr.hpp> //glm stuff (vec3, quat)
 
-#include "Model.h"
+#include "Model.hpp"
 #include "PolyVox/PagedVolume.h"
 #include "PolyVox/FilePager.h"
 #include "NoisePager.h"

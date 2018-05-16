@@ -1,5 +1,5 @@
 
-#include "Shape.h"
+#include "Shape.hpp"
 #include <iostream>
 #include <cassert>
 

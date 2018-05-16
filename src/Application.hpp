@@ -22,7 +22,7 @@
 
 //Rendering Related Stuff
 #include "Program.h"
-#include "Shape.h"
+#include "Shape.hpp"
 
 //State
 #include "State.hpp"
