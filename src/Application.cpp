@@ -9,7 +9,6 @@
 #include <btSphereShape.h>
 
 #include "Application.hpp"
-#include "stb_image.h"
 
 using namespace std;
 using namespace glm;

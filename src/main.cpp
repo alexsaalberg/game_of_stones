@@ -2,9 +2,6 @@
 
 #include <iostream>
 
-#include "imgui.h"
-#include "imgui_impl_glfw_gl3.h"
-
 #include "WindowManager.h"
 
 #define GLM_FORCE_RADIANS

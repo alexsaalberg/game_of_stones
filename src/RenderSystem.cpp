@@ -9,7 +9,6 @@
 
 #include "GLSL.h" //CHECK_GL_CALL, among others
 //imgui
-#include "imgui.h"
 
 #include "FastNoise.h"
 #include "NoisePager.h"
@@ -86,6 +85,7 @@ void RenderSystem::setMVPE(double t, std::shared_ptr<Program> program) {
     Camera::setLight(program);
 }
 
+/*
 void RenderSystem::renderGUI() {
     bool my_tool_active = true;
     // Create a window called "My First Tool", with a menu bar.
@@ -107,5 +107,5 @@ void RenderSystem::renderGUI() {
     ImGui::EndChild();
     ImGui::End();
 }
-
+*/
 
