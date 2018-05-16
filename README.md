@@ -1,11 +1,14 @@
 # Castle Simulator!
 
 ## Controls
-* Click the screen to bind the mouse. 
-  * Click again to unbind
 * Use WASD to move. 
-* Use R/F to move vertically.
+* Space to bounce
 * Use arrow keys to change camera
+* Hold right mouse to change camera
+* Hold left, drag, then release to make selection
+	* V to delete all in selection
+	* B to fill selection
+	* C to clear selection
 
 ## Naming Conventions
 * Variables (local and member)
