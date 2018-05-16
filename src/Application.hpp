@@ -24,9 +24,6 @@
 #include "Program.hpp"
 #include "Shape.hpp"
 
-//State
-#include "State.hpp"
-
 //value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -83,10 +80,6 @@ public:
     std::shared_ptr<Program> simpleProgram;
     std::shared_ptr<Program> voxelProgram;
     
-    //State
-    std::shared_ptr<State> currentState;
-    std::shared_ptr<State> previousState;
-    
     std::shared_ptr<Model> temporaryModel;
     std::shared_ptr<Model> sphereModel;
     std::shared_ptr<Model> cubeModel;
@@ -122,7 +115,6 @@ public:
     
     //Graphics
     void render(double t,  float alpha);
-    void renderState(State& state, double t);
     
     //[0,1.0]
     float randomFloat();

@@ -13,8 +13,8 @@ list(APPEND OTHER_SOURCES "BulletDraw.cpp" "RegionUtils.cpp" "FastNoise.cpp" "Po
 list(APPEND OTHER_HEADERS "BulletDraw.hpp" "RegionUtils.hpp" "FastNoise.h")
 
 
-list(APPEND ENGINE_SOURCES "Application.cpp" "State.cpp" "main.cpp")
-list(APPEND ENGINE_HEADERS "Application.hpp" "State.hpp") 
+list(APPEND ENGINE_SOURCES "Application.cpp" "main.cpp")
+list(APPEND ENGINE_HEADERS "Application.hpp") 
 
 set(ALL_SOURCES ${SYSTEM_SOURCES} ${GRAPHICS_HELPER_SOURCES} ${ECS_MANAGEMENT_SOURCES} ${OTHER_SOURCES} ${ENGINE_SOURCES})
 set(ALL_HEADERS ${SYSTEM_HEADERS} ${GRAPHICS_HELPER_HEADERS} ${ECS_MANAGEMENT_HEADERS} ${OTHER_HEADERS} ${ENGINE_HEADERS})

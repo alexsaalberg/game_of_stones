@@ -15,9 +15,6 @@ using namespace glm;
 //using namespace PolyVox;
 
 void Application::init(double t, const std::string& resourceDirectory) {
-	currentState = make_shared<State>();
-	previousState = make_shared<State>();
-    
     initBullet();
     
     entity_manager = make_shared<EntityManager>();
@@ -320,13 +317,9 @@ void Application::initHelicopter(glm::vec3 position) {
 
 void Application::integrate(double t, float dt) {
     btScalar timestep = dt;
-    //printf("timestep: %f\n", timestep);
     bullet_dynamics_world->stepSimulation(timestep, 20);
     
-    input_system.step(t, dt);
-	//previousState = make_shared<State>( *currentState );
-    currentState->integrate(t, dt);
-    pick_system.step(t, dt);
+    input_system.step(t, dt);    pick_system.step(t, dt);
     chunk_system.step(t, dt);
     selection_system.step(t, dt);
     
@@ -419,10 +412,6 @@ void Application::integrate(double t, float dt) {
 }
 
 void Application::render(double t, float alpha) {
-    renderState(*currentState.get(), t);
-}
-
-void Application::renderState(State& state, double t) {
     CHECKED_GL_CALL( glBindFramebuffer(GL_FRAMEBUFFER, 0) );
     CHECKED_GL_CALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     CHECKED_GL_CALL( glDisable(GL_CULL_FACE) ) ; //default, two-sided rendering
@@ -452,8 +441,6 @@ void Application::renderState(State& state, double t) {
         bullet_draw->drawAllLines(simpleProgram);
         simpleProgram->unbind();
     }
-    
-    //render_system.draw_voxels(entity_manager, t, mainProgram);
 }
 
 //[0,1.0]
