@@ -4,11 +4,20 @@ cmake_minimum_required(VERSION 3.1)
 list(APPEND SYSTEM_SOURCES "ChunkSystem.cpp" "InputSystem.cpp" "PhysicsSystem.cpp" "RenderSystem.cpp" "SelectionSystem.cpp" "VolumeRenderSystem.cpp")
 list(APPEND SYSTEM_HEADERS "ChunkSystem.hpp" "InputSystem.hpp" "PhysicsSystem.hpp" "RenderSystem.hpp" "SelectionSystem.hpp" "VolumeRenderSystem.hpp")
 
-list(APPEND GRAPHICS_HELPER_SOURCES "Model.cpp" "Shape.cpp" "GLSL.cpp" "Program.cpp" "WindowManager.cpp" "tiny_obj_loader.cpp")
-list(APPEND GRAPHICS_HELPER_HEADERS "Model.hpp" "Shape.hpp" "GLSL.hpp" "Program.hpp" "WindowManager.hpp" )
+list(APPEND GRAPHICS_HELPER_SOURCES "Camera.cpp" "Model.cpp" "Shape.cpp" "GLSL.cpp" "Program.cpp" "WindowManager.cpp" "GLMUtils.cpp" "tiny_obj_loader.cpp")
+list(APPEND GRAPHICS_HELPER_HEADERS "Camera.hpp" "Model.hpp" "Shape.hpp" "GLSL.hpp" "Program.hpp" "WindowManager.hpp" "GLMUtils.hpp" "tiny_obj_loader.h"))
+
+list(APPEND ECS_MANAGEMENT_SOURCES "EntityManager.cpp" "Messaging.cpp" "System.cpp" "ComponentManager.cpp" "ComponentStorage.cpp" "Component.cpp")
+list(APPEND ECS_MANAGEMENT_HEADERS "EntityManager.hpp" "Messaging.hpp" "System.hpp" "ComponentManager.hpp" "ComponentStorage.hpp" "Component.hpp" "ComponentOrdering.h")
+
+list(APPEND OTHER_SOURCES "BulletDraw.cpp" "RegionUtils.cpp" "FastNoise.cpp" "PolyVoxOpenGL.hpp" "NoisePager.h" "CastleDef.h")
+list(APPEND OTHER_HEADERS "BulletDraw.hpp" "RegionUtils.hpp" "FastNoise.h")
 
 
-list(APPEND 
+list(APPEND ENGINE_SOURCES "Application.cpp" "State.cpp" "main.cpp")
+list(APPEND ENGINE_HEADERS "Application.hpp" "State.hpp" 
+
+list 
 
 #list(APPEND IMGUI_FILES "imgui.cpp" "imgui.h" "imgui_demo.cpp" "imgui_draw.cpp" 
 
