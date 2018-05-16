@@ -1,5 +1,5 @@
 //
-//  Component_Manager.hpp
+//  ComponentManager.hpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 3/28/18.
@@ -8,7 +8,7 @@
 #ifndef Component_Manager_hpp
 #define Component_Manager_hpp
 
-#include "Component_Storage.hpp"
+#include "ComponentStorage.hpp"
 #include "Component.hpp"
 
 class Component_Manager {

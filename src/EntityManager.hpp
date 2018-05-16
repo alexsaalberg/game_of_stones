@@ -14,7 +14,7 @@
 #include <bitset>
 
 #include "ComponentOrdering.h"
-#include "Component_Manager.hpp"
+#include "ComponentManager.hpp"
 #include "Component.hpp"
 
 typedef int32_t Entity_Id;

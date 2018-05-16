@@ -1,5 +1,5 @@
 //
-//  Component_Storage.hpp
+//  ComponentStorage.hpp
 //  CastleSim
 //
 //  Created by Alex Saalberg on 3/28/18.

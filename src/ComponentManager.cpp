@@ -5,7 +5,7 @@
 //  Created by Alex Saalberg on 3/28/18.
 //
 
-#include "Component_Manager.hpp"
+#include "ComponentManager.hpp"
 
 template<> Active_Component* Component_Manager::add_component<Active_Component>(int entity_id) {
     return active_components.add_component(entity_id);
