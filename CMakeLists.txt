@@ -1,31 +1,25 @@
-cmake_minimum_required(VERSION 2.7)
+#target_sources was added in 3.1
+cmake_minimum_required(VERSION 3.1)
+
+#Functions and Macros
+include("Helpers.cmake")
 
 # Name of the project
 project(CastleSim)
 
-# Use glob to get the list of all source files.
-file(GLOB_RECURSE SOURCES "src/*.cpp" "ext/glad/src/*.c")
-file(GLOB_RECURSE BOX2D_SOURCES "ext/Box2D/*/*.cpp" "ext/Box2D/*/*.h")
+#glfw.dylib is in usr/local/lib
+#If absent, "ld: library not found for -lglfw"
+link_directories("/usr/local/lib")
 
-# We don't really need to include header and resource files to build, but it's
-# nice to have them show up in IDEs.
-file(GLOB_RECURSE HEADERS "src/*.h" "src/*.hpp" "ext/glad/*/*.h")
-file(GLOB_RECURSE GLSL "resources/*.glsl")
-file(GLOB_RECURSE SRC_EXT "ext/*.cpp" "ext/*.c" "ext/.h") 
+#Set the executable. 
+#Sources are set via target_sources in add_subdirectorie(s)
+add_executable(${CMAKE_PROJECT_NAME} "") 
 
-include_directories("ext/glad/include")
-link_directories("/usr/local/lib/")
+add_subdirectory("ext")
+add_subdirectory("src")
+add_subdirectory("resources")
 
-# Set the executable.
-add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${BOX2D_SOURCES} ${GLSL})
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "ext")
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "ext/glad/include")
-
-source_group("src"  FILES ${SOURCES})
-source_group("headers" FILES ${HEADERS})
-source_group("ext"  FILES ${SRC_EXT})
-source_group("glsl" FILES ${GLSL})
-source_group("box2d" FILES ${BOX2D_SOURCES})
+#Libraries (could probably add to sub_directory CMakeLists.txt(s))
 
 # Add GLFW
 # Get the GLFW environment variable.
@@ -57,6 +51,8 @@ else()
 		message(STATUS "PkgConfig has found glfw3")
 		target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})
 		target_link_libraries(${CMAKE_PROJECT_NAME} ${GLFW_LIBRARIES})
+		print_var("GLFW_INCLUDE_DIRS")
+		print_var("GLFW_LIBRARIES")
 	else()
 		message(STATUS "No PkgConfig found")
 		find_package(glfw3)
@@ -98,7 +94,7 @@ message(STATUS "")
 message(STATUS "=====> START BULLET <=====")
 find_package(bullet)
 if(BULLET_FOUND)
-	message(STATUS ${BULLET_LIBRARIES})
+	message(STATUS "Bullet Library Files: ${BULLET_LIBRARIES}")
 	target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
 	target_link_libraries(${CMAKE_PROJECT_NAME} ${BULLET_LIBRARIES})
 	message(STATUS "FOUND BULLET YAY!")
