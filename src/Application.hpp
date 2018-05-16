@@ -13,7 +13,7 @@
 #include <btTriangleIndexVertexArray.h>
 
 //Messaging System
-#include "Messaging.h"
+#include "Messaging.hpp"
 
 #include <iostream>
 #include <glad/glad.h>

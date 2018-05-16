@@ -14,7 +14,7 @@
 #include "WindowManager.hpp" //EventCallbacks
 
 #include "EntityManager.hpp"
-#include "Messaging.h"
+#include "Messaging.hpp"
 
 /*
  

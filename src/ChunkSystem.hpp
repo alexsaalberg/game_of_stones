@@ -35,7 +35,7 @@
 #include "EntityManager.hpp"
 #include "Program.hpp"
 #include "Camera.hpp"
-#include "Messaging.h"
+#include "Messaging.hpp"
 #include "InputSystem.hpp"
 
 const int32_t Chunk_X_Length = 16; //x
