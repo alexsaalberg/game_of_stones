@@ -23,7 +23,7 @@ function(prepend_filepath files_var_name prefix)
 endfunction(prepend_filepath)
 
 set(debug_output ON)
-set(debug_output_var ON)
+set(debug_output_var OFF)
 set(debug_output_sourcevar OFF)
 
 function(debug_print str)

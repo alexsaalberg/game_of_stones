@@ -23,8 +23,8 @@ set(ALL_HEADERS ${SYSTEM_HEADERS} ${GRAPHICS_HELPER_HEADERS} ${ECS_MANAGEMENT_HE
 prepend_filepath("ALL_SOURCES" ${CMAKE_CURRENT_LIST_DIR})
 prepend_filepath("ALL_HEADERS" ${CMAKE_CURRENT_LIST_DIR})
 
-debug_print_var("ALL_SOURCES")
-debug_print_var("ALL_HEADERS")
+debug_print_sourcevar("ALL_SOURCES")
+debug_print_sourcevar("ALL_HEADERS")
 
 #Add files to IDE folder (doesn't affect executable)
 source_group("sources" FILES ${ALL_SOURCES})

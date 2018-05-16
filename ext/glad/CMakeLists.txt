@@ -3,7 +3,7 @@ list(APPEND GLAD_SOURCES "glad.c")
 #Expand source files to their full path
 prepend_filepath("GLAD_SOURCES" "${CMAKE_CURRENT_LIST_DIR}/src")
 
-debug_print_var("GLAD_SOURCES")
+debug_print_sourcevar("GLAD_SOURCES")
 
 #Add files to executable
 target_sources(${CMAKE_PROJECT_NAME} PUBLIC ${GLAD_SOURCES})
