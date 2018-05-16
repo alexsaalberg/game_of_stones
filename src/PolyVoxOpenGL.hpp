@@ -12,7 +12,7 @@
 #include <glad/glad.h>
 
 #include "Program.hpp"
-#include "MatrixStack.h"
+#include "MatrixStack.hpp"
 
 #include "GLSL.hpp" //CHECK_GL_CALL, among others
 

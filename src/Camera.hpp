@@ -13,12 +13,12 @@
 
 #include "GLSL.hpp" //CHECK_GL_CALL, among others
 
-#include "MatrixStack.h"
+#include "MatrixStack.hpp"
 #include "WindowManager.hpp"
 #include "EntityManager.hpp"
 #include "Component.hpp"
 
-#include "GLMUtils.h"
+#include "GLMUtils.hpp"
 
 using namespace std;
 using namespace glm;

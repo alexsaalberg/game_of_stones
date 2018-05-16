@@ -5,7 +5,7 @@
 //  Created by Alex Saalberg on 5/2/18.
 //
 
-#include "GLMUtils.h"
+#include "GLMUtils.hpp"
 
 void printVec3(glm::vec3 v) {
     printf("(%f %f %f)", v.x, v.y, v.z);

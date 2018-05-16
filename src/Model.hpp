@@ -18,7 +18,7 @@
 #include "Shape.hpp"
 #include "glm/glm.hpp"
 #include "tiny_obj_loader.h"
-#include "MatrixStack.h"
+#include "MatrixStack.hpp"
 #include "Program.hpp"
 
 class Model

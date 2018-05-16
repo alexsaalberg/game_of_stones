@@ -9,10 +9,10 @@
 
 #include <vector>
 
-#include "MatrixStack.h"
+#include "MatrixStack.hpp"
 #include "PolyVox/Picking.h"
 
-#include "GLMUtils.h"
+#include "GLMUtils.hpp"
 
 using namespace std;
 using namespace glm;
