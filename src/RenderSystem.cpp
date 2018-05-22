@@ -6,9 +6,9 @@
 //
 #include "RenderSystem.hpp"
 
-
 #include "GLSL.hpp" //CHECK_GL_CALL, among others
-//imgui
+
+#include <btBulletDynamicsCommon.h>
 
 #include "FastNoise.h"
 #include "NoisePager.h"
@@ -24,16 +24,42 @@ using namespace std;
 using namespace glm;
 using namespace PolyVox;
 
-void RenderSystem::render(double t, std::shared_ptr<Program> program) {
-    program->bind();
+//Virtual Overloads
+void RenderSystem::init(const std::string& resourceDirectory) {
+    // Initialize the GLSL program.
+    program = make_shared<Program>();
+    program->setVerbose(true);
+    program->setShaderNames(resourceDirectory + "/shaders/mainVert.glsl",
+                                resourceDirectory + "/shaders/mainFrag.glsl");
     
-    setMVPE(t, program);
-    
-    draw_entities(t, program);
-    
-    program->unbind();
+    if (! program->init()) {
+        std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+        exit(1);
+    }
+    program->addUniform("P");
+    program->addUniform("V");
+    program->addUniform("trans_inv_V");
+    program->addUniform("M");
+    program->addUniform("mAmbientCoefficient");
+    program->addUniform("mDiffusionCoefficient");
+    program->addUniform("mSpecularCoefficient");
+    program->addUniform("mSpecularAlpha");
+    program->addUniform("eyePosition");
+    program->addUniform("directionTowardsLight");
+    //program->addUniform("Texture0");
+    program->addAttribute("vPosition");
+    program->addAttribute("vNormal");
+    program->addAttribute("vTextureCoordinates");
 }
 
+void RenderSystem::render(double t, std::shared_ptr<Program> program) {
+    this->program->bind();
+        setMVPE(t, this->program);
+        draw_entities(t, this->program);
+    this->program->unbind();
+}
+
+//Other functions
 void RenderSystem::draw_entities(double t, std::shared_ptr<Program> program) {
     Camera::setMaterial(program, 6);
     

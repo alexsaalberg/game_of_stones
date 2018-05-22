@@ -8,15 +8,11 @@
 #ifndef PhysicsSystem_hpp
 #define PhysicsSystem_hpp
 
-#include <memory> //shared_ptr
-
 #include "System.hpp"
-#include "EntityManager.hpp"
 
-class PhysicsSystem : StepSystem {
+class PhysicsSystem : public System {
 public:
-    virtual void step(double time, double delta_time);
-    std::shared_ptr<EntityManager> entity_manager;
+    virtual void step(double t, double dt);
 };
 
 #endif /* PhysicsSystem_hpp */

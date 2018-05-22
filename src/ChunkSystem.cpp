@@ -161,6 +161,7 @@ void ChunkSystem::step(double t, double dt) {
             }
         }
     }
+    
 }
 
 void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
@@ -174,7 +175,7 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
     
     program->bind();
     
-    Camera::setMVPE(t, window_manager, entity_manager.get(), program);
+    Camera::setMVPE(t, window_manager, entity_manager, program);
     Camera::setMaterial(program, 2);
     
     for(auto& chunk_pair : chunks) {
@@ -203,10 +204,10 @@ void ChunkSystem::renderAllChunks(double t, std::shared_ptr<Program> program) {
 }
 
 std::set<Vector3DInt32, ChunkCompare> ChunkSystem::calculateChunkSetAroundCoord(Vector3DInt32 chunk_coord) {
-    const float radius = 15.1f;
-    const float max_vert_distance = 4.0f;
-    const float horz_distance = 20.0f;
-    const int max_chunks = 2000;
+    const float radius = 12.1f;
+    const float max_vert_distance = 2.0f;
+    const float horz_distance = 10.0f;
+    const int max_chunks = 1000;
     
     std::set<Vector3DInt32, ChunkCompare> return_chunks;
     std::set<Vector3DInt32, ChunkCompare> current_chunks;
@@ -251,7 +252,7 @@ void ChunkSystem::addLoader(double t, EntityId entity) {
     Position_Component* position_component = entity_manager->get_component<Position_Component>(entity);
     chunk_loader.current_chunk_coord = positionToChunkCoord(position_component->position);
     //chunk_loader.current_chunk_coord = NULL;
-    chunk_loader.previous_chunk_coord = NULL;
+    chunk_loader.previous_chunk_coord = Vector3DInt32(INT32_MIN, INT32_MIN, INT32_MIN);
     //todo: init references
     
     

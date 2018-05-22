@@ -43,13 +43,13 @@ struct Control {
     bool pressedLastStep;
 };
 
-class InputSystem : StepSystem, public EventCallbacks {
+class InputSystem : public System, public EventCallbacks {
 public:
     const float press_threshold = 0.9f;
     
-    WindowManager* window_manager;
+    //WindowManager* window_manager;
     
-    std::shared_ptr<EntityManager> entity_manager;
+    //std::shared_ptr<EntityManager> entity_manager;
     std::shared_ptr<EventHandler> event_handler;
     
     std::map<std::string, Control> control_map;

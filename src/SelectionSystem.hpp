@@ -10,16 +10,11 @@
 
 #include <memory>
 
+#include "Program.hpp"
 #include "System.hpp"
 
-#include "Program.hpp"
-
-#include "EntityManager.hpp"
-
-class SelectionSystem : StepSystem {
+class SelectionSystem : public System {
 public:
-    std::shared_ptr<EntityManager> entity_manager;
-    
     virtual void step(double t, double dt);
 };
 

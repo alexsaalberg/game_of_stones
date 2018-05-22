@@ -15,20 +15,23 @@
 #include "ChunkSystem.hpp"
 #include "InputSystem.hpp"
 
+#include "Model.hpp"
+
 #include "PolyVox/Vector.h"
 
 #include "CastleDef.h"
 
-class PickSystem : StepSystem {
+class PickSystem : public System {
 public:
     //Variables
-    EntityId cursor_id;
-    EntityId selection_id;
-    std::shared_ptr<EntityManager> entity_manager;
-    InputSystem* input_system;
+    EntityId cursor_id = -1;
+    EntityId selection_id = -1;
+    //std::shared_ptr<EntityManager> entity_manager;
+    //InputSystem* input_system;
     ChunkSystem* chunk_system;
 
     //Virtual Functions
+    virtual void init(const std::string& resourceDirectory);
     virtual void step(double t, double dt);
     
     //Member Functions

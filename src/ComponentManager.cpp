@@ -63,5 +63,12 @@ template<> Selection_Component* Component_Manager::get_component<Selection_Compo
     return selection_components.get_component(entity_id);
 }
 
+template<> Physics_Component* Component_Manager::add_component<Physics_Component>(int entity_id) {
+    return physics_components.add_component(entity_id);
+}
+
+template<> Physics_Component* Component_Manager::get_component<Physics_Component>(int entity_id) {
+    return physics_components.get_component(entity_id);
+}
 
 

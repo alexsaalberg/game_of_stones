@@ -32,6 +32,37 @@ Vector3DInt32 limitSelectionToMax(int max, Vector3DInt32 origin, Vector3DInt32 p
 
 }
 
+void PickSystem::init(const std::string& resourceDirectory) {
+    // This is the tiny obj shapes - not to be confused with our shapes
+    vector<tinyobj::shape_t> TOshapes;
+    vector<tinyobj::material_t> objMaterials;
+    
+    string errStr;
+    
+    std::shared_ptr<Model> cubeModel;
+    
+    //load in the mesh and make the shapes
+    bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                          (resourceDirectory + "/models/cube.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        cubeModel = make_shared<Model>();
+        cubeModel->createModel(TOshapes, objMaterials);
+        cubeModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
+        cubeModel->scale *= 0.51f;
+    }
+    
+    // Cursor Entity
+    cursor_id = entity_manager->create_entity();
+    Position_Component* position = entity_manager->add_component<Position_Component>(cursor_id);
+    Model_Component* renderable = entity_manager->add_component<Model_Component>(cursor_id);
+    position->position = vec3(0.0f);
+    position->rotation = quat(1.0f, 0.0f, 0.0f, 0.0f);
+    renderable->model = cubeModel;
+}
+
 void PickSystem::step(double t, double dt) {
     float screenx = input_system->getCurrentControlValue("mouse_x");
     float screeny = input_system->getCurrentControlValue("mouse_y");

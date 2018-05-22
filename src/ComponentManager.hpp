@@ -20,6 +20,7 @@ public:
     Component_Storage<RawVolume_Component> rawVolume_components;
     Component_Storage<PagedVolume_Component> pagedVolume_components;
     Component_Storage<Selection_Component> selection_components;
+    Component_Storage<Physics_Component> physics_components;
     
     template<class Component_Type>
     Component_Type* add_component(int entity_id);

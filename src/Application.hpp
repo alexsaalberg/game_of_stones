@@ -40,7 +40,9 @@
 #include "ChunkSystem.hpp"
 #include "SelectionSystem.hpp"
 #include "PickSystem.hpp"
+#include "PhysicsSystem.hpp"
 #include "VolumeRenderSystem.hpp"
+#include "PlayerSystem.hpp"
 
 #include "BulletDraw.hpp"
 
@@ -61,19 +63,21 @@ public:
     
     //Messaging
     std::shared_ptr<EventHandler> event_handler;
-    std::shared_ptr<EntityManager> entity_manager;
-    
-    EntityId player_id = -1;
-    EntityId camera_id = -1;
+    EntityManager* entity_manager;
+ 
     EntityId voxel_id = -1;
     
     //Systems
-    RenderSystem render_system;
-    InputSystem input_system;
+    SystemManager system_manager;
+    
     ChunkSystem chunk_system;
+    InputSystem input_system;
     PickSystem pick_system;
+    PlayerSystem player_system;
+    RenderSystem render_system;
     SelectionSystem selection_system;
     VolumeRenderSystem volume_render_system;
+    PhysicsSystem physics_system;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;
@@ -94,21 +98,14 @@ public:
     
     void initBullet();
     
-    void initCamera();
-    void initPlayer();
+    //void initCamera();
     void initVoxels();
     
-    void initHelicopter(glm::vec3 position);
-    
     void initShaders(const std::string& resourceDirectory);
-    void initMainProgram(const std::string& resourceDirectory);
     void initSimpleProgram(const std::string& resourceDirectory);
     void initVoxelProgram(const std::string& resourceDirectory);
 
-    void initTextures(const std::string& resourceDirectory);
-
     void initGeom(const std::string& resourceDirectory);
-    
 
     //Physics
     void integrate(double t, float dt);

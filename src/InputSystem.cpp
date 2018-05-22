@@ -142,7 +142,7 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
-    
+    /*
     vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
     EntityId camera_id = camera_ids.at(0);
     
@@ -167,8 +167,8 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     
     float dot_product = glm::dot(forwardMove, rightwardMove);
     if(dot_product > 0.001f) {
-        printQuatRotationAsAngles(position->rotation);
-        printf("Weird Dot: %f\n", dot_product);
+        //printQuatRotationAsAngles(position->rotation);
+        //printf("Weird Dot: %f\n", dot_product);
     }
     
     rightwardMove = cross(forwardMove, vec3(0.0f, 1.0f, 0.0f));
@@ -215,6 +215,7 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
         position->position += rightwardMove;
     }
     */
+    /*
     if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
         glm::quat deltaRotation;
@@ -251,23 +252,14 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
         deltaRotation = glm::angleAxis(-1.0f * delta_angle, normalize(glm::vec3(0.0f, 1.0f, 0.0f)));
         
         position->rotation = deltaRotation * position->rotation;
-    }
-    /*
-    if (key == GLFW_KEY_R && action == GLFW_PRESS)
-    {
-        position->position.y += delta_distance;
-    }
-    if (key == GLFW_KEY_F && action == GLFW_PRESS)
-    {
-        position->position.y -= delta_distance;
-    }
-     */
+    }*/
 }
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully
 //                    they're not being called every time the mouse moves)
 void InputSystem::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
 {
+    /*
     double scroll_degree_ratio = 1.0f;
     float x_radians = radians(scroll_degree_ratio * deltaX);
     float y_radians = radians(scroll_degree_ratio * deltaY);
@@ -286,7 +278,7 @@ void InputSystem::scrollCallback(GLFWwindow* window, double deltaX, double delta
     glm::quat deltaRotationY = glm::angleAxis(1.0f * -y_radians, relative_x_axis);
         
     position->rotation = deltaRotationY * deltaRotationX * position->rotation;
-    
+     */
 }
 void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int mods)
 {
@@ -305,12 +297,13 @@ void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int 
         }
     }
     
+    /*
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
     if((button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) && action == GLFW_PRESS) {
         MouseClickEvent click(xpos, ypos, button);
         event_handler->emit(click);
-    }
+    }*/
 }
 void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -329,6 +322,10 @@ void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos
     
     yPercent *= -1.0f;
     //y starts 0 at top
+    //(-1, -1)     (-1, -1)
+    //
+    //(-1, +1)     (+1, +1)
+    
     for(auto& map_entry : control_map) {
         if(map_entry.second.type == INPUT_MOUSE_POSITION_X) {
             map_entry.second.currentValue = xPercent;

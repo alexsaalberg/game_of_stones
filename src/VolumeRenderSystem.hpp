@@ -15,9 +15,8 @@
 #include "EntityManager.hpp"
 #include "PolyVoxOpenGL.hpp"
 
-class VolumeRenderSystem : FrameSystem {
+class VolumeRenderSystem : public System {
 public:
-    std::shared_ptr<EntityManager> entity_manager;
     
     virtual void render(double t, std::shared_ptr<Program> program);
 private:

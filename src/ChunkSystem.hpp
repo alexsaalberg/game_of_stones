@@ -138,15 +138,15 @@ public:
 };*/
 
 
-class ChunkSystem : StepSystem, public Receiver<MouseClickEvent> {
+class ChunkSystem : public System, public Receiver<MouseClickEvent> {
 public:
 //Variables
-    InputSystem* input_system;
+    //InputSystem* input_system;
     
     int radius = 5;
-    std::shared_ptr<EntityManager> entity_manager;
-    WindowManager* window_manager;
-    btDiscreteDynamicsWorld* bullet_dynamics_world;
+    //std::shared_ptr<EntityManager> entity_manager;
+    //WindowManager* window_manager;
+    //btDiscreteDynamicsWorld* bullet_dynamics_world;
     
     //std::set<ChunkLoader> entities;
     std::multimap<EntityId, ChunkLoader> chunk_loaders;

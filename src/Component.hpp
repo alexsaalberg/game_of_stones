@@ -11,6 +11,7 @@
 #include <memory> //shared_ptr
 
 #include <glm/gtc/type_ptr.hpp> //glm stuff (vec3, quat)
+#include <btRigidBody.h>
 
 #include "Model.hpp"
 #include "PolyVox/PagedVolume.h"
@@ -20,8 +21,6 @@
 
 #include "CastleDef.h"
 
-typedef int32_t EntityId;
-
 class Component {
 };
 
@@ -30,7 +29,6 @@ class Active_Component : Component {
 
 class Model_Component : Component {
 public:
-    unsigned int entity_id;
     std::shared_ptr<Model> model;
 };
 
@@ -58,10 +56,10 @@ public:
 };
 
 class Player_Component : Component {
-    EntityId seeing_stone = -1;
 };
 
 class Camera_Component : Component {
+    glm::vec3 offset = glm::vec3(0.0f);
 };
 
 class Selection_Component : Component {
@@ -74,6 +72,11 @@ public:
     }
     ~Selection_Component() {
     }
+};
+
+class Physics_Component : Component {
+public:
+    btRigidBody* body;
 };
 
 #endif /* Component_hpp */

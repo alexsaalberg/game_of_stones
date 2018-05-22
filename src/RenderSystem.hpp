@@ -28,16 +28,18 @@ struct VoxelMeshData
     double dirty_time;
 };
 
-class RenderSystem : FrameSystem {
+class RenderSystem : public System {
 public:
     //Variables
-    std::shared_ptr<EntityManager> entity_manager;
-    WindowManager* window_manager;
+    //WindowManager* window_manager;
+    std::shared_ptr<Program> program;
     
     //Virtual Functions
     virtual void render(double t, std::shared_ptr<Program> program);
+    virtual void init(const std::string& resourceDirectory);
     
 private:
+    
     void draw_entities(double t, std::shared_ptr<Program> program);
     void setMVPE(double t, std::shared_ptr<Program> program);
     void renderGUI();
