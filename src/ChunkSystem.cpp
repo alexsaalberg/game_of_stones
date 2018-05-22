@@ -90,6 +90,14 @@ void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
         }
     }
 }
+
+void ChunkSystem::init() {
+    EntityId voxel_id = entity_manager->create_entity();
+    
+    PagedVolume_Component* voxels = entity_manager->add_component<PagedVolume_Component>(voxel_id);
+    voxels->dirty_time = -1.0f;
+}
+
 void ChunkSystem::step(double t, double dt) {
     
     if(input_system->isControlDownThisStep("mouse_left")) {

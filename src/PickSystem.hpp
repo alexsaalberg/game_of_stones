@@ -21,6 +21,8 @@
 
 #include "CastleDef.h"
 
+
+
 class PickSystem : public System {
 public:
     //Variables

@@ -28,8 +28,8 @@ void Application::init(double t, const std::string& resourceDirectory) {
     System::bullet_dynamics_world = bullet_dynamics_world;
     System::window_manager = window_manager;
     
-    system_manager.add(&chunk_system);
     system_manager.add(&input_system);
+    system_manager.add(&chunk_system);
     system_manager.add(&volume_render_system);
     system_manager.add(&pick_system);
     system_manager.add(&player_system);
@@ -38,52 +38,17 @@ void Application::init(double t, const std::string& resourceDirectory) {
     system_manager.add(&physics_system);
     
     system_manager.init(resourceDirectory);
+    system_manager.init();
     
     input_system.event_handler = event_handler;
     
-    //chunk_system.input_system = &input_system;
-    
-    //pick_system.input_system = &input_system;
     pick_system.chunk_system = &chunk_system;
-    
-    input_system.addKeyControl("key_x", GLFW_KEY_X);
-    input_system.addKeyControl("key_b", GLFW_KEY_B);
-    input_system.addKeyControl("key_p", GLFW_KEY_P);
-    input_system.addKeyControl("key_v", GLFW_KEY_V);
-    input_system.addKeyControl("key_y", GLFW_KEY_Y);
-    input_system.addKeyControl("key_g", GLFW_KEY_G);
-    input_system.addKeyControl("key_c", GLFW_KEY_C);
-    
-    input_system.addKeyControl("key_w", GLFW_KEY_W);
-    input_system.addKeyControl("key_a", GLFW_KEY_A);
-    input_system.addKeyControl("key_s", GLFW_KEY_S);
-    input_system.addKeyControl("key_d", GLFW_KEY_D);
-    
-    input_system.addKeyControl("key_up", GLFW_KEY_UP);
-    input_system.addKeyControl("key_down", GLFW_KEY_DOWN);
-    input_system.addKeyControl("key_left", GLFW_KEY_LEFT);
-    input_system.addKeyControl("key_right", GLFW_KEY_RIGHT);
-    
-    input_system.addKeyControl("key_i", GLFW_KEY_I);
-    input_system.addKeyControl("key_q", GLFW_KEY_Q);
-    
-    
-    input_system.addKeyControl("key_space", GLFW_KEY_SPACE);
-    input_system.addMouseclickControl("mouse_left", GLFW_MOUSE_BUTTON_LEFT);
-    input_system.addMouseclickControl("mouse_right", GLFW_MOUSE_BUTTON_RIGHT);
-    input_system.addMouseposXControl("mouse_x");
-    input_system.addMouseposYControl("mouse_y");
-    
-    //render_system.initVoxels();
     
 	initShaders(resourceDirectory+"/shaders");
     initGeom(resourceDirectory+"/models");
 
-    initVoxels();
-
     event_handler->subscribe<MouseClickEvent>(&chunk_system);
     
-    //chunk_system.addLoader(t, player_id);
     chunk_system.addLoader(t, player_system.player_id);
 }
 
@@ -210,13 +175,6 @@ void Application::initGeom(const std::string& resourceDirectory) {
         cubeModel->rotate( vec3(0.0f, 0.0f, 0.0f) );
         cubeModel->scale *= 0.51f;
     }
-}
-
-void Application::initVoxels() {
-    voxel_id = entity_manager->create_entity();
-    
-    PagedVolume_Component* voxels = entity_manager->add_component<PagedVolume_Component>(voxel_id);
-    voxels->dirty_time = -1.0f;
 }
 
 void Application::integrate(double t, float dt) {

@@ -53,7 +53,8 @@ public:
     std::shared_ptr<EventHandler> event_handler;
     
     std::map<std::string, Control> control_map;
-    //Update
+    //Virtual
+    virtual void init();
     virtual void step(double time, double delta_time);
     
     //Controls
@@ -69,8 +70,6 @@ public:
     bool wasControlPressedLastStep(std::string name);
     float getCurrentControlValue(std::string name);
     float getPreviousControlValue(std::string name);
-    
-
     
     //Input Callbacks
     void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);

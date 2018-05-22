@@ -43,7 +43,20 @@ void PlayerSystem::init(const std::string& resourceDirectory) {
 void PlayerSystem::step(double t, double dt) {
     //printf("Active? %d\n", player_body->getActivationState());
     //player_body->activate();
-    
+    switch (player_state) {
+        case FPS_MODE:
+            fps_step(t, dt);
+            break;
+        case RTS_MODE:
+            rts_step(t, dt);
+            break;
+        default:
+            std::cerr << "Unexpected Switch Case in PlayerSystem.\n";
+            break;
+    }
+}
+
+void PlayerSystem::fps_step(double t, double dt) {
     if(t < 4.0f) {
         btTransform lock_trans;
         lock_trans.setIdentity();
@@ -126,5 +139,17 @@ void PlayerSystem::step(double t, double dt) {
         } else {
             glfwSetInputMode(window_manager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
+    }
+}
+
+void PlayerSystem::rts_step(double t, double dt) {
+    switch(selection_state) {
+        case BUILD_MODE:
+            break;
+        case COLONIST_MODE:
+            break;
+        default:
+            std::cerr << "Unexpected Switch Case in PlayerSystem.\n";
+            break;
     }
 }

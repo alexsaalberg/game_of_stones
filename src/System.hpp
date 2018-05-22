@@ -34,6 +34,7 @@ public:
     static WindowManager* window_manager;
     static WindowManager* getWindowManager();
     
+    virtual void init() {}
     virtual void init(const std::string& resourceDirectory) {}
     virtual void step(double t, double dt) {}
     virtual void render(double t, std::shared_ptr<Program> program) {}
@@ -45,6 +46,7 @@ private:
     std::vector<System*> systems;
 public:
     void add(System* system);
+    void init();
     void init(const std::string& resourceDirectory);
     void step(double t, double dt);
     void render(double t, std::shared_ptr<Program> program);

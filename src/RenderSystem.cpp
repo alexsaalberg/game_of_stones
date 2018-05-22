@@ -111,27 +111,3 @@ void RenderSystem::setMVPE(double t, std::shared_ptr<Program> program) {
     Camera::setLight(program);
 }
 
-/*
-void RenderSystem::renderGUI() {
-    bool my_tool_active = true;
-    // Create a window called "My First Tool", with a menu bar.
-    ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
-    
-    static float my_color[4] = {0.0f};
-    // Edit a color (stored as ~4 floats)
-    ImGui::ColorEdit4("Color", my_color);
-    
-    // Plot some values
-    const float my_values[] = { 0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f };
-    ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
-    
-    // Display contents in a scrolling region
-    ImGui::TextColored(ImVec4(1,1,0,1), "Important Stuff");
-    ImGui::BeginChild("Scrolling");
-    for (int n = 0; n < 50; n++)
-        ImGui::Text("%04d: Some text", n);
-    ImGui::EndChild();
-    ImGui::End();
-}
-*/
-

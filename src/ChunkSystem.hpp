@@ -154,6 +154,7 @@ public:
     std::vector<MouseClickEvent> click_events;
     //std::vector<Entity_Id> entities;
 //Virtual Functions
+    virtual void init();
     virtual void receive(const MouseClickEvent& collision);
     void processClickEvent(double t, MouseClickEvent& click);
     

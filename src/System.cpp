@@ -18,6 +18,12 @@ void SystemManager::add(System *system) {
     systems.push_back(system);
 }
 
+void SystemManager::init() {
+    for(System* system : systems) {
+        system->init();
+    }
+}
+
 void SystemManager::init(const std::string& resourceDirectory) {
     for(System* system : systems) {
         system->init(resourceDirectory);

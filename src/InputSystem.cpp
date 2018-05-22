@@ -17,6 +17,36 @@
 using namespace std;
 using namespace glm;
 
+void InputSystem::init() {
+    input_system->addKeyControl("key_x", GLFW_KEY_X);
+    input_system->addKeyControl("key_b", GLFW_KEY_B);
+    input_system->addKeyControl("key_p", GLFW_KEY_P);
+    input_system->addKeyControl("key_v", GLFW_KEY_V);
+    input_system->addKeyControl("key_y", GLFW_KEY_Y);
+    input_system->addKeyControl("key_g", GLFW_KEY_G);
+    input_system->addKeyControl("key_c", GLFW_KEY_C);
+    
+    input_system->addKeyControl("key_w", GLFW_KEY_W);
+    input_system->addKeyControl("key_a", GLFW_KEY_A);
+    input_system->addKeyControl("key_s", GLFW_KEY_S);
+    input_system->addKeyControl("key_d", GLFW_KEY_D);
+    
+    input_system->addKeyControl("key_up", GLFW_KEY_UP);
+    input_system->addKeyControl("key_down", GLFW_KEY_DOWN);
+    input_system->addKeyControl("key_left", GLFW_KEY_LEFT);
+    input_system->addKeyControl("key_right", GLFW_KEY_RIGHT);
+    
+    input_system->addKeyControl("key_i", GLFW_KEY_I);
+    input_system->addKeyControl("key_q", GLFW_KEY_Q);
+    
+    
+    input_system->addKeyControl("key_space", GLFW_KEY_SPACE);
+    input_system->addMouseclickControl("mouse_left", GLFW_MOUSE_BUTTON_LEFT);
+    input_system->addMouseclickControl("mouse_right", GLFW_MOUSE_BUTTON_RIGHT);
+    input_system->addMouseposXControl("mouse_x");
+    input_system->addMouseposYControl("mouse_y");
+}
+
 void InputSystem::step(double t, double dt) {
     for(auto& map_entry : control_map) {
         map_entry.second.previousValue = map_entry.second.currentValue;
@@ -142,117 +172,6 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
-    /*
-    vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
-    EntityId camera_id = camera_ids.at(0);
-    
-    //Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
-    Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
-    
-    static float move_scale = 8.0f;
-    static float rotate_scale = 1.0f;
-    float delta_angle = 5.0;
-    float delta_distance = 0.25f * move_scale;
-    
-    //positive z is forward (default orientation of camera)
-    //positive x is rightward
-    vec3 forwardMove = position->rotation * vec3(0.0f, 0.0f, 1.0f);
-    vec3 rightwardMove = position->rotation * vec3(1.0f, 0.0f, 0.0f);
-    
-    forwardMove = vec3(forwardMove.x, 0.0f, forwardMove.z);
-    rightwardMove = vec3(rightwardMove.x, 0.0f, rightwardMove.z);
-    
-    forwardMove = normalize(forwardMove) * delta_distance;
-    rightwardMove = normalize(rightwardMove) * delta_distance;
-    
-    float dot_product = glm::dot(forwardMove, rightwardMove);
-    if(dot_product > 0.001f) {
-        //printQuatRotationAsAngles(position->rotation);
-        //printf("Weird Dot: %f\n", dot_product);
-    }
-    
-    rightwardMove = cross(forwardMove, vec3(0.0f, 1.0f, 0.0f));
-    //printf("F(%f %f %f) R(%f %f %f)\n", forwardMove.x, forwardMove.y, forwardMove.z, rightwardMove.x, rightwardMove.y, rightwardMove.z);
-    
-    delta_angle = glm::radians(delta_angle);
-    
-    /*
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-    {
-        move_scale *= 2.0f;
-        printf("Move Scale: %f\n", move_scale);
-    }
-    if (key == GLFW_KEY_X && action == GLFW_PRESS)
-    {
-        move_scale /=2.0f;
-        if(move_scale < 0.25f) {
-            move_scale = 0.25f;
-        }
-    }
-    if (key == GLFW_KEY_V && action == GLFW_PRESS)
-    {
-        rotate_scale *= 2.0f;
-        printf("Move Scale: %f\n", move_scale);
-    }
-    if (key == GLFW_KEY_B && action == GLFW_PRESS)
-    {
-        rotate_scale /=2.0f;
-        if(rotate_scale < 0.25f) {
-            rotate_scale = 0.25f;
-        }
-    }
-    
-    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-        position->position += forwardMove;
-    }
-    if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-        position->position -= forwardMove;
-    }
-    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-        position->position -= rightwardMove;
-    }
-    if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-        position->position += rightwardMove;
-    }
-    */
-    /*
-    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        glm::quat deltaRotation;
-        
-        vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
-        
-        deltaRotation = glm::angleAxis(-1.0f * delta_angle, relative_x_axis);
-        position->rotation = deltaRotation * position->rotation;
-        
-    }
-    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        glm::quat deltaRotation;
-        
-        vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
-        
-        deltaRotation = glm::angleAxis(1.0f * delta_angle, relative_x_axis);
-        
-        position->rotation = deltaRotation * position->rotation;
-    }
-    
-    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        glm::quat deltaRotation;
-        
-        deltaRotation = glm::angleAxis(1.0f * delta_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-        
-        position->rotation = deltaRotation * position->rotation;
-    }
-    if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        glm::quat deltaRotation;
-        
-        deltaRotation = glm::angleAxis(-1.0f * delta_angle, normalize(glm::vec3(0.0f, 1.0f, 0.0f)));
-        
-        position->rotation = deltaRotation * position->rotation;
-    }*/
 }
 
 //Todo: Remove these (Idk if they're being optimized out, but hopefully
@@ -296,14 +215,6 @@ void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int 
             }
         }
     }
-    
-    /*
-    double xpos, ypos;
-    glfwGetCursorPos(window, &xpos, &ypos);
-    if((button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) && action == GLFW_PRESS) {
-        MouseClickEvent click(xpos, ypos, button);
-        event_handler->emit(click);
-    }*/
 }
 void InputSystem::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {

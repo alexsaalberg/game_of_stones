@@ -98,9 +98,6 @@ public:
     
     void initBullet();
     
-    //void initCamera();
-    void initVoxels();
-    
     void initShaders(const std::string& resourceDirectory);
     void initSimpleProgram(const std::string& resourceDirectory);
     void initVoxelProgram(const std::string& resourceDirectory);
