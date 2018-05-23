@@ -50,6 +50,29 @@ void RenderSystem::init(const std::string& resourceDirectory) {
     program->addAttribute("vPosition");
     program->addAttribute("vNormal");
     program->addAttribute("vTextureCoordinates");
+    
+    initArrowModel(resourceDirectory);
+}
+
+void RenderSystem::initArrowModel(const std::string& resourceDirectory) {
+    // This is the tiny obj shapes - not to be confused with our shapes
+    vector<tinyobj::shape_t> TOshapes;
+    vector<tinyobj::material_t> objMaterials;
+    
+    string errStr;
+    
+    //load in the mesh and make the shapes
+    bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                               (resourceDirectory + "/models/arrow/model.obj").c_str());
+    if (!rc)
+    {
+        cerr << errStr << endl;
+    } else {
+        arrow_model = make_shared<Model>();
+        arrow_model->createModel(TOshapes, objMaterials);
+        arrow_model->rotate( vec3(0.0f, 0.0f, 90.0f) );
+        arrow_model->scale *= 0.2f;
+    }
 }
 
 void RenderSystem::render(double t, std::shared_ptr<Program> program) {
@@ -90,6 +113,14 @@ void RenderSystem::draw_entities(double t, std::shared_ptr<Program> program) {
         //M->rotate(gameObject.rotation.z, vec3(0, 0, 1));
         
         renderable_component->model->draw(program, M);
+        
+        if(entity_manager->entity_has_component<Colonist_Component>(id)) {
+            Colonist_Component* colonist = entity_manager->get_component<Colonist_Component>(id);
+            if(colonist->selected) {
+                M->translate(vec3(0.0f, 1.0f, 0.0f));
+                arrow_model->draw(program, M);
+            }
+        }
         
         M->popMatrix();
         

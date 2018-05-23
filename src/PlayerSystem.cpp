@@ -85,7 +85,10 @@ void PlayerSystem::initCursor(const std::string& resourceDirectory) {
     renderable->draw_as_outline = true;
 }
 
+
 void PlayerSystem::step(double t, double dt) {
+    switchSelectedBlock(); // if player hits 1-9, change block
+    
     if(getInputSystem()->wasControlPressedThisStep("key_g")) {
         if(player_state == FPS_MODE) {
             player_state = RTS_MODE;
@@ -227,6 +230,7 @@ void PlayerSystem::rtsStep(double t, double dt) {
     
     if(getInputSystem()->wasControlPressedThisStep("mouse_left")) {
         entity_manager->delete_entity(selection_id);
+        clearSelectedColonists();
         
         initial_screenx = screenx;
         initial_screeny = screeny;
@@ -277,6 +281,10 @@ void PlayerSystem::rtsStep(double t, double dt) {
     if(getInputSystem()->wasControlReleasedThisStep("mouse_left")) {
         if(!isDrag) { // this is a click
             printf("*click*\n");
+            EntityId hit_entity = bulletPhysicsPickScreen(screenx, screeny);
+            if(hit_entity != -1) {
+                selectColonist(hit_entity);
+            }
         }
     }
     
@@ -291,6 +299,98 @@ void PlayerSystem::rtsStep(double t, double dt) {
     }
 }
 
+void PlayerSystem::clearSelectedColonists() {
+    for(EntityId id : selected_colonists) {
+        Colonist_Component* colonist_component = getEntityManager()->get_component<Colonist_Component>(id);
+        colonist_component->selected = false;
+    }
+    selected_colonists.clear();
+}
+
+void PlayerSystem::selectColonist(EntityId colonist_id) {
+    Colonist_Component* colonist_component = getEntityManager()->get_component<Colonist_Component>(colonist_id);
+    colonist_component->selected = true;
+    selected_colonists.push_back(colonist_id);
+}
+
+void PlayerSystem::switchSelectedBlock() {
+    if(getInputSystem()->wasControlPressedThisStep("key_1")) {
+        selected_block = BLOCK1;
+    }
+    if(getInputSystem()->wasControlPressedThisStep("key_2")) {
+        selected_block = BLOCK2;
+    }
+    if(getInputSystem()->wasControlPressedThisStep("key_3")) {
+        selected_block = BLOCK3;
+    }
+    if(getInputSystem()->wasControlPressedThisStep("key_4")) {
+        selected_block = BLOCK4;
+    }
+    if(getInputSystem()->wasControlPressedThisStep("key_5")) {
+        selected_block = BLOCK5;
+    }
+    if(getInputSystem()->wasControlPressedThisStep("key_6")) {
+        selected_block = BLOCK6;
+    }
+    if(getInputSystem()->wasControlPressedThisStep("key_7")) {
+        selected_block = BLOCK7;
+    }
+    if(getInputSystem()->wasControlPressedThisStep("key_8")) {
+        selected_block = BLOCK8;
+    }
+    if(getInputSystem()->wasControlPressedThisStep("key_9")) {
+        selected_block = BLOCK9;
+    }
+}
+
+EntityId PlayerSystem::bulletPhysicsPickScreen(float screen_x, float screen_y) {
+    Camera_Component* camera = entity_manager->get_component<Camera_Component>(player_id);
+    Position_Component* camera_position = entity_manager->get_component<Position_Component>(player_id);
+    
+    mat4 V = Camera::getViewMatrix(camera, camera_position);
+    mat4 P = Camera::getProjectionMatrix();
+    mat4 PV = P * V;
+    
+    mat4 invPV = inverse( PV );
+    
+    vec4 start(screen_x, screen_y, 0.0f, 1.0f);
+    vec4 end(screen_x, screen_y, 0.05f, 1.0f);
+    
+    start = invPV * start;
+    start = start / start.w;
+    
+    end = invPV * end;
+    end = end / end.w;
+    
+    const float length = 300.0f;
+    vec4 direction = normalize(end - start);
+    vec4 directionAndLength = direction * length;
+    
+    end = (start + directionAndLength);
+    
+    btVector3 btStart = btVector3(start.x, start.y, start.z);
+    btVector3 btEnd = btVector3(end.x, end.y, end.z);
+    
+    btCollisionWorld::ClosestRayResultCallback RayCallback(btStart, btEnd);
+
+    // Perform raycast
+    getBulletWorld()->rayTest(btStart, btEnd, RayCallback);
+    
+    if(RayCallback.hasHit()) {
+        //btVector3 result_end = RayCallback.m_hitPointWorld;
+        //btVector3 result_normal = RayCallback.m_hitNormalWorld;
+        //printf("Hit %f %f %f\n", result_end.getX(), result_end.getY(), result_end.getZ());
+        // Do some clever stuff here
+        //auto hit = RayCallback.m_collisionObject;
+        const btCollisionObject* hit_object = RayCallback.m_collisionObject;
+        
+        printf("Hit Object id: %d\n", hit_object->getUserIndex());
+        return hit_object->getUserIndex();
+    } else {
+        printf("No hit!\n");
+        return -1;
+    }
+}
 
 Vector3DInt32 PlayerSystem::polyVoxPickScreen(float xpercent, float ypercent, bool previous) {
     std::vector<EntityId> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();

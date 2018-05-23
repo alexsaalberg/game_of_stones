@@ -33,6 +33,7 @@ public:
     //Variables
     //WindowManager* window_manager;
     std::shared_ptr<Program> program;
+    std::shared_ptr<Model> arrow_model;
     
     //Virtual Functions
     virtual void render(double t, std::shared_ptr<Program> program);
@@ -40,6 +41,7 @@ public:
     
 private:
     
+    void initArrowModel(const std::string& resourceDirectory);
     void draw_entities(double t, std::shared_ptr<Program> program);
     void setMVPE(double t, std::shared_ptr<Program> program);
     void renderGUI();

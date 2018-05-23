@@ -163,9 +163,8 @@ bool InputSystem::wasControlPressedLastStep(std::string name) {
     return control.pressedLastStep;
 }
 bool InputSystem::wasControlReleasedThisStep(std::string name) {
-    const Control& control = getControl(name);
     
-    return (!control.pressedThisStep) && (control.pressedLastStep);
+    return (!isControlDownThisStep(name) && wasControlDownLastStep(name));
 }
 
 void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)

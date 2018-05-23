@@ -82,7 +82,7 @@ void SelectionSystem::step(double t, double dt) {
         //Get pointer to this selections rawVolumeComponent (create one if it doesn't exist)
         if( !entity_manager->entity_has_component<RawVolume_Component>(id) ) {
             rawVolume_component = entity_manager->add_component<RawVolume_Component>(id);
-            rawVolume_component->volume = makeFilledVolume(2, pagedVolume_component->volume, edge_lengths, properRegion.getLowerCorner());
+            rawVolume_component->volume = makeFilledVolume(BLOCK_REDOUTLINE, pagedVolume_component->volume, edge_lengths, properRegion.getLowerCorner());
             rawVolume_component->dirty_time = t;
         } else {
             rawVolume_component = entity_manager->get_component<RawVolume_Component>(id);
@@ -98,7 +98,7 @@ void SelectionSystem::step(double t, double dt) {
         
         //Update volume and position if selection has changed
         if(selection_component->dirty_time > rawVolume_component->dirty_time) {
-            rawVolume_component->volume = makeFilledVolume(2, pagedVolume_component->volume, edge_lengths, properRegion.getLowerCorner());
+            rawVolume_component->volume = makeFilledVolume(BLOCK_REDOUTLINE, pagedVolume_component->volume, edge_lengths, properRegion.getLowerCorner());
             rawVolume_component->dirty_time = t;
             
             position_component->scale = vec3(1.0f);

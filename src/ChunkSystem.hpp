@@ -98,12 +98,12 @@ public:
             materialToUse = static_cast<CASTLE_VOXELTYPE>(back);
             return true;
         }
-        else if(front != 2 && back == 2)
+        else if(front != BLOCK_REDOUTLINE && back == BLOCK_REDOUTLINE)
         {
             materialToUse = static_cast<CASTLE_VOXELTYPE>(back);
             return true;
         }
-        else if(front == 2 && back != 2)
+        else if(front == BLOCK_REDOUTLINE && back != BLOCK_REDOUTLINE)
         {
             materialToUse = static_cast<CASTLE_VOXELTYPE>(front);
             return true; 

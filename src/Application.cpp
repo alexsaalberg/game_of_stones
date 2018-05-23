@@ -99,6 +99,7 @@ void Application::initColonists() {
         Physics_Component* physics = entity_manager->add_component<Physics_Component>(colonist_id);
         Model_Component* model = entity_manager->add_component<Model_Component>(colonist_id);
         Position_Component* position = entity_manager->add_component<Position_Component>(colonist_id);
+        Colonist_Component* colonist_component = entity_manager->add_component<Colonist_Component>(colonist_id);
         
         // set position to defaults
         position->position = vec3(0.0f);
@@ -120,6 +121,7 @@ void Application::initColonists() {
         initial_trans.setOrigin(btVector3(spawn.x, spawn.y, spawn.z));
         
         physics->body->setCenterOfMassTransform(initial_trans);
+        physics->body->setUserIndex(colonist_id); // physics bodies can hold some data for us, very handy
         
         // add model
         model->model = cubeModel;

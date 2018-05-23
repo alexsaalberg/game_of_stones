@@ -32,6 +32,8 @@ public:
     EntityId selection_id = -1;
     EntityId cursor_id = -1;
     
+    vector<EntityId> selected_colonists;
+    
     SelectedBlock selected_block = BLOCK1;
     
     PlayerState player_state = FPS_MODE;
@@ -51,10 +53,14 @@ public:
     virtual void init(const std::string& resourceDirectory);
     virtual void step(double t, double dt);
 private:
+    void clearSelectedColonists();
+    void selectColonist(EntityId id);
+    void switchSelectedBlock();
     void initCursor(const std::string& resourceDirectory);
     void fpsStep(double t, double dt);
     void rtsStep(double t, double dt);
     Vector3DInt32 polyVoxPickScreen(float screenX, float screenY, bool previous);
+    EntityId bulletPhysicsPickScreen(float screen_x, float screen_y);
     void fillRegion(double t, Region& region, CASTLE_VOXELTYPE voxel_type);
 };
 

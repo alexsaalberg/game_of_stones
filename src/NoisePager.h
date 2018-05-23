@@ -15,6 +15,7 @@
 #include "PolyVox/PagedVolume.h"
 
 #include "FastNoise.h"
+#include "CastleDef.h"
 
 using namespace PolyVox;
 
@@ -60,11 +61,11 @@ public:
                 //printf("X%d Z%d, height %d\n", x, z, height);
                 
                 for(int y = region.getLowerY(); y <= region.getUpperY(); y++) {
-                    voxelVal = 0;
+                    voxelVal = BLOCK_AIR;
                     
                     if(y < height) {
                         //printf("X%d Z%d, Y%d H%d\n", x, z, y, height);
-                        voxelVal = 255-128;
+                        voxelVal = BLOCK_GRASS;
                     }
                     
                     // Voxel position within a chunk always start from zero. So if a chunk represents region (4, 8, 12) to (11, 19, 15)

@@ -63,6 +63,11 @@ class Camera_Component : Component {
     glm::vec3 eye_offset = glm::vec3(0.0f);
 };
 
+class Colonist_Component : Component {
+public:
+    bool selected = false;
+};
+
 class Selection_Component : Component {
 public:
     double dirty_time;

@@ -71,4 +71,12 @@ template<> Physics_Component* Component_Manager::get_component<Physics_Component
     return physics_components.get_component(entity_id);
 }
 
+template<> Colonist_Component* Component_Manager::add_component<Colonist_Component>(int entity_id) {
+    return colonist_components.add_component(entity_id);
+}
+
+template<> Colonist_Component* Component_Manager::get_component<Colonist_Component>(int entity_id) {
+    return colonist_components.get_component(entity_id);
+}
+
 
