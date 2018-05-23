@@ -92,11 +92,14 @@ public:
     //Window
     WindowManager* window_manager;
     
+    bool colonists_created = false;
+    
 //Functions
     /* Initilizations */
     void init(double t, const std::string& resourceDirectory);
     
     void initBullet();
+    void initColonists();
     
     void initShaders(const std::string& resourceDirectory);
     void initSimpleProgram(const std::string& resourceDirectory);

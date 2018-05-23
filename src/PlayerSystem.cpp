@@ -82,6 +82,7 @@ void PlayerSystem::initCursor(const std::string& resourceDirectory) {
     position->position = vec3(0.0f);
     position->rotation = quat(1.0f, 0.0f, 0.0f, 0.0f);
     renderable->model = cubeModel;
+    renderable->draw_as_outline = true;
 }
 
 void PlayerSystem::step(double t, double dt) {
@@ -113,7 +114,7 @@ void PlayerSystem::fpsStep(double t, double dt) {
     if(t < 4.0f) {
         btTransform lock_trans;
         lock_trans.setIdentity();
-        lock_trans.setOrigin(btVector3(30.0f, 120.0f, 30.0f));
+        lock_trans.setOrigin(btVector3(0.0f, 120.0f, 0.0f));
         
         player_body->setCenterOfMassTransform(lock_trans);
         player_body->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
@@ -188,6 +189,9 @@ void PlayerSystem::fpsStep(double t, double dt) {
         glm::quat deltaRotationY = glm::angleAxis(1.0f * -y_radians, relative_x_axis);
         
         position->rotation = deltaRotationY * deltaRotationX * position->rotation;
+        
+        // todo: Limit Camera Y rotations
+        
         
         //Block Breaking
         Vector3DInt32 break_block_point = polyVoxPickScreen(0.0f, 0.0f, false); //exact middle of screen

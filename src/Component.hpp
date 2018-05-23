@@ -30,6 +30,7 @@ class Active_Component : Component {
 class Model_Component : Component {
 public:
     std::shared_ptr<Model> model;
+    bool draw_as_outline = false;
 };
 
 class RawVolume_Component: Component {

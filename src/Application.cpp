@@ -18,6 +18,7 @@ void Application::init(double t, const std::string& resourceDirectory) {
     //Bullet
     initBullet();
     
+    
     //Systems
     event_handler = make_shared<EventHandler>();
     
@@ -47,7 +48,6 @@ void Application::init(double t, const std::string& resourceDirectory) {
     
 	initShaders(resourceDirectory+"/shaders");
     initGeom(resourceDirectory+"/models");
-
     event_handler->subscribe<MouseClickEvent>(&chunk_system);
     
     chunk_system.addLoader(t, player_system.player_id);
@@ -75,6 +75,55 @@ void Application::initBullet() {
     bullet_draw->setDebugMode(1);
 
     bullet_dynamics_world->setDebugDrawer(bullet_draw);
+}
+
+void Application::initColonists() {
+    float spawn_half_length = 10.0f;
+    
+    
+    for(int i = 0; i < 10; i++) {
+        btCollisionShape* collision_shape = new btBoxShape( btVector3(0.5, 0.5, 0.5) );
+        btDefaultMotionState* motion_state = new btDefaultMotionState(btTransform(btQuaternion(1, 0, 0, 0), btVector3(0, 0, 0)));
+        btScalar mass = 5.0f;
+        btVector3 fallInertia(0, 0, 0);
+        collision_shape->calculateLocalInertia(mass, fallInertia);
+        
+        btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(mass, motion_state, collision_shape, fallInertia);
+        
+        vec3 spawn = vec3(randomFloatNegativePossible(), 0.0f, randomFloatNegativePossible());
+        spawn *= spawn_half_length;
+        spawn.y = 200.0f;
+        
+        // Create Entity
+        EntityId colonist_id = entity_manager->create_entity();
+        Physics_Component* physics = entity_manager->add_component<Physics_Component>(colonist_id);
+        Model_Component* model = entity_manager->add_component<Model_Component>(colonist_id);
+        Position_Component* position = entity_manager->add_component<Position_Component>(colonist_id);
+        
+        // set position to defaults
+        position->position = vec3(0.0f);
+        position->rotation = quat(1.0f, 0.0f, 0.0f, 0.0f);
+        
+        // Create Rigid Body
+        btRigidBody* fallRigidBody = new btRigidBody(fallRigidBodyCI);
+        fallRigidBody->setDamping(0.2, 0.5);
+        fallRigidBody->setAngularFactor(btVector3(0.0f, 0.0f, 0.0f));
+        
+        bullet_dynamics_world->addRigidBody(fallRigidBody);
+        fallRigidBody->setActivationState(DISABLE_DEACTIVATION); // always active, important
+        physics->body = fallRigidBody;
+        physics->eye_offset = vec3(0.0f);
+        
+        // put rigid body at proper location
+        btTransform initial_trans;
+        initial_trans.setIdentity(); //Important to set rotation (if not set causes many issues)
+        initial_trans.setOrigin(btVector3(spawn.x, spawn.y, spawn.z));
+        
+        physics->body->setCenterOfMassTransform(initial_trans);
+        
+        // add model
+        model->model = cubeModel;
+    }
 }
 
 void Application::initShaders(const std::string& resourceDirectory)
@@ -182,6 +231,11 @@ void Application::integrate(double t, float dt) {
     // Do Physics
     btScalar timestep = dt;
     bullet_dynamics_world->stepSimulation(timestep, 10);
+    
+    if(!colonists_created && t > 4.0f) {
+        initColonists();
+        colonists_created = true;
+    }
     
     // Step the Systems
     system_manager.step(t, dt);
