@@ -64,6 +64,8 @@ void PickSystem::init(const std::string& resourceDirectory) {
 }
 
 void PickSystem::step(double t, double dt) {
+    return;
+    
     float screenx = input_system->getCurrentControlValue("mouse_x");
     float screeny = input_system->getCurrentControlValue("mouse_y");
     

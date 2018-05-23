@@ -23,10 +23,10 @@ class InputSystem;
 class System {
 public:
     static EntityManager* entity_manager;
-    //static EntityManager* getEntityManager() { return entity_manager; }
+    static EntityManager* getEntityManager() { return entity_manager; }
     
     static InputSystem* input_system;
-    //static InputSystem* getInputSystem() { return input_system; }
+    static InputSystem* getInputSystem() { return input_system; }
     
     static btDiscreteDynamicsWorld* bullet_dynamics_world;
     static btDiscreteDynamicsWorld* getBulletWorld() { return bullet_dynamics_world; }

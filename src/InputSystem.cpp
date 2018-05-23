@@ -24,12 +24,23 @@ void InputSystem::init() {
     input_system->addKeyControl("key_v", GLFW_KEY_V);
     input_system->addKeyControl("key_y", GLFW_KEY_Y);
     input_system->addKeyControl("key_g", GLFW_KEY_G);
+    input_system->addKeyControl("key_t", GLFW_KEY_T);
     input_system->addKeyControl("key_c", GLFW_KEY_C);
     
     input_system->addKeyControl("key_w", GLFW_KEY_W);
     input_system->addKeyControl("key_a", GLFW_KEY_A);
     input_system->addKeyControl("key_s", GLFW_KEY_S);
     input_system->addKeyControl("key_d", GLFW_KEY_D);
+    
+    input_system->addKeyControl("key_1", GLFW_KEY_1);
+    input_system->addKeyControl("key_2", GLFW_KEY_2);
+    input_system->addKeyControl("key_3", GLFW_KEY_3);
+    input_system->addKeyControl("key_4", GLFW_KEY_4);
+    input_system->addKeyControl("key_5", GLFW_KEY_5);
+    input_system->addKeyControl("key_6", GLFW_KEY_6);
+    input_system->addKeyControl("key_7", GLFW_KEY_7);
+    input_system->addKeyControl("key_8", GLFW_KEY_8);
+    input_system->addKeyControl("key_9", GLFW_KEY_9);
     
     input_system->addKeyControl("key_up", GLFW_KEY_UP);
     input_system->addKeyControl("key_down", GLFW_KEY_DOWN);
@@ -151,6 +162,11 @@ bool InputSystem::wasControlPressedLastStep(std::string name) {
     
     return control.pressedLastStep;
 }
+bool InputSystem::wasControlReleasedThisStep(std::string name) {
+    const Control& control = getControl(name);
+    
+    return (!control.pressedThisStep) && (control.pressedLastStep);
+}
 
 void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
@@ -174,31 +190,11 @@ void InputSystem::keyCallback(GLFWwindow *window, int key, int scancode, int act
     }
 }
 
-//Todo: Remove these (Idk if they're being optimized out, but hopefully
-//                    they're not being called every time the mouse moves)
 void InputSystem::scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
 {
-    /*
-    double scroll_degree_ratio = 1.0f;
-    float x_radians = radians(scroll_degree_ratio * deltaX);
-    float y_radians = radians(scroll_degree_ratio * deltaY);
     
-    
-    vector<EntityId> camera_ids = entity_manager->get_ids_with_component<Camera_Component>();
-    EntityId camera_id = camera_ids.at(0);
-    
-    //Camera_Component* camera = entity_manager->get_component<Camera_Component>(camera_id);
-    Position_Component* position = entity_manager->get_component<Position_Component>(camera_id);
-    
-    vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
-    vec3 relative_y_axis = (vec3(0.0f, 1.0f, 0.0f));
-    
-    glm::quat deltaRotationX = glm::angleAxis(1.0f * x_radians, relative_y_axis);
-    glm::quat deltaRotationY = glm::angleAxis(1.0f * -y_radians, relative_x_axis);
-        
-    position->rotation = deltaRotationY * deltaRotationX * position->rotation;
-     */
 }
+
 void InputSystem::mouseCallback(GLFWwindow *window, int button, int action, int mods)
 {
     for(auto& map_entry : control_map) {

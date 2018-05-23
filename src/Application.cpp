@@ -43,6 +43,7 @@ void Application::init(double t, const std::string& resourceDirectory) {
     input_system.event_handler = event_handler;
     
     pick_system.chunk_system = &chunk_system;
+    player_system.chunk_system = &chunk_system;
     
 	initShaders(resourceDirectory+"/shaders");
     initGeom(resourceDirectory+"/models");

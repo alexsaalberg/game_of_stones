@@ -59,7 +59,7 @@ class Player_Component : Component {
 };
 
 class Camera_Component : Component {
-    glm::vec3 offset = glm::vec3(0.0f);
+    glm::vec3 eye_offset = glm::vec3(0.0f);
 };
 
 class Selection_Component : Component {
@@ -77,6 +77,7 @@ public:
 class Physics_Component : Component {
 public:
     btRigidBody* body;
+    glm::vec3 eye_offset = glm::vec3(0.0f);
 };
 
 #endif /* Component_hpp */

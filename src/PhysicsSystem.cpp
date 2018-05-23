@@ -28,6 +28,8 @@ void PhysicsSystem::step(double t, double dt) {
         position_component->position.y = bPosition.getY();
         position_component->position.z = bPosition.getZ();
         
+        position_component->position += physics_component->eye_offset;
+        
         btQuaternion bRotation = trans.getRotation();
         //position_component->rotation.w = bRotation.getW();
         //position_component->rotation.x = bRotation.getX();
