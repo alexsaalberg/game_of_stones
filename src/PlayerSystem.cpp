@@ -210,6 +210,7 @@ void PlayerSystem::fpsStep(double t, double dt) {
         
         if(getInputSystem()->wasControlPressedThisStep("mouse_left")) {
             fillRegion(t, break_region, BLOCK_AIR);
+            //chunk_system->setDirtyTimeViaVoxel(t, point);
         } else if (getInputSystem()->wasControlPressedThisStep("mouse_right")) {
             fillRegion(t, place_region, selected_block);
         }

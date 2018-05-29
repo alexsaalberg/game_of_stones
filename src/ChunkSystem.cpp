@@ -340,6 +340,19 @@ void ChunkSystem::setDirtyTimeViaVoxel(double t, Vector3DInt32& voxel_coord) {
     //printf("V(%d %d %d) C(%d %d %d) %lf.\n", voxel_coord.getX(), voxel_coord.getY(), voxel_coord.getZ(), chunk_coord.getX(), chunk_coord.getY(), chunk_coord.getZ(), t);
     //printf("SetDirty Chunk (%d %d %d) %lf.\n", chunk_coord.getX(), chunk_coord.getY(), chunk_coord.getZ(), t);
     
+    
+    for(int x = -1; x <= 1; x++) {
+        for(int y = -1; y <= 1; y++) {
+            for(int z = -1; z <= 1; z++) {
+                Vector3DInt32 direction(x, y, z);
+                //Vector3DInt32 adjacent_voxel = (voxel_coord.operator+=(direction));
+                if(chunk_coord != voxelCoordToChunkCoord(voxel_coord + direction)) {
+                   setDirtyTimeViaChunk(t, chunk_coord + direction);
+                }
+            }
+        }
+    }
+    /*
     if(abs(voxel_coord.getX()) % Chunk_X_Length == 0) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32(-1, 0, 0));
     }
@@ -357,7 +370,7 @@ void ChunkSystem::setDirtyTimeViaVoxel(double t, Vector3DInt32& voxel_coord) {
     }
     if(abs(voxel_coord.getZ()) % Chunk_Z_Length == Chunk_Z_Length - 1) {
         setDirtyTimeViaChunk(t, chunk_coord + Vector3DInt32( 0, 0, 1));
-    }
+    }*/
     
     setDirtyTimeViaChunk(t, chunk_coord);
 }
