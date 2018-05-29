@@ -64,4 +64,26 @@ private:
     void fillRegion(double t, Region& region, CASTLE_VOXELTYPE voxel_type);
 };
 
+
+template< typename VolumeType>
+bool colonistVoxelValidator(const VolumeType* volData, const Vector3DInt32& v3dPos)
+{
+    //Voxels are considered valid candidates for the path if they are inside the volume...
+    
+    typename VolumeType::VoxelType oneAbove = volData->getVoxel(v3dPos.getX(), v3dPos.getY()+1, v3dPos.getZ());
+    typename VolumeType::VoxelType voxel = volData->getVoxel(v3dPos);
+    typename VolumeType::VoxelType oneBelow = volData->getVoxel(v3dPos.getX(), v3dPos.getY()-1, v3dPos.getZ());
+    if (voxel != BLOCK_AIR) {
+        return false;
+    }
+    if(oneAbove != BLOCK_AIR) {
+        return false;
+    }
+    if(oneBelow == BLOCK_AIR) {
+        return false;
+    }
+        
+    return true;
+}
+
 #endif /* PlayerSystem_hpp */

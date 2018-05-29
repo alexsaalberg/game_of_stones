@@ -43,6 +43,7 @@
 #include "PhysicsSystem.hpp"
 #include "VolumeRenderSystem.hpp"
 #include "PlayerSystem.hpp"
+#include "ColonistSystem.hpp"
 
 #include "BulletDraw.hpp"
 
@@ -78,6 +79,7 @@ public:
     SelectionSystem selection_system;
     VolumeRenderSystem volume_render_system;
     PhysicsSystem physics_system;
+    ColonistSystem colonist_system;
     
     //Shader Programs
     std::shared_ptr<Program> mainProgram;

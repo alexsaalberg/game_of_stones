@@ -37,6 +37,7 @@ void Application::init(double t, const std::string& resourceDirectory) {
     system_manager.add(&render_system);
     system_manager.add(&selection_system);
     system_manager.add(&physics_system);
+    system_manager.add(&colonist_system);
     
     system_manager.init(resourceDirectory);
     system_manager.init();

@@ -66,6 +66,8 @@ class Camera_Component : Component {
 class Colonist_Component : Component {
 public:
     bool selected = false;
+    bool has_target = false;
+    std::list<PolyVox::Vector3DInt32> path_to_target;
 };
 
 class Selection_Component : Component {

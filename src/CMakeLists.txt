@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.1)
 list(APPEND ENGINE_HEADERS "Application.hpp") 
 list(APPEND ENGINE_SOURCES "Application.cpp" "main.cpp")
 
-list(APPEND SYSTEM_SOURCES "ChunkSystem.cpp" "InputSystem.cpp" "PickSystem.cpp" "PhysicsSystem.cpp" "RenderSystem.cpp" "SelectionSystem.cpp" "VolumeRenderSystem.cpp" "PlayerSystem.cpp")
-list(APPEND SYSTEM_HEADERS "ChunkSystem.hpp" "InputSystem.hpp" "PickSystem.hpp" "PhysicsSystem.hpp" "RenderSystem.hpp" "SelectionSystem.hpp" "VolumeRenderSystem.hpp" "PlayerSystem.hpp")
+list(APPEND SYSTEM_SOURCES "ChunkSystem.cpp" "InputSystem.cpp" "PickSystem.cpp" "PhysicsSystem.cpp" "RenderSystem.cpp" "SelectionSystem.cpp" "VolumeRenderSystem.cpp" "PlayerSystem.cpp" "ColonistSystem.cpp")
+list(APPEND SYSTEM_HEADERS "ChunkSystem.hpp" "InputSystem.hpp" "PickSystem.hpp" "PhysicsSystem.hpp" "RenderSystem.hpp" "SelectionSystem.hpp" "VolumeRenderSystem.hpp" "PlayerSystem.hpp" "ColonistSystem.hpp")
 
 list(APPEND ECS_MANAGEMENT_SOURCES "EntityManager.cpp" "Messaging.cpp" "System.cpp" "ComponentManager.cpp" "ComponentStorage.cpp" "Component.cpp")
 list(APPEND ECS_MANAGEMENT_HEADERS "EntityManager.hpp" "Messaging.hpp" "System.hpp" "ComponentManager.hpp" "ComponentStorage.hpp" "Component.hpp" "ComponentOrdering.h")

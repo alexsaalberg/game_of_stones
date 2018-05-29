@@ -5,6 +5,7 @@
 //  Created by Alex Saalberg on 5/20/18.
 //
 #include "PolyVox/Picking.h"
+#include "PolyVox/AStarPathfinder.h"
 
 #include "PlayerSystem.hpp"
 #include "InputSystem.hpp"
@@ -14,6 +15,7 @@
 #include "Camera.hpp"
 
 using namespace glm;
+using namespace PolyVox;
 
 void PlayerSystem::init(const std::string& resourceDirectory) {
     // create Player Entity
@@ -285,6 +287,37 @@ void PlayerSystem::rtsStep(double t, double dt) {
             if(hit_entity != -1) {
                 selectColonist(hit_entity);
             }
+        }
+    }
+    
+    if(getInputSystem()->wasControlPressedThisStep("mouse_right")) {
+        for(EntityId colonist_id : selected_colonists) {
+            Colonist_Component* colonist_component = getEntityManager()->get_component<Colonist_Component>(colonist_id);
+            Position_Component* position_component = getEntityManager()->get_component<Position_Component>(colonist_id);
+            vec3 position = position_component->position;
+            colonist_component->has_target = true;
+            
+            position += 0.5f;
+            Vector3DInt32 block_position = Vector3DInt32(position.x, position.y, position.z);
+            std::list<Vector3DInt32> result;
+            
+            std::vector<EntityId> voxel_list = entity_manager->get_ids_with_component<PagedVolume_Component>();
+            PagedVolume_Component* voxel_component = entity_manager->get_component<PagedVolume_Component>(voxel_list.at(0));
+            
+            AStarPathfinderParams< PagedVolume<CASTLE_VOXELTYPE> > params(voxel_component->volume.get(), block_position, point, &colonist_component->path_to_target, 1.0f, 10000, TwentySixConnected, &colonistVoxelValidator<PagedVolume<CASTLE_VOXELTYPE> >);
+            AStarPathfinder< PagedVolume<CASTLE_VOXELTYPE> > pathfinder(params);
+            try {
+                pathfinder.execute();
+            } catch(const std::runtime_error err) {
+                colonist_component->has_target = false;
+            }
+        }
+    }
+    if(getInputSystem()->wasControlPressedThisStep("key_space")) {
+        for(EntityId colonist_id : selected_colonists) {
+            Colonist_Component* colonist_component = getEntityManager()->get_component<Colonist_Component>(colonist_id);
+            
+            colonist_component->has_target = false;
         }
     }
     
