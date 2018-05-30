@@ -89,7 +89,17 @@ void PlayerSystem::initCursor(const std::string& resourceDirectory) {
 
 
 void PlayerSystem::step(double t, double dt) {
-    switchSelectedBlock(); // if player hits 1-9, change block
+    if(t < 4.0f) {
+        btTransform lock_trans;
+        lock_trans.setIdentity();
+        lock_trans.setOrigin(btVector3(0.0f, 120.0f, 0.0f));
+        
+        player_body->setCenterOfMassTransform(lock_trans);
+        player_body->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        return;
+    }
+    
+    sharedStep(t, dt);
     
     if(getInputSystem()->wasControlPressedThisStep("key_g")) {
         if(player_state == FPS_MODE) {
@@ -115,105 +125,103 @@ void PlayerSystem::step(double t, double dt) {
     }
 }
 
+void PlayerSystem::sharedStep(double, double dt) {
+    switchSelectedBlock(); // if player hits 1-9, change block
+    
+    Position_Component* position = entity_manager->get_component<Position_Component>(player_id);
+    
+    vec3 forwardMove = position->rotation * vec3(0.0f, 0.0f, 1.0f);
+    forwardMove = vec3(forwardMove.x, 0.0f, forwardMove.z);
+    
+    vec3 rightwardMove = cross(forwardMove, vec3(0.0f, 1.0f, 0.0f));
+    
+    float force_scalar = 50.0f;
+    float delta_angle = glm::radians(5.0f);
+    
+    if(input_system->isControlDownThisStep("key_w")) {
+        player_body->applyCentralImpulse( dt * force_scalar * btVector3(forwardMove.x, forwardMove.y, forwardMove.z));
+    }
+    if(input_system->isControlDownThisStep("key_s")) {
+        player_body->applyCentralImpulse(-dt * force_scalar * btVector3(forwardMove.x, forwardMove.y, forwardMove.z));
+    }
+    if(input_system->isControlDownThisStep("key_d")) {
+        player_body->applyCentralImpulse( dt * force_scalar * btVector3(rightwardMove.x, rightwardMove.y, rightwardMove.z));
+    }
+    if(input_system->isControlDownThisStep("key_a")) {
+        player_body->applyCentralImpulse(-dt * force_scalar * btVector3(rightwardMove.x, rightwardMove.y, rightwardMove.z));
+    }
+    
+    if(input_system->isControlDownThisStep("key_space")) {
+        if(abs(player_body->getLinearVelocity().getY()) < 0.01f) {
+            player_body->applyCentralImpulse(btVector3(0.0, dt * (550.0f / player_body->getInvMass()), 0.0));
+        }
+    }
+    
+    // up/down camera movements are relative to current camera
+    // left/right aren't because we never do "roll" camera rotations (which alter the rel y axis)
+    vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
+    vec3 relative_y_axis = (vec3(0.0f, 1.0f, 0.0f));
+    
+    if(input_system->isControlDownThisStep("key_up")) {
+        glm::quat deltaRotation;
+        deltaRotation = glm::angleAxis(-1.0f * delta_angle, relative_x_axis);
+        position->rotation = deltaRotation * position->rotation;
+        
+    }
+    if(input_system->isControlDownThisStep("key_down")) {
+        glm::quat deltaRotation;
+        deltaRotation = glm::angleAxis(1.0f * delta_angle, relative_x_axis);
+        position->rotation = deltaRotation * position->rotation;
+    }
+    
+    if(input_system->isControlDownThisStep("key_left")) {
+        glm::quat deltaRotation;
+        deltaRotation = glm::angleAxis(1.0f * delta_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+        position->rotation = deltaRotation * position->rotation;
+    }
+    if(input_system->isControlDownThisStep("key_right"))
+    {
+        glm::quat deltaRotation;
+        deltaRotation = glm::angleAxis(-1.0f * delta_angle, normalize(glm::vec3(0.0f, 1.0f, 0.0f)));
+        position->rotation = deltaRotation * position->rotation;
+    }
+}
+
 void PlayerSystem::fpsStep(double t, double dt) {
-    if(t < 4.0f) {
-        btTransform lock_trans;
-        lock_trans.setIdentity();
-        lock_trans.setOrigin(btVector3(0.0f, 120.0f, 0.0f));
-        
-        player_body->setCenterOfMassTransform(lock_trans);
-        player_body->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
-    } else {
-        Position_Component* position = entity_manager->get_component<Position_Component>(player_id);
-        
-        if(input_system->isControlDownThisStep("key_space")) {
-            if(abs(player_body->getLinearVelocity().getY()) < 0.01f) {
-                player_body->applyCentralImpulse(btVector3(0.0, dt * (550.0f / player_body->getInvMass()), 0.0));
-            }
+    Position_Component* position = entity_manager->get_component<Position_Component>(player_id);
+    
+    if(input_system->isControlDownThisStep("key_space")) {
+        if(abs(player_body->getLinearVelocity().getY()) < 0.01f) {
+            player_body->applyCentralImpulse(btVector3(0.0, dt * (550.0f / player_body->getInvMass()), 0.0));
         }
-        
-        vec3 forwardMove = position->rotation * vec3(0.0f, 0.0f, 1.0f);
-        forwardMove = vec3(forwardMove.x, 0.0f, forwardMove.z);
-        
-        vec3 rightwardMove = cross(forwardMove, vec3(0.0f, 1.0f, 0.0f));
-        
-        float force_scalar = 50.0f;
-        float delta_angle = glm::radians(5.0f);
-        
-        if(input_system->isControlDownThisStep("key_w")) {
-            player_body->applyCentralImpulse( dt * force_scalar * btVector3(forwardMove.x, forwardMove.y, forwardMove.z));
-        }
-        if(input_system->isControlDownThisStep("key_s")) {
-            player_body->applyCentralImpulse(-dt * force_scalar * btVector3(forwardMove.x, forwardMove.y, forwardMove.z));
-        }
-        if(input_system->isControlDownThisStep("key_d")) {
-            player_body->applyCentralImpulse( dt * force_scalar * btVector3(rightwardMove.x, rightwardMove.y, rightwardMove.z));
-        }
-        if(input_system->isControlDownThisStep("key_a")) {
-            player_body->applyCentralImpulse(-dt * force_scalar * btVector3(rightwardMove.x, rightwardMove.y, rightwardMove.z));
-        }
-        
-        // up/down camera movements are relative to current camera
-        // left/right aren't because we never do "roll" camera rotations (which alter the rel y axis)
-        vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
-        vec3 relative_y_axis = (vec3(0.0f, 1.0f, 0.0f));
-        
-        if(input_system->isControlDownThisStep("key_up")) {
-            glm::quat deltaRotation;
-            deltaRotation = glm::angleAxis(-1.0f * delta_angle, relative_x_axis);
-            position->rotation = deltaRotation * position->rotation;
-            
-        }
-        if(input_system->isControlDownThisStep("key_down")) {
-            glm::quat deltaRotation;
-            deltaRotation = glm::angleAxis(1.0f * delta_angle, relative_x_axis);
-            position->rotation = deltaRotation * position->rotation;
-        }
-        
-        if(input_system->isControlDownThisStep("key_left")) {
-            glm::quat deltaRotation;
-            deltaRotation = glm::angleAxis(1.0f * delta_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-            position->rotation = deltaRotation * position->rotation;
-        }
-        if(input_system->isControlDownThisStep("key_right"))
-        {
-            glm::quat deltaRotation;
-            deltaRotation = glm::angleAxis(-1.0f * delta_angle, normalize(glm::vec3(0.0f, 1.0f, 0.0f)));
-            position->rotation = deltaRotation * position->rotation;
-        }
-        
-        //Move camera
-        float scroll_degree_ratio = 8.0f;
-        
-        float deltaX = input_system->getCurrentControlValue("mouse_x") - input_system->getPreviousControlValue("mouse_x");
-        float deltaY = input_system->getCurrentControlValue("mouse_y") - input_system->getPreviousControlValue("mouse_y");
-        float x_radians = radians(scroll_degree_ratio * deltaX);
-        float y_radians = radians(scroll_degree_ratio * deltaY);
-        
-        glm::quat deltaRotationX = glm::angleAxis(1.0f * -x_radians, relative_y_axis);
-        glm::quat deltaRotationY = glm::angleAxis(1.0f * -y_radians, relative_x_axis);
-        
-        position->rotation = deltaRotationY * deltaRotationX * position->rotation;
-        
-        // todo: Limit Camera Y rotations
-        
-        
-        //Block Breaking
-        Vector3DInt32 break_block_point = polyVoxPickScreen(0.0f, 0.0f, false); //exact middle of screen
-        Vector3DInt32 place_block_point = polyVoxPickScreen(0.0f, 0.0f, true); //exact middle of screen
-        Region break_region = PolyVox::Region(break_block_point, break_block_point);
-        Region place_region = PolyVox::Region(place_block_point, place_block_point);
-        
-        Position_Component* cursor_position = entity_manager->get_component<Position_Component>(cursor_id);
-        glm::vec3 new_cursor_position = vec3((float)break_block_point.getX(), (float)break_block_point.getY(), (float)break_block_point.getZ());
-        cursor_position->position = new_cursor_position;
-        
-        if(getInputSystem()->wasControlPressedThisStep("mouse_left")) {
-            fillRegion(t, break_region, BLOCK_AIR);
-            //chunk_system->setDirtyTimeViaVoxel(t, point);
-        } else if (getInputSystem()->wasControlPressedThisStep("mouse_right")) {
-            fillRegion(t, place_region, selected_block);
-        }
+    }
+    
+    vec3 forwardMove = position->rotation * vec3(0.0f, 0.0f, 1.0f);
+    forwardMove = vec3(forwardMove.x, 0.0f, forwardMove.z);
+    
+    //vec3 rightwardMove = cross(forwardMove, vec3(0.0f, 1.0f, 0.0f));
+    
+    //float force_scalar = 50.0f;
+    //float delta_angle = glm::radians(5.0f);
+    
+    moveCameraWithMouse(t, dt);
+    
+    
+    //Block Breaking
+    Vector3DInt32 break_block_point = polyVoxPickScreen(0.0f, 0.0f, false); //exact middle of screen
+    Vector3DInt32 place_block_point = polyVoxPickScreen(0.0f, 0.0f, true); //exact middle of screen
+    Region break_region = PolyVox::Region(break_block_point, break_block_point);
+    Region place_region = PolyVox::Region(place_block_point, place_block_point);
+    
+    Position_Component* cursor_position = entity_manager->get_component<Position_Component>(cursor_id);
+    glm::vec3 new_cursor_position = vec3((float)break_block_point.getX(), (float)break_block_point.getY(), (float)break_block_point.getZ());
+    cursor_position->position = new_cursor_position;
+    
+    if(getInputSystem()->wasControlPressedThisStep("mouse_left")) {
+        fillRegion(t, break_region, BLOCK_AIR);
+        //chunk_system->setDirtyTimeViaVoxel(t, point);
+    } else if (getInputSystem()->wasControlPressedThisStep("mouse_right")) {
+        fillRegion(t, place_region, selected_block);
     }
 }
 
@@ -314,12 +322,34 @@ void PlayerSystem::rtsStep(double t, double dt) {
             }
         }
     }
-    if(getInputSystem()->wasControlPressedThisStep("key_space")) {
-        for(EntityId colonist_id : selected_colonists) {
-            Colonist_Component* colonist_component = getEntityManager()->get_component<Colonist_Component>(colonist_id);
-            
-            colonist_component->has_target = false;
+    if(getInputSystem()->isControlDownThisStep("mouse_right")) {
+        if(getInputSystem()->wasControlPressedLastStep("mouse_right")) {
+            glfwSetInputMode(window_manager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
+        moveCameraWithMouse(t, dt);
+    }
+    if(getInputSystem()->wasControlReleasedThisStep("mouse_right")) {
+        glfwSetInputMode(window_manager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    
+    if(input_system->wasControlPressedThisStep("key_v")) {
+        Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
+        Region& region = selection_component->selection.region;
+        
+        fillRegion(t, region, 0);
+        entity_manager->delete_entity(selection_id);
+    }
+    else if(input_system->wasControlPressedThisStep("key_b")) {
+        Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
+        Region& region = selection_component->selection.region;
+        
+        fillRegion(t, region, selected_block);
+        entity_manager->delete_entity(selection_id);
+    }
+    else if(input_system->wasControlPressedThisStep("key_c")) {
+        Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
+        
+        entity_manager->delete_entity(selection_id);
     }
     
     switch(selection_state) {
@@ -331,6 +361,28 @@ void PlayerSystem::rtsStep(double t, double dt) {
             std::cerr << "Unexpected Switch Case in PlayerSystem.\n";
             break;
     }
+}
+
+void PlayerSystem::moveCameraWithMouse(double t, double dt) {
+    Position_Component* position = entity_manager->get_component<Position_Component>(player_id);
+    
+    // up/down camera movements are relative to current camera
+    // left/right aren't because we never do "roll" camera rotations (which alter the rel y axis)
+    vec3 relative_x_axis = position->rotation * (vec3(1.0f, 0.0f, 0.0f));
+    vec3 relative_y_axis = (vec3(0.0f, 1.0f, 0.0f));
+    
+    //Move camera
+    float scroll_degree_ratio = 8.0f;
+    
+    float deltaX = input_system->getCurrentControlValue("mouse_x") - input_system->getPreviousControlValue("mouse_x");
+    float deltaY = input_system->getCurrentControlValue("mouse_y") - input_system->getPreviousControlValue("mouse_y");
+    float x_radians = radians(scroll_degree_ratio * deltaX);
+    float y_radians = radians(scroll_degree_ratio * deltaY);
+    
+    glm::quat deltaRotationX = glm::angleAxis(1.0f * -x_radians, relative_y_axis);
+    glm::quat deltaRotationY = glm::angleAxis(1.0f * -y_radians, relative_x_axis);
+    
+    position->rotation = deltaRotationY * deltaRotationX * position->rotation;
 }
 
 void PlayerSystem::clearSelectedColonists() {

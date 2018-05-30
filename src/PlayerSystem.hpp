@@ -57,8 +57,10 @@ private:
     void selectColonist(EntityId id);
     void switchSelectedBlock();
     void initCursor(const std::string& resourceDirectory);
+    void sharedStep(double t, double dt);
     void fpsStep(double t, double dt);
     void rtsStep(double t, double dt);
+    void moveCameraWithMouse(double t, double dt);
     Vector3DInt32 polyVoxPickScreen(float screenX, float screenY, bool previous);
     EntityId bulletPhysicsPickScreen(float screen_x, float screen_y);
     void fillRegion(double t, Region& region, CASTLE_VOXELTYPE voxel_type);
