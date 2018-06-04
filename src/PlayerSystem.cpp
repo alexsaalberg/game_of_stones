@@ -7,6 +7,8 @@
 #include "PolyVox/Picking.h"
 #include "PolyVox/AStarPathfinder.h"
 
+#include <btVector3.h>
+
 #include "PlayerSystem.hpp"
 #include "InputSystem.hpp"
 
@@ -332,24 +334,24 @@ void PlayerSystem::rtsStep(double t, double dt) {
         glfwSetInputMode(window_manager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
     
-    if(input_system->wasControlPressedThisStep("key_v")) {
+    if(entity_manager->entityExists(selection_id)) {
         Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
         Region& region = selection_component->selection.region;
-        
-        fillRegion(t, region, 0);
-        entity_manager->delete_entity(selection_id);
-    }
-    else if(input_system->wasControlPressedThisStep("key_b")) {
-        Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
-        Region& region = selection_component->selection.region;
-        
-        fillRegion(t, region, selected_block);
-        entity_manager->delete_entity(selection_id);
-    }
-    else if(input_system->wasControlPressedThisStep("key_c")) {
-        Selection_Component* selection_component = entity_manager->get_component<Selection_Component>(selection_id);
-        
-        entity_manager->delete_entity(selection_id);
+        if(input_system->wasControlPressedThisStep("key_v")) {
+            fillRegion(t, region, 0);
+            entity_manager->delete_entity(selection_id);
+        }
+        else if(input_system->wasControlPressedThisStep("key_b")) {
+            fillRegion(t, region, selected_block);
+            entity_manager->delete_entity(selection_id);
+        }
+        else if(input_system->wasControlPressedThisStep("key_c")) {
+            entity_manager->delete_entity(selection_id);
+        }
+        else if(getInputSystem()->wasControlPressedThisStep("key_f"))  {
+            selectColonistsInRegion(region);
+            entity_manager->delete_entity(selection_id);
+        }
     }
     
     switch(selection_state) {
@@ -383,6 +385,12 @@ void PlayerSystem::moveCameraWithMouse(double t, double dt) {
     glm::quat deltaRotationY = glm::angleAxis(1.0f * -y_radians, relative_x_axis);
     
     position->rotation = deltaRotationY * deltaRotationX * position->rotation;
+    
+    
+    Vector3DInt32 break_block_point = polyVoxPickScreen(0.0f, 0.0f, false); //exact middle of screen
+    Position_Component* cursor_position = entity_manager->get_component<Position_Component>(cursor_id);
+    glm::vec3 new_cursor_position = vec3((float)break_block_point.getX(), (float)break_block_point.getY(), (float)break_block_point.getZ());
+    cursor_position->position = new_cursor_position;
 }
 
 void PlayerSystem::clearSelectedColonists() {
@@ -397,6 +405,64 @@ void PlayerSystem::selectColonist(EntityId colonist_id) {
     Colonist_Component* colonist_component = getEntityManager()->get_component<Colonist_Component>(colonist_id);
     colonist_component->selected = true;
     selected_colonists.push_back(colonist_id);
+}
+
+void PlayerSystem::selectColonistsInRegion(Region& region) {
+    std::vector<EntityId> colonist_id_list = entity_manager->get_ids_with_component<Colonist_Component>();
+    printf("Region: ");
+    printf("min (%d %d %d) ", region.getLowerX(), region.getLowerY(), region.getLowerZ());
+    printf("max (%d %d %d)\n", region.getUpperX(), region.getUpperY(), region.getUpperZ());
+    for(EntityId colonist_id : colonist_id_list) {
+        if(isColonistInRegion(colonist_id, region)) {
+            selectColonist(colonist_id);
+        }
+    }
+}
+
+bool PlayerSystem::isColonistInRegion(EntityId colonist_id, Region& region) {
+    Physics_Component* physics = getEntityManager()->get_component<Physics_Component>(colonist_id);
+    
+    btVector3 aabbMin;
+    btVector3 aabbMax;
+    
+    Region properRegion = PolyVoxExtensions::createProperRegion(region);
+    
+    physics->body->getAabb(aabbMin, aabbMax);
+    
+    btVector3 regionMin = btVector3(properRegion.getLowerX()-1, properRegion.getLowerY()-1, properRegion.getLowerZ()-1);
+    btVector3 regionMax = btVector3(properRegion.getUpperX(), properRegion.getUpperY(), properRegion.getUpperZ());
+    
+    float threshold = 0.1f; //Want to capture things ON current level
+    regionMin += btVector3(-threshold, -threshold, -threshold);
+    regionMax += btVector3(threshold,  threshold, threshold);
+    
+    if(pointInBox(aabbMin, regionMin, regionMax) || pointInBox(aabbMax, regionMin, regionMax)) {
+       return true;
+    }
+    
+    printf("%d: ", colonist_id);
+    printf("min(%f %f %f) ", aabbMin.getX(), aabbMin.getY(), aabbMin.getZ());
+    printf("max(%f %f %f)\n", aabbMax.getX(), aabbMax.getY(), aabbMax.getZ());
+    
+    return false;
+}
+
+bool PlayerSystem::pointInBox(btVector3 point, btVector3 boxMin, btVector3 boxMax) {
+    if(point.getX() < boxMin.getX())
+        return false;
+    if(point.getY() < boxMin.getY())
+        return false;
+    if(point.getZ() < boxMin.getZ())
+        return false;
+    
+    if(point.getX() > boxMax.getX())
+        return false;
+    if(point.getY() > boxMax.getY())
+        return false;
+    if(point.getZ() > boxMax.getZ())
+        return false;
+    
+    return true;
 }
 
 void PlayerSystem::switchSelectedBlock() {

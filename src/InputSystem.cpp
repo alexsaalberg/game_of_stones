@@ -26,6 +26,7 @@ void InputSystem::init() {
     input_system->addKeyControl("key_g", GLFW_KEY_G);
     input_system->addKeyControl("key_t", GLFW_KEY_T);
     input_system->addKeyControl("key_c", GLFW_KEY_C);
+    input_system->addKeyControl("key_f", GLFW_KEY_F);
     
     input_system->addKeyControl("key_w", GLFW_KEY_W);
     input_system->addKeyControl("key_a", GLFW_KEY_A);

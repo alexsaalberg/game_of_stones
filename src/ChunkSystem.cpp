@@ -90,7 +90,6 @@ void ChunkSystem::processClickEvent(double t, MouseClickEvent& click) {
         }
     }
 }
-
 void ChunkSystem::init() {
     EntityId voxel_id = entity_manager->create_entity();
     

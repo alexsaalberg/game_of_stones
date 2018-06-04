@@ -55,6 +55,9 @@ public:
 private:
     void clearSelectedColonists();
     void selectColonist(EntityId id);
+    void selectColonistsInRegion(PolyVox::Region& region);
+    bool isColonistInRegion(EntityId id, PolyVox::Region& region);
+    bool pointInBox(btVector3 point, btVector3 boxMin, btVector3 boxMax);
     void switchSelectedBlock();
     void initCursor(const std::string& resourceDirectory);
     void sharedStep(double t, double dt);
