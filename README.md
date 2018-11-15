@@ -1,4 +1,4 @@
-# Castle Simulator!
+# Game Of Stones
 
 ## Controls
 * Use WASD to move. 
