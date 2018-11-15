@@ -1,6 +1,9 @@
 # Game Of Stones
 
-More info: [alexsaalberg.com](https://alexsaalberg.com/gos.html)
+More info: [alexsaalberg.com/gos.html](https://alexsaalberg.com/gos.html)
+
+![Screenshot showing overview of features in Game of Stones](media/screen1.png)
+
 ## Description
 
 Game of Stones was my senior project. It was created in a little under 10 weeks. 
