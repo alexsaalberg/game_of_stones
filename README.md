@@ -72,6 +72,14 @@ Here is a summary of the controls available
 
 # Behind The Scenes
 
+## General Code Structure
+
+While peeking into the src/ folder may lead you to believe this project has no structure, this is not true. The CMakeLists within the project will put the proper source files into the proper directories in the IDE of your choice. 
+
+*Example of XCode Project Navigator*
+
+![Figure showing IDE file structure.](media/diagram2.png)
+
 ## Entity-Component-System-(Manager?) Pattern
 
 ### Background Info
