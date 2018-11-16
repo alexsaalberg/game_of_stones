@@ -66,6 +66,59 @@ Here is a summary of the controls available
   * Hit C or Left-Click to cancel selection
   * Hit F to select colonists in selection
 
+# Behind The Scenes
+
+## Entity-Component-System-(Manager?) Pattern
+
+### Background Info
+
+Game of Stones uses the [ECS Programming Pattern](https://en.wikipedia.org/wiki/Entity%E2%80%93component%E2%80%93system) to define it's game objects. This pattern favors "composition over inheritence" and is generally used to combat the problems that game engines can have of using traditional object inheritance to define hundreds of different game objects with overlapping, but slightly differing, properties.
+
+ECS is used in game engines both because of the possible performance benefits due to better [data locality](http://gameprogrammingpatterns.com/data-locality.html), and because it can make the engine simplier and easier to develop. 
+
+### Implementation
+
+This part of the engine was implemented in a fairly straightforward fashion. Each entity is nothing more than an ID (int). Each component type has its’ own storage manager which ultimately stores all components of the same type in a contiguous array or a hashmap. There is roughly one system for each game mechanic (e.g. RenderSystem, PhysicsSystem, ColonistSystem) which is automatically called each frame or physics step and can query the EntityManager to get entities with one or more components as needed. For example, every frame the RenderSystem renders every entity with a TransformComponent and a ModelComponent.
+
+
+### Systems
+
+ChunkSystem
+* Receives click events from InputSystem and processes them asynchronously (creating or destroying blocks as necessary)
+* On each Physics Step 
+  * Calculates which chunks are within view-range and loads/unloads them as necessary. (Like in minecraft)
+  * Calls PolyVox to created MeshData for newly loaded chunks. (Limits how many are created per step to prevent lag).
+* On each Graphics Frame
+  * Renders the meshdata for all loaded chunks.
+
+ColonistSystem
+* On each Physics Step
+  * For each colonist which has a target destination
+    * move them towards the next point on the A* path towards the destination.
+    * Jump if necessary
+InputSystem
+* On each Physics Step
+  * For each control in control_map (Can contain mouse or key controls)
+    * See if that control was activate in the last step
+    * (Incoming controls are managed by GLFW)
+* PhysicsSystem
+  * 
+* PickSystem
+* PlayerSystem
+* RenderSystem
+* SelectionSystem
+* VolumeRenderSystem
+
+### Components
+
+
+
+
+*NOTE!: Ignore the erroneous arrow between TransformComponent and ActiveComponent*
+
+![UML Diagram of ECS structure](media/diagram1.png)
+
+
 ## Naming Conventions
 * Variables (local and member)
   * snake_case 
