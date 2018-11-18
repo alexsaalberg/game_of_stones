@@ -80,7 +80,7 @@ While peeking into the src/ folder may lead you to believe this project has no s
 
 ![Figure showing IDE file structure.](media/diagram2.png)
 
-## Entity-Component-System-(Manager?) Pattern
+## Entity-Component-System Pattern
 
 ### Background Info
 
